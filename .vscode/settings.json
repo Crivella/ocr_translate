@@ -1,0 +1,21 @@
+{
+    "emmet.triggerExpansionOnTab": true,
+    "emmet.showSuggestionsAsSnippets": true,
+    "editor.snippetSuggestions": "top",
+    "cmake.configureOnOpen": false,
+    "spellright.language": [
+        "en"
+    ],
+    "spellright.documentTypes": [
+        "latex",
+        "markdown",
+        "plaintext"
+    ],
+    "python.linting.pylintArgs": [
+        "--disable=C0103",
+        "--disable=C0111",
+        "--disable=C0115",
+        "--load-plugins=pylint_django",
+        "--django-settings-module=backend.settings"
+    ]
+}
