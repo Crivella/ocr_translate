@@ -99,6 +99,7 @@ def merge_bboxes(bboxes):
 
 def get_ocr_boxes(image):
     # reader.recognize(image)
+    image = image.convert('RGB')
     results = reader.readtext(np.array(image))
     bboxes = [_[0] for _ in results]
 
@@ -132,16 +133,3 @@ def ocr(img: Image, bbox: tuple[int, int, int, int] = None, *args, **kwargs):
     generated_text = ocr_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
 
     return generated_text[0].replace(' ', '')
-
-# def ocr_pipeline(image):
-#     bboxes = get_ocr_boxes(image)
-
-#     res = []
-#     for bbox in bboxes:
-#         bbox = bbox_to_lbrt(bbox)
-#         app = image.crop(bbox)
-
-#         text = ocr(app)
-#         res.append((bbox, text))
-    
-#     return res
