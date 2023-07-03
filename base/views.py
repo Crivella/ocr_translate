@@ -7,6 +7,7 @@ import time
 
 from django.http import HttpRequest, JsonResponse
 from django.middleware import csrf
+from django.views.decorators.csrf import csrf_exempt
 from PIL import Image, ImageDraw, ImageFont
 
 from . import models as m
@@ -16,6 +17,7 @@ from .OCR_TSL import (bbox_model_obj, get_ocr_boxes, ocr, ocr_model_obj,
 # print(os.path.abspath(os.getcwd()))
 font = ImageFont.truetype("MangaMaster BB Bold.ttf", 28)
 
+@csrf_exempt
 def test(request: HttpRequest) -> JsonResponse:
     if request.method == 'GET':
         csrf.get_token(request)
@@ -34,7 +36,8 @@ def test(request: HttpRequest) -> JsonResponse:
                 return JsonResponse({'error': 'no contents'}, status=400)
 
             bin = base64.b64decode(c)
-            md5 = hashlib.md5(bin).hexdigest()
+            # md5 = hashlib.md5(bin).hexdigest()
+            md5 = hashlib.md5(c.encode('utf-8')).hexdigest()
             print(md5)
             img = Image.open(io.BytesIO(bin))
             # i.show()
@@ -124,7 +127,9 @@ def test(request: HttpRequest) -> JsonResponse:
 
         return JsonResponse({
             'test': 'POST',
-            # 'body': request.body.decode('utf-8'),
-            # data: [data],
+            'result': [
+                {'ocr': '123', 'tsl': '456', 'box': (0,0,100,100)},
+                {'ocr': 'abc', 'tsl': 'def', 'box': (50,50,150,150)},
+            ]
             })
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
