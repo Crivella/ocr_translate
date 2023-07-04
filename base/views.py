@@ -12,7 +12,7 @@ from .OCR_TSL import (get_ocr_model, get_tsl_model, import_models,
 
 
 def handshake(request: HttpRequest) -> JsonResponse:
-    import_models()
+    # import_models()
     print(str(get_ocr_model()), str(get_tsl_model()))
     return JsonResponse({
         'OCRModels': [str(_) for _ in m.OCRModel.objects.all()] or ["1","2","3"],
@@ -65,8 +65,11 @@ def test(request: HttpRequest) -> JsonResponse:
         
         b64 = data.get('contents')
         md5 = data.get('md5')
+        frc = data.get('force', False)
+        opt = data.get('options', {})
         if b64 is None:
             return JsonResponse({'error': 'no contents'}, status=400)
+        # return JsonResponse({}, status=500)
 
         bin = base64.b64decode(b64)
         # Doing md5 on the base64 to have consistency with the JS generate one
@@ -76,7 +79,7 @@ def test(request: HttpRequest) -> JsonResponse:
 
         print('md5', md5)
 
-        res = ocr_tsl_pipeline(bin, md5)
+        res = ocr_tsl_pipeline(bin, md5, force=frc, options=opt)
         
         # res = [
         #         {'ocr': '123', 'tsl': '456', 'box': (0,0,100,100)},

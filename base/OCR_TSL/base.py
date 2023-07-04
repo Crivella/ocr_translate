@@ -16,3 +16,5 @@ def import_models():
         m.OCRModel.objects.get_or_create(name=name)
     for name in config["tsl_models"]:
         m.TSLModel.objects.get_or_create(name=name)
+
+    
