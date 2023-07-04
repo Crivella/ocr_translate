@@ -8,23 +8,61 @@ from transformers import (BertJapaneseTokenizer, VisionEncoderDecoderModel,
 
 from .base import dev, root
 
-ocr_model_id = "kha-white/manga-ocr-base"
+# ocr_model_id = "kha-white/manga-ocr-base"
 
-reader = easyocr.Reader(['ja'], gpu=True)
+reader = easyocr.Reader(['ja'], gpu=(dev == "cuda"))
 
-mid = root / 'OCR' / ocr_model_id
-ocr_model = VisionEncoderDecoderModel.from_pretrained(
-    mid
-    ).to(dev)
-ocr_tokenizer = BertJapaneseTokenizer.from_pretrained(mid)
-ocr_image_processor = ViTImageProcessor.from_pretrained(mid)
+# mid = root / 'OCR' / ocr_model_id
+# ocr_model = VisionEncoderDecoderModel.from_pretrained(
+#     mid
+#     ).to(dev)
+# ocr_tokenizer = BertJapaneseTokenizer.from_pretrained(mid)
+# ocr_image_processor = ViTImageProcessor.from_pretrained(mid)
+obj_model_id = None
+ocr_model = None
+ocr_tokenizer = None
+ocr_image_processor = None
+
+import logging
 
 from ..models import OCRBoxModel, OCRModel
 
+logger = logging.getLogger('ocr_tsl')
+
 # bbox_model = 1
 # ocr_model = 1
+ocr_model_obj = None
 bbox_model_obj, _ = OCRBoxModel.objects.get_or_create(name='easyocr')
-ocr_model_obj, _ = OCRModel.objects.get_or_create(name=ocr_model_id)
+# ocr_model_obj, _ = OCRModel.objects.get_or_create(name=ocr_model_id)
+
+def load_ocr_model(model_id):
+    global ocr_model_obj, ocr_model, ocr_tokenizer, ocr_image_processor, obj_model_id
+
+    if obj_model_id == model_id:
+        return
+
+    mid = root / model_id
+    logger.debug(mid)
+    ocr_model = VisionEncoderDecoderModel.from_pretrained(mid).to(dev)
+    ocr_tokenizer = BertJapaneseTokenizer.from_pretrained(mid)
+    ocr_image_processor = ViTImageProcessor.from_pretrained(mid)
+
+    ocr_model_obj, _ = OCRModel.objects.get_or_create(name=model_id)
+    obj_model_id = model_id
+
+    logger.debug(f'OCR model loaded: {model_id}')
+    logger.debug(f'OCR model object: {ocr_model_obj}')
+    logfromoutside()
+
+
+def logfromoutside():
+    logger.debug(f'OCR model object (OUTSIDE): {ocr_model_obj}')
+
+def get_box_model():
+    return bbox_model_obj
+
+def get_ocr_model():
+    return ocr_model_obj
 
 def bbox_to_lbrt(bbox):
     l = bbox[0][0]

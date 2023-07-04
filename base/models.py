@@ -8,15 +8,24 @@ class OCRModel(models.Model):
     """OCR model using hugging space naming convention"""
     name = models.CharField(max_length=128)
 
+    def __str__(self):
+        return str(self.name)
+
 class OCRBoxModel(models.Model):
     """OCR model for bounding boxes"""
     name = models.CharField(max_length=128)
+
+    def __str__(self):
+        return str(self.name)
 
 class TSLModel(models.Model):
     """Translation models using hugging space naming convention"""
     name = models.CharField(max_length=128)
     src_language = models.CharField(max_length=lang_length)
     dst_language = models.CharField(max_length=lang_length)
+    
+    def __str__(self):
+        return str(self.name)
 
 class Image(models.Model):
     """Image registered as the md5 of the uploaded file"""
