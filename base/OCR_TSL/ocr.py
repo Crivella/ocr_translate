@@ -112,6 +112,7 @@ def merge_bboxes(bboxes):
 
     lst = list(range(len(bboxes)))
 
+    torm = set()
     for app in inters:
         app = list(app)
         data = bboxes[app].reshape(-1,2)
@@ -127,10 +128,11 @@ def merge_bboxes(bboxes):
             [l,t]
         ])
 
-        for i in app:
-            lst.remove(i)
+        torm = torm.union(app)
 
     for i in lst:
+        if i in torm:
+            continue
         res.append(bboxes[i])
     
     return res
