@@ -99,7 +99,7 @@ def ocr_tsl_pipeline_work(img, md5, force=False, options={}) -> list[dict]:
             new = tsl_pipeline(text, lang_src, lang_dst)
             text_obj, _ = m.Text.objects.get_or_create(
                 text=new,
-                lang=lang_dst,
+                # lang=lang_dst,
                 )
             tsl_run_obj = m.TranslationRun.objects.create(**params)
             tsl_run_obj.result = text_obj
