@@ -19,7 +19,12 @@
             //     "uriFormat": "%s/testdb"
             //   },
             "env": {
-                "PYTHONDONTWRITEBYTECODE": "1"
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "LOAD_ON_START": "true",
+                "TRANSFORMERS_CACHE": "/home/crivella/app/AI",
+                "TRANSFORMERS_ALLOW_CACHE": "true",
+                "TRANSFORMERS_OFFLINE": "1",
+                "DEVICE": "cpu"
             },
             "django": true
         }

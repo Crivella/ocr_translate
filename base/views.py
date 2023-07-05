@@ -77,9 +77,11 @@ def test(request: HttpRequest) -> JsonResponse:
         # Can't find a way to run ms5 on the binary (the blob does not work)
         if md5 != hashlib.md5(b64.encode('utf-8')).hexdigest():
             return JsonResponse({'error': 'md5 mismatch'}, status=400)
+        print('md5', md5, ' <- ', len(bin))
+        # return JsonResponse({'test failure': ''}, status=500)
 
-        print('md5', md5)
 
+        # res = []
         res = ocr_tsl_pipeline(bin, md5, force=frc, options=opt)
         
         # res = [

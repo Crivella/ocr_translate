@@ -1,12 +1,7 @@
-from pathlib import Path
-
 import easyocr
 import numpy as np
-from PIL import Image
-from transformers import (BertJapaneseTokenizer, VisionEncoderDecoderModel,
-                          ViTImageProcessor)
 
-from .base import dev, root
+from .base import dev, load_model
 
 reader = None
 
@@ -16,15 +11,20 @@ from ..models import OCRBoxModel
 
 logger = logging.getLogger('ocr_tsl')
 
+box_model_id = None
 bbox_model_obj = None
 
 def load_bbox_model(model_id):
-    global bbox_model_obj, reader
+    global bbox_model_obj, reader, box_model_id
+
+    if box_model_id == model_id:
+        return
 
     if model_id == 'easyocr':
         logger.debug('Loading easyocr')
         reader = easyocr.Reader(['ja'], gpu=(dev == "cuda"))
         bbox_model_obj, _ = OCRBoxModel.objects.get_or_create(name='easyocr')
+        box_model_id = model_id
         return
 
     raise NotImplementedError

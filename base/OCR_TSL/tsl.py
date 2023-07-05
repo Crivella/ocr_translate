@@ -4,7 +4,7 @@ import re
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, M2M100Tokenizer
 
 from ..models import TSLModel
-from .base import dev, root
+from .base import dev, load_model
 
 logger = logging.getLogger('ocr_tsl')
 
@@ -27,10 +27,11 @@ def load_tsl_model(model_id):
     if tsl_model_id == model_id:
         return
 
-    mid = root / model_id
-    logger.debug(mid)
-    tsl_model = AutoModelForSeq2SeqLM.from_pretrained(mid).to(dev)
-    tsl_tokenizer = AutoTokenizer.from_pretrained(mid)
+    # mid = root / model_id
+    logger.debug(model_id)
+    res = load_model(model_id, request=['seq2seq', 'tokenizer'])
+    tsl_model = res['seq2seq']
+    tsl_tokenizer = res['tokenizer']
 
     tsl_model_obj, _ = TSLModel.objects.get_or_create(name=model_id)
     tsl_model_id = model_id

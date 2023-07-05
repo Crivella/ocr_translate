@@ -1,11 +1,10 @@
 from pathlib import Path
 
-import numpy as np
 from PIL import Image
 from transformers import (BertJapaneseTokenizer, VisionEncoderDecoderModel,
                           ViTImageProcessor)
 
-from .base import dev, root
+from .base import dev, load_model
 
 obj_model_id = None
 ocr_model = None
@@ -27,11 +26,15 @@ def load_ocr_model(model_id):
     if obj_model_id == model_id:
         return
 
-    mid = root / model_id
-    logger.debug(f'Loading OCR model: {mid}')
-    ocr_model = VisionEncoderDecoderModel.from_pretrained(mid).to(dev)
-    ocr_tokenizer = BertJapaneseTokenizer.from_pretrained(mid)
-    ocr_image_processor = ViTImageProcessor.from_pretrained(mid)
+    # mid = root / model_id
+    logger.debug(f'Loading OCR model: {model_id}')
+    res = load_model(model_id, request=['ved_model', 'tokenizer', 'image_processor'])
+    ocr_model = res['ved_model']
+    ocr_tokenizer = res['tokenizer']
+    ocr_image_processor = res['image_processor']
+    # ocr_model = VisionEncoderDecoderModel.from_pretrained(model_id).to(dev)
+    # ocr_tokenizer = BertJapaneseTokenizer.from_pretrained(model_id)
+    # ocr_image_processor = ViTImageProcessor.from_pretrained(model_id)
 
     ocr_model_obj, _ = OCRModel.objects.get_or_create(name=model_id)
     obj_model_id = model_id

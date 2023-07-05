@@ -1,9 +1,10 @@
 import io
+import os
 
 from PIL import Image
 
 from .. import models as m
-from .base import import_models
+# from .base import import_models
 from .box import box_pipeline, get_box_model, load_bbox_model
 from .ocr import get_ocr_model, load_ocr_model, ocr
 from .tsl import get_tsl_model, load_tsl_model, tsl_pipeline
@@ -130,6 +131,7 @@ def ocr_tsl_pipeline(bin, md5, force=False, options={}) -> list[dict]:
             res = ocr_tsl_pipeline_lazy(md5)
         except ValueError:
             img = Image.open(io.BytesIO(bin))
+            # img.show()
             res = ocr_tsl_pipeline_work(img, md5, options=options)
     else:
         img = Image.open(io.BytesIO(bin))
@@ -139,7 +141,8 @@ def ocr_tsl_pipeline(bin, md5, force=False, options={}) -> list[dict]:
 
 def init_most_used():
     from django.db.models import Count
-    import_models()
+
+    # import_models()
     
     box = m.OCRBoxModel.objects.annotate(count=Count('runs')).order_by('-count').first()
     ocr = m.OCRModel.objects.annotate(count=Count('runs')).order_by('-count').first()
@@ -152,4 +155,5 @@ def init_most_used():
     if tsl:
         load_tsl_model(tsl.name)
 
-# init_most_used()
+if os.environ.get('LOAD_ON_START', 'false').lower() == 'true':
+    init_most_used()
