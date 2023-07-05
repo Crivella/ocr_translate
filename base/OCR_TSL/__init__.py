@@ -4,8 +4,8 @@ from PIL import Image
 
 from .. import models as m
 from .base import import_models
-from .ocr import (get_box_model, get_ocr_boxes, get_ocr_model, load_ocr_model,
-                  ocr)
+from .box import box_pipeline, get_box_model, load_bbox_model
+from .ocr import get_ocr_model, load_ocr_model, ocr
 from .tsl import get_tsl_model, load_tsl_model, tsl_pipeline
 
 lang_src = 'ja'
@@ -46,7 +46,7 @@ def ocr_tsl_pipeline_work(img, md5, force=False, options={}) -> list[dict]:
     bbox_run = m.OCRBoxRun.objects.filter(**params).first()
     if bbox_run is None or force:
         logger.debug('Running BBox OCR')
-        bboxes = get_ocr_boxes(img)
+        bboxes = box_pipeline(img)
         # Create it here to avoid having a failed entry in DB
         bbox_run = m.OCRBoxRun.objects.create(**params)
         for bbox in bboxes:
@@ -141,13 +141,15 @@ def init_most_used():
     from django.db.models import Count
     import_models()
     
+    box = m.OCRBoxModel.objects.annotate(count=Count('runs')).order_by('-count').first()
     ocr = m.OCRModel.objects.annotate(count=Count('runs')).order_by('-count').first()
     tsl = m.TSLModel.objects.annotate(count=Count('runs')).order_by('-count').first()
 
+    if box:
+        load_bbox_model(box.name)
     if ocr:
         load_ocr_model(ocr.name)
     if tsl:
         load_tsl_model(tsl.name)
 
-import_models()
-init_most_used()
+# init_most_used()

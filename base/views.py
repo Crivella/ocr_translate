@@ -7,7 +7,7 @@ from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
 
 from . import models as m
-from .OCR_TSL import (get_ocr_model, get_tsl_model, import_models,
+from .OCR_TSL import (get_ocr_model, get_tsl_model, load_bbox_model,
                       load_ocr_model, load_tsl_model, ocr_tsl_pipeline)
 
 
@@ -39,6 +39,7 @@ def load_models(request: HttpRequest) -> JsonResponse:
             return JsonResponse({'error': 'no tsl_model_id'}, status=400)
 
         try:
+            load_bbox_model('easyocr')
             load_ocr_model(ocr_model_id)
             load_tsl_model(tsl_model_id)
         except Exception as e:
