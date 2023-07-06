@@ -5,17 +5,18 @@ import json
 import queue
 import time
 
+import numpy as np
 from django.http import HttpRequest, JsonResponse
 from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 
 from . import models as m
-from .messaging import Message, WorkerMessageQueue
 from .OCR_TSL import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
 from .OCR_TSL.box import get_box_model, load_box_model
 from .OCR_TSL.ocr import get_ocr_model, load_ocr_model
 from .OCR_TSL.tsl import get_tsl_model, load_tsl_model
+from .queues import main_queue as q
 
 
 def handshake(request: HttpRequest) -> JsonResponse:
@@ -57,8 +58,6 @@ def load_models(request: HttpRequest) -> JsonResponse:
         return JsonResponse({})
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
 
-q: WorkerMessageQueue[Message] = WorkerMessageQueue(num_workers=1)
-
 @csrf_exempt
 def test(request: HttpRequest) -> JsonResponse:
     if request.method == 'GET':
@@ -99,28 +98,22 @@ def test(request: HttpRequest) -> JsonResponse:
             # return JsonResponse({'test failure': ''}, status=500)
 
             img = Image.open(io.BytesIO(bin))
+            # Needed to make sure the image is loaded synchronously before going forward
+            # Enforce thread safety
+            np.array(img)
 
             # Check if same request is already in queue. If yes attach listener to it
-            if ( msg := q.get_msg(md5) ) is None:
-                msg = Message(
-                    id = md5,
-                    message = {
-                        'args': (img, md5),
-                        'kwargs': {'force': frc, 'options': opt},
-                    },
-                    handler = ocr_tsl_pipeline_work,
-                    )
-            
-                q.put(msg)
+            msg = q.put(
+                id = md5,
+                msg = {
+                    'args': (img, md5),
+                    'kwargs': {'force': frc, 'options': opt},
+                },
+                handler = ocr_tsl_pipeline_work,
+            )
 
-            while not msg.is_resolved:
-                time.sleep(1)
+            res = msg.response()
 
-                # print('waiting', q.qsize())
-
-                # print('waiting', q.qsize())
-                # time.sleep(1)
-            res = msg.response
             # res = ocr_tsl_pipeline_work(img, md5, force=frc, options=opt)
             # res = []
             # res = ocr_tsl_pipeline(md5, bin, force=frc, options=opt)
@@ -135,5 +128,3 @@ def test(request: HttpRequest) -> JsonResponse:
             'result': res,
             })
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-q.start_workers()

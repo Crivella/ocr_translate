@@ -4,6 +4,7 @@ import re
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, M2M100Tokenizer
 
 from .. import models as m
+from ..queues import tsl_queue as q
 from .base import dev, load_model
 
 logger = logging.getLogger('ocr_tsl')
@@ -40,7 +41,7 @@ def get_tsl_model():
     return tsl_model_obj
 
 special = re.compile("([・・.!。?♥]+)")
-def tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
+def _tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
     tsl_tokenizer.src_lang = lang_src
                            
     res = []
@@ -64,6 +65,15 @@ def tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
 
     return ' '.join(res)
 
+def tsl_pipeline(*args, id, **kwargs):
+    msg = q.put(
+        id = id,
+        msg = {'args': args, 'kwargs': kwargs},
+        handler = _tsl_pipeline,
+    )
+
+    return msg.response()
+
 def tsl_run(text_obj: m.Text, options: dict = {}, force: bool = False) -> m.Text:
     global tsl_model_obj
     params = {
@@ -74,9 +84,10 @@ def tsl_run(text_obj: m.Text, options: dict = {}, force: bool = False) -> m.Text
     tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
     if tsl_run_obj is None or force:
         logger.debug('Running TSL')
-        new = tsl_pipeline(text_obj.text)
+        id = (text_obj.id, tsl_model_obj.id)
+        new = tsl_pipeline(text_obj.text, id=id)
         text_obj, _ = m.Text.objects.get_or_create(
-            text=new,
+            text = new,
             # lang=lang_dst,
             )
         tsl_run_obj = m.TranslationRun.objects.create(**params)
@@ -87,9 +98,3 @@ def tsl_run(text_obj: m.Text, options: dict = {}, force: bool = False) -> m.Text
         # new = tsl_run_obj.result.text
 
     return tsl_run_obj.result
-    # print(new)
-    res.append({
-        'ocr': text,
-        'tsl': new,
-        'box': bbox,
-        })

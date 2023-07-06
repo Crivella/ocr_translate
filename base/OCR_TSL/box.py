@@ -11,6 +11,7 @@ reader = None
 import logging
 
 from .. import models as m
+from ..queues import box_queue as q
 
 logger = logging.getLogger('ocr_tsl')
 
@@ -108,7 +109,7 @@ def merge_bboxes(bboxes):
     
     return res
 
-def box_pipeline(image):
+def _box_pipeline(image):
     # reader.recognize(image)
     image = image.convert('RGB')
     results = reader.readtext(np.array(image))
@@ -124,6 +125,15 @@ def box_pipeline(image):
 
     return [bbox_to_lbrt(_) for _ in bboxes]
 
+def box_pipeline(image, md5):
+    msg = q.put(
+        id = md5,
+        msg = {'args': (image,)},
+        handler = _box_pipeline,
+    )
+
+    return msg.response()
+
 def box_run(img_obj: m.Image, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> list[m.BBox]:
     params = {
         'image': img_obj,
@@ -136,7 +146,7 @@ def box_run(img_obj: m.Image, image: Union[Image.Image, None] = None, force: boo
         if image is None:
             raise ValueError('Image is required for BBox OCR')
         logger.debug('Running BBox OCR')
-        bboxes = box_pipeline(image)
+        bboxes = box_pipeline(image, img_obj.md5)
         # Create it here to avoid having a failed entry in DB
         bbox_run = m.OCRBoxRun.objects.create(**params)
         for bbox in bboxes:

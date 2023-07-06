@@ -6,6 +6,7 @@ from transformers import (BertJapaneseTokenizer, VisionEncoderDecoderModel,
                           ViTImageProcessor)
 
 from .. import models as m
+from ..queues import ocr_queue as q
 from .base import dev, load_model
 
 obj_model_id = None
@@ -45,7 +46,7 @@ def load_ocr_model(model_id):
 def get_ocr_model():
     return ocr_model_obj
 
-def ocr(img: Image.Image, bbox: tuple[int, int, int, int] = None, *args, **kwargs) -> str:
+def _ocr(img: Image.Image, bbox: tuple[int, int, int, int] = None, *args, **kwargs) -> str:
     if isinstance(img, (str, Path)):
         img = Image.open(img)
     if isinstance(img, Image.Image):
@@ -64,6 +65,15 @@ def ocr(img: Image.Image, bbox: tuple[int, int, int, int] = None, *args, **kwarg
 
     return generated_text[0].replace(' ', '')
 
+def ocr(*args, id, **kwargs) -> str:
+    msg = q.put(
+        id = id,
+        msg = {'args': args, 'kwargs': kwargs},
+        handler = _ocr,
+    )
+
+    return msg.response()
+
 def ocr_run(bbox_obj: m.BBox, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> m.Text:
         global ocr_model_obj
         params = {
@@ -76,7 +86,8 @@ def ocr_run(bbox_obj: m.BBox, image: Union[Image.Image, None] = None, force: boo
             if image is None:
                 raise ValueError('Image is required for OCR')
             logger.debug('Running OCR')
-            text = ocr(image, bbox=bbox_obj.lbrt)
+            id = (bbox_obj.id, ocr_model_obj.id)
+            text = ocr(image, bbox=bbox_obj.lbrt, id=id)
             text_obj, _ = m.Text.objects.get_or_create(
                 text=text,
                 # lang=lang_src,
