@@ -3,7 +3,7 @@ import re
 
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, M2M100Tokenizer
 
-from ..models import TSLModel
+from .. import models as m
 from .base import dev, load_model
 
 logger = logging.getLogger('ocr_tsl')
@@ -33,14 +33,14 @@ def load_tsl_model(model_id):
     tsl_model = res['seq2seq']
     tsl_tokenizer = res['tokenizer']
 
-    tsl_model_obj, _ = TSLModel.objects.get_or_create(name=model_id)
+    tsl_model_obj, _ = m.TSLModel.objects.get_or_create(name=model_id)
     tsl_model_id = model_id
 
 def get_tsl_model():
     return tsl_model_obj
 
 special = re.compile("([・・.!。?♥]+)")
-def tsl_pipeline(text, lang_src, lang_dst):
+def tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
     tsl_tokenizer.src_lang = lang_src
                            
     res = []
@@ -63,3 +63,33 @@ def tsl_pipeline(text, lang_src, lang_dst):
         res.append(' '.join(tsl))
 
     return ' '.join(res)
+
+def tsl_run(text_obj: m.Text, options: dict = {}, force: bool = False) -> m.Text:
+    global tsl_model_obj
+    params = {
+        'options': options,
+        'text': text_obj,
+        'model': tsl_model_obj,
+    }
+    tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
+    if tsl_run_obj is None or force:
+        logger.debug('Running TSL')
+        new = tsl_pipeline(text_obj.text)
+        text_obj, _ = m.Text.objects.get_or_create(
+            text=new,
+            # lang=lang_dst,
+            )
+        tsl_run_obj = m.TranslationRun.objects.create(**params)
+        tsl_run_obj.result = text_obj
+        tsl_run_obj.save()
+    else:
+        logger.debug('Reusing TSL')
+        # new = tsl_run_obj.result.text
+
+    return tsl_run_obj.result
+    # print(new)
+    res.append({
+        'ocr': text,
+        'tsl': new,
+        'box': bbox,
+        })

@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Union
 
 from PIL import Image
 from transformers import (BertJapaneseTokenizer, VisionEncoderDecoderModel,
                           ViTImageProcessor)
 
+from .. import models as m
 from .base import dev, load_model
 
 obj_model_id = None
@@ -12,8 +14,6 @@ ocr_tokenizer = None
 ocr_image_processor = None
 
 import logging
-
-from ..models import OCRModel
 
 logger = logging.getLogger('ocr_tsl')
 
@@ -36,7 +36,7 @@ def load_ocr_model(model_id):
     # ocr_tokenizer = BertJapaneseTokenizer.from_pretrained(model_id)
     # ocr_image_processor = ViTImageProcessor.from_pretrained(model_id)
 
-    ocr_model_obj, _ = OCRModel.objects.get_or_create(name=model_id)
+    ocr_model_obj, _ = m.OCRModel.objects.get_or_create(name=model_id)
     obj_model_id = model_id
 
     logger.debug(f'OCR model loaded: {model_id}')
@@ -45,7 +45,7 @@ def load_ocr_model(model_id):
 def get_ocr_model():
     return ocr_model_obj
 
-def ocr(img: Image, bbox: tuple[int, int, int, int] = None, *args, **kwargs):
+def ocr(img: Image.Image, bbox: tuple[int, int, int, int] = None, *args, **kwargs) -> str:
     if isinstance(img, (str, Path)):
         img = Image.open(img)
     if isinstance(img, Image.Image):
@@ -63,3 +63,30 @@ def ocr(img: Image, bbox: tuple[int, int, int, int] = None, *args, **kwargs):
     generated_text = ocr_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
 
     return generated_text[0].replace(' ', '')
+
+def ocr_run(bbox_obj: m.BBox, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> m.Text:
+        global ocr_model_obj
+        params = {
+            'bbox': bbox_obj,
+            'model': ocr_model_obj,
+            'options': options,
+        }
+        ocr_run = m.OCRRun.objects.filter(**params).first()
+        if ocr_run is None or force:
+            if image is None:
+                raise ValueError('Image is required for OCR')
+            logger.debug('Running OCR')
+            text = ocr(image, bbox=bbox_obj.lbrt)
+            text_obj, _ = m.Text.objects.get_or_create(
+                text=text,
+                # lang=lang_src,
+                )
+            ocr_run = m.OCRRun.objects.create(**params)
+            ocr_run.result = text_obj
+            ocr_run.save()
+        else:
+            logger.debug('Reusing OCR')
+            text_obj = ocr_run.result
+            # text = ocr_run.result.text
+
+        return text_obj

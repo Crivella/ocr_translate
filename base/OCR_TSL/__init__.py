@@ -1,13 +1,12 @@
-import io
 import os
 
 from PIL import Image
 
 from .. import models as m
 # from .base import import_models
-from .box import box_pipeline, get_box_model, load_bbox_model
-from .ocr import get_ocr_model, load_ocr_model, ocr
-from .tsl import get_tsl_model, load_tsl_model, tsl_pipeline
+from .box import box_run, load_box_model
+from .ocr import load_ocr_model, ocr_run
+from .tsl import load_tsl_model, tsl_run
 
 lang_src = 'ja'
 lang_dst = 'en'
@@ -24,132 +23,66 @@ h.setFormatter(f)
 
 logger.addHandler(h)
 
-def ocr_tsl_pipeline_lazy(md5) -> list[dict]:
-    raise ValueError('Cannot fulfill lazy')
+def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
+    logger.debug(f'LAZY: START {md5}')
+    res = []
+    try:
+        img_obj= m.Image.objects.get(md5=md5)
+    except m.Image.DoesNotExist:
+        raise ValueError(f'Image with md5 {md5} does not exist')
+    bbox_obj_list = box_run(img_obj)
+    for bbox_obj in bbox_obj_list:
+        text_obj = ocr_run(bbox_obj)
+        tsl_obj = tsl_run(text_obj)
+
+        text = text_obj.text
+        new = tsl_obj.text
+
+        res.append({
+            'ocr': text,
+            'tsl': new,
+            'box': bbox_obj.lbrt,
+            })
+        
+    logger.debug(f'LAZY: DONE')
+    return res
 
 # This is already kinda lazy, but the idea for the lazy version is to
 # check if all results are available just with the md5, and if not,
 # ask the extension to send the binary to minimize traffic
-def ocr_tsl_pipeline_work(img, md5, force=False, options={}) -> list[dict]:
-    bbox_model_obj = get_box_model()
-    ocr_model_obj = get_ocr_model()
-    tsl_model_obj = get_tsl_model()
-    
+def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, options: dict = {}) -> list[dict]:
     res = []
 
+
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
-    params = {
-        'image': img_obj,
-        'model': bbox_model_obj,
-        'options': {},
-    }
+    bbox_obj_list = box_run(img_obj, image=img)
 
-    bbox_run = m.OCRBoxRun.objects.filter(**params).first()
-    if bbox_run is None or force:
-        logger.debug('Running BBox OCR')
-        bboxes = box_pipeline(img)
-        # Create it here to avoid having a failed entry in DB
-        bbox_run = m.OCRBoxRun.objects.create(**params)
-        for bbox in bboxes:
-            l,b,r,t = bbox
-            m.BBox.objects.create(
-                l=l,
-                b=b,
-                r=r,
-                t=t,
-                image=img_obj,
-                from_ocr=bbox_run,
-                )
-    else:
-        logger.debug('Reusing BBox OCR')
-    logger.debug(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
-
-    for bbox_obj in bbox_run.result.all():
+    for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
-        bbox = bbox_obj.lbrt
-        params = {
-            'bbox': bbox_obj,
-            'model': ocr_model_obj,
-            'options': {},
-        }
-        ocr_run = m.OCRRun.objects.filter(**params).first()
-        if ocr_run is None or force:
-            logger.debug('Running OCR')
-            text = ocr(img, bbox=bbox)
-            text_obj, _ = m.Text.objects.get_or_create(
-                text=text,
-                lang=lang_src,
-                )
-            ocr_run = m.OCRRun.objects.create(**params)
-            ocr_run.result = text_obj
-            ocr_run.save()
-        else:
-            logger.debug('Reusing OCR')
-            text_obj = ocr_run.result
-            text = ocr_run.result.text
 
-        logger.info(f'{bbox}, {text}')
-        params = {
-            'options': {},
-            'text': text_obj,
-            'model': tsl_model_obj,
-        }
-        tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
-        if tsl_run_obj is None or force:
-            logger.debug('Running TSL')
-            new = tsl_pipeline(text, lang_src, lang_dst)
-            text_obj, _ = m.Text.objects.get_or_create(
-                text=new,
-                # lang=lang_dst,
-                )
-            tsl_run_obj = m.TranslationRun.objects.create(**params)
-            tsl_run_obj.result = text_obj
-            tsl_run_obj.save()
-        else:
-            logger.debug('Reusing TSL')
-            new = tsl_run_obj.result.text
-        # print(new)
+        text_obj = ocr_run(bbox_obj, image=img, force=force)
+        tsl_obj = tsl_run(text_obj, force=force)
+
+        text = text_obj.text
+        new = tsl_obj.text
+
         res.append({
             'ocr': text,
             'tsl': new,
-            'box': bbox,
+            'box': bbox_obj.lbrt,
             })
     
-    return res
-
-def ocr_tsl_pipeline(bin, md5, force=False, options={}) -> list[dict]:
-    bbox_model_obj = get_box_model()
-    ocr_model_obj = get_ocr_model()
-    tsl_model_obj = get_tsl_model()
-
-    if any([_ is None for _ in [bbox_model_obj, ocr_model_obj, tsl_model_obj]]):
-        logger.warning(f'Models not loaded, box:{bbox_model_obj} ocr:{ocr_model_obj} tsl:{tsl_model_obj}')
-        return []
-    
-    if not force:
-        try:
-            res = ocr_tsl_pipeline_lazy(md5)
-        except ValueError:
-            img = Image.open(io.BytesIO(bin))
-            # img.show()
-            res = ocr_tsl_pipeline_work(img, md5, options=options)
-    else:
-        img = Image.open(io.BytesIO(bin))
-        res = ocr_tsl_pipeline_work(img, md5, force=force, options=options)
-
     return res
 
 def init_most_used():
     from django.db.models import Count
 
-    # import_models()
-    
     box = m.OCRBoxModel.objects.annotate(count=Count('runs')).order_by('-count').first()
     ocr = m.OCRModel.objects.annotate(count=Count('runs')).order_by('-count').first()
     tsl = m.TSLModel.objects.annotate(count=Count('runs')).order_by('-count').first()
 
     if box:
-        load_bbox_model(box.name)
+        load_box_model(box.name)
     if ocr:
         load_ocr_model(ocr.name)
     if tsl:

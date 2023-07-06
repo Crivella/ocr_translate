@@ -33,10 +33,10 @@ class Image(models.Model):
 
 class BBox(models.Model):
     """Bounding box of a text in an image"""
-    l = models.IntegerField()
-    b = models.IntegerField()
-    r = models.IntegerField()
-    t = models.IntegerField()
+    l = models.IntegerField(null=False)
+    b = models.IntegerField(null=False)
+    r = models.IntegerField(null=False)
+    t = models.IntegerField(null=False)
 
     image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='bboxes')
     from_ocr = models.ForeignKey('OCRBoxRun', on_delete=models.CASCADE, related_name='result')

@@ -1,5 +1,8 @@
+from typing import Union
+
 import easyocr
 import numpy as np
+from PIL import Image
 
 from .base import dev, load_model
 
@@ -7,14 +10,14 @@ reader = None
 
 import logging
 
-from ..models import OCRBoxModel
+from .. import models as m
 
 logger = logging.getLogger('ocr_tsl')
 
 box_model_id = None
 bbox_model_obj = None
 
-def load_bbox_model(model_id):
+def load_box_model(model_id):
     global bbox_model_obj, reader, box_model_id
 
     if box_model_id == model_id:
@@ -23,7 +26,7 @@ def load_bbox_model(model_id):
     if model_id == 'easyocr':
         logger.debug('Loading easyocr')
         reader = easyocr.Reader(['ja'], gpu=(dev == "cuda"))
-        bbox_model_obj, _ = OCRBoxModel.objects.get_or_create(name='easyocr')
+        bbox_model_obj, _ = m.OCRBoxModel.objects.get_or_create(name='easyocr')
         box_model_id = model_id
         return
 
@@ -120,3 +123,35 @@ def box_pipeline(image):
     bboxes = merge_bboxes(bboxes)
 
     return [bbox_to_lbrt(_) for _ in bboxes]
+
+def box_run(img_obj: m.Image, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> list[m.BBox]:
+    params = {
+        'image': img_obj,
+        'model': bbox_model_obj,
+        'options': options,
+    }
+
+    bbox_run = m.OCRBoxRun.objects.filter(**params).first()
+    if bbox_run is None or force:
+        if image is None:
+            raise ValueError('Image is required for BBox OCR')
+        logger.debug('Running BBox OCR')
+        bboxes = box_pipeline(image)
+        # Create it here to avoid having a failed entry in DB
+        bbox_run = m.OCRBoxRun.objects.create(**params)
+        for bbox in bboxes:
+            l,b,r,t = bbox
+            m.BBox.objects.create(
+                l=l,
+                b=b,
+                r=r,
+                t=t,
+                image=img_obj,
+                from_ocr=bbox_run,
+                )
+    else:
+        logger.debug('Reusing BBox OCR')
+    logger.debug(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
+
+    return list(bbox_run.result.all())
+
