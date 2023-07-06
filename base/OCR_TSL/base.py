@@ -8,7 +8,7 @@ from transformers import (AutoImageProcessor, AutoModel, AutoModelForSeq2SeqLM,
 # from .. import models as m
 
 # This should be set from env variables in the container
-root = Path(os.environ.get('TRANSFORMERS_CACHE'))
+root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
 # print(f'Cache dir: {cache_dir}')
 # root = Path("C:\models")
 # root = Path("/home/crivella/app/AI")
@@ -19,8 +19,12 @@ def load(loader, model_id: str):
     try:
         mid = root / model_id
         # raise OSError
+        print(f'Attempt loading from store: "{loader}" "{mid}"')
         res = loader.from_pretrained(mid)
-    except OSError:
+    except Exception:
+        # Needed to catch some weird exception from transformers
+        # eg: huggingface_hub.utils._validators.HFValidationError: Repo id must use alphanumeric chars or '-', '_', '.', '--' and '..' are forbidden, '-' and '.' cannot start or end the name, max length is 96: ...
+        print(f'Attempt loading from cache: "{loader}" "{model_id}" "{root}"')
         res = loader.from_pretrained(model_id, cache_dir=root)
     return res
 
