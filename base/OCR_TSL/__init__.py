@@ -24,6 +24,10 @@ h.setFormatter(f)
 logger.addHandler(h)
 
 def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
+    """
+    Try to lazily generate reponse from md5.
+    Should raise a ValueError if the operation is not possible (fails at any step).
+    """
     logger.debug(f'LAZY: START {md5}')
     res = []
     try:
@@ -51,8 +55,12 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
 # check if all results are available just with the md5, and if not,
 # ask the extension to send the binary to minimize traffic
 def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, options: dict = {}) -> list[dict]:
+    """
+    Generate response from md5 and binary.
+    Will attempt to behave lazily at every step unless force is True.
+    """
+    logger.debug(f'WORK: START {md5}')
     res = []
-
 
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
     bbox_obj_list = box_run(img_obj, image=img)
@@ -72,6 +80,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
             'box': bbox_obj.lbrt,
             })
     
+    logger.debug(f'WORK: DONE')
     return res
 
 def init_most_used():
