@@ -27,11 +27,27 @@ def handshake(request: HttpRequest) -> JsonResponse:
         return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
     
     # print(str(get_ocr_model()), str(get_tsl_model()))
+    lang_src = get_lang_src()
+    lang_dst = get_lang_dst()
+
+    languages = m.Language.objects.all()
+    box_models = m.OCRBoxModel.objects.all()
+    ocr_models = m.OCRModel.objects.all()
+    tsl_models = m.TSLModel.objects.all()
+
+    if not lang_src is None:
+        ocr_models = ocr_models.filter(languages=lang_src)
+        if not lang_dst is None:
+            tsl_models = tsl_models.filter(
+                src_languages=lang_src,
+                dst_languages=lang_dst,
+                )
+
     return JsonResponse({
-        'BOXModels': [str(_) for _ in m.OCRBoxModel.objects.all()],
-        'OCRModels': [str(_) for _ in m.OCRModel.objects.all()],
-        'TSLModels': [str(_) for _ in m.TSLModel.objects.all()],
-        'Languages': [str(_) for _ in m.Language.objects.all()],
+        'Languages': [str(_) for _ in languages],
+        'BOXModels': [str(_) for _ in box_models],
+        'OCRModels': [str(_) for _ in ocr_models],
+        'TSLModels': [str(_) for _ in tsl_models],
 
         'box_selected': str(get_box_model()), 
         'ocr_selected': str(get_ocr_model()),
