@@ -6,5 +6,6 @@ app_name = 'base'
 urlpatterns = [
     path('', views.handshake),
     path('load/', views.load_models),
+    path('set_lang/', views.set_lang),
     path('test/', views.test),
 ]

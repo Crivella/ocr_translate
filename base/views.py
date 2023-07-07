@@ -14,6 +14,8 @@ from PIL import Image
 from . import models as m
 from .OCR_TSL import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
 from .OCR_TSL.box import get_box_model, load_box_model
+from .OCR_TSL.lang import (get_lang_dst, get_lang_src, load_lang_dst,
+                           load_lang_src)
 from .OCR_TSL.ocr import get_ocr_model, load_ocr_model
 from .OCR_TSL.tsl import get_tsl_model, load_tsl_model
 from .queues import main_queue as q
@@ -21,14 +23,21 @@ from .queues import main_queue as q
 
 def handshake(request: HttpRequest) -> JsonResponse:
     # import_models()
-    print(str(get_ocr_model()), str(get_tsl_model()))
+    if not request.method == 'GET':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+    
+    # print(str(get_ocr_model()), str(get_tsl_model()))
     return JsonResponse({
         'BOXModels': [str(_) for _ in m.OCRBoxModel.objects.all()],
         'OCRModels': [str(_) for _ in m.OCRModel.objects.all()],
         'TSLModels': [str(_) for _ in m.TSLModel.objects.all()],
+        'Languages': [str(_) for _ in m.Language.objects.all()],
+
         'box_selected': str(get_box_model()), 
         'ocr_selected': str(get_ocr_model()),
         'tsl_selected': str(get_tsl_model()), 
+        'lang_src': str(get_lang_src()),
+        'lang_dst': str(get_lang_dst()),
         })
 
 @csrf_exempt
@@ -52,6 +61,32 @@ def load_models(request: HttpRequest) -> JsonResponse:
             load_box_model('easyocr')
             load_ocr_model(ocr_model_id)
             load_tsl_model(tsl_model_id)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+        
+        return JsonResponse({})
+    return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+@csrf_exempt
+def set_lang(request: HttpRequest) -> JsonResponse:
+    if request.method == 'POST':
+        data = {}
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            return JsonResponse({'error': 'invalid content type'}, status=400)
+        print('SET LANG', data)
+        
+        lang_src = data.get('lang_src', None)
+        lang_dst = data.get('lang_dst', None)
+        if lang_src is None:
+            return JsonResponse({'error': 'no lang_src'}, status=400)
+        if lang_dst is None:
+            return JsonResponse({'error': 'no lang_dst'}, status=400)
+
+        try:
+            load_lang_src(lang_src)
+            load_lang_dst(lang_dst)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
         
