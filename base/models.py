@@ -4,9 +4,17 @@ from django.db import models
 
 lang_length = 16
 
+class Language(models.Model):
+    """Language used for translation"""
+    name = models.CharField(max_length=lang_length, unique=True)
+
+    def __str__(self):
+        return str(self.name)
+
 class OCRModel(models.Model):
     """OCR model using hugging space naming convention"""
     name = models.CharField(max_length=128)
+    languages = models.ManyToManyField(Language, related_name='ocr_models')
 
     def __str__(self):
         return str(self.name)
@@ -21,8 +29,8 @@ class OCRBoxModel(models.Model):
 class TSLModel(models.Model):
     """Translation models using hugging space naming convention"""
     name = models.CharField(max_length=128)
-    src_language = models.CharField(max_length=lang_length)
-    dst_language = models.CharField(max_length=lang_length)
+    src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')
+    dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
     
     def __str__(self):
         return str(self.name)
@@ -51,7 +59,7 @@ class BBox(models.Model):
 class Text(models.Model):
     """Text extracted from an image or translated from another text"""
     text = models.TextField(unique=True)
-    lang = models.CharField(max_length=lang_length)
+    lang = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='texts')
 
 class OCRBoxRun(models.Model):
     """OCR run on an image using a specific model"""
@@ -68,10 +76,7 @@ class OCRRun(models.Model):
     # image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='to_ocr')
     bbox = models.ForeignKey(BBox, on_delete=models.CASCADE, related_name='to_ocr')
     model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='runs')
-    result = models.ForeignKey(
-        Text, on_delete=models.CASCADE, related_name='from_ocr',
-        null=True, blank=True,
-        )
+    result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr')
 
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""
@@ -79,8 +84,5 @@ class TranslationRun(models.Model):
     
     text = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='to_trans')
     model = models.ForeignKey(TSLModel, on_delete=models.CASCADE, related_name='runs')
-    result = models.ForeignKey(
-        Text, on_delete=models.CASCADE, related_name='from_trans',
-        null=True, blank=True,
-        )
+    result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_trans')
 

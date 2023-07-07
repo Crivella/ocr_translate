@@ -74,7 +74,7 @@ def tsl_pipeline(*args, id, **kwargs):
 
     return msg.response()
 
-def tsl_run(text_obj: m.Text, options: dict = {}, force: bool = False) -> m.Text:
+def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: dict = {}, force: bool = False) -> m.Text:
     global tsl_model_obj
     params = {
         'options': options,
@@ -88,11 +88,10 @@ def tsl_run(text_obj: m.Text, options: dict = {}, force: bool = False) -> m.Text
         new = tsl_pipeline(text_obj.text, id=id)
         text_obj, _ = m.Text.objects.get_or_create(
             text = new,
-            # lang=lang_dst,
+            lang = dst,
             )
+        params['result'] = text_obj
         tsl_run_obj = m.TranslationRun.objects.create(**params)
-        tsl_run_obj.result = text_obj
-        tsl_run_obj.save()
     else:
         logger.debug('Reusing TSL')
         # new = tsl_run_obj.result.text

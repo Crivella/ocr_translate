@@ -4,6 +4,8 @@ from . import models as m
 
 # Register your models here.
 
+class LanguageAdmin(admin.ModelAdmin):
+    list_display = ('name',)
 class OCRBoxModelAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
@@ -14,6 +16,7 @@ class TSLModelAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
 
+admin.site.register(m.Language, LanguageAdmin)
 admin.site.register(m.OCRBoxModel, OCRBoxModelAdmin)
 admin.site.register(m.OCRModel, OCRModelAdmin)
 admin.site.register(m.TSLModel, TSLModelAdmin)

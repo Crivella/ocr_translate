@@ -63,7 +63,10 @@ def _ocr(img: Image.Image, bbox: tuple[int, int, int, int] = None, *args, **kwar
     generated_ids = ocr_model.generate(pixel_values, *args, **kwargs)
     generated_text = ocr_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
 
-    return generated_text[0].replace(' ', '')
+    # This might be specific only to kha-white model? (Having space between each char)
+    res = generated_text[0].replace(' ', '')
+
+    return res
 
 def ocr(*args, id, **kwargs) -> str:
     msg = q.put(
@@ -74,7 +77,7 @@ def ocr(*args, id, **kwargs) -> str:
 
     return msg.response()
 
-def ocr_run(bbox_obj: m.BBox, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> m.Text:
+def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> m.Text:
         global ocr_model_obj
         params = {
             'bbox': bbox_obj,
@@ -90,11 +93,10 @@ def ocr_run(bbox_obj: m.BBox, image: Union[Image.Image, None] = None, force: boo
             text = ocr(image, bbox=bbox_obj.lbrt, id=id)
             text_obj, _ = m.Text.objects.get_or_create(
                 text=text,
-                # lang=lang_src,
+                lang=lang,
                 )
+            params['result'] = text_obj
             ocr_run = m.OCRRun.objects.create(**params)
-            ocr_run.result = text_obj
-            ocr_run.save()
         else:
             logger.debug('Reusing OCR')
             text_obj = ocr_run.result

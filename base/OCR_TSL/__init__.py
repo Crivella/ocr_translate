@@ -1,3 +1,4 @@
+import logging
 import os
 
 from PIL import Image
@@ -5,13 +6,9 @@ from PIL import Image
 from .. import models as m
 # from .base import import_models
 from .box import box_run, load_box_model
+from .lang import lang_dst, lang_src
 from .ocr import load_ocr_model, ocr_run
 from .tsl import load_tsl_model, tsl_run
-
-lang_src = 'ja'
-lang_dst = 'en'
-
-import logging
 
 logger = logging.getLogger('ocr_tsl')
 logger.setLevel(logging.DEBUG)
@@ -36,8 +33,8 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
         raise ValueError(f'Image with md5 {md5} does not exist')
     bbox_obj_list = box_run(img_obj)
     for bbox_obj in bbox_obj_list:
-        text_obj = ocr_run(bbox_obj)
-        tsl_obj = tsl_run(text_obj)
+        text_obj = ocr_run(bbox_obj, lang_src)
+        tsl_obj = tsl_run(text_obj, lang_src, lang_dst)
 
         text = text_obj.text
         new = tsl_obj.text
@@ -68,8 +65,8 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
 
-        text_obj = ocr_run(bbox_obj, image=img, force=force)
-        tsl_obj = tsl_run(text_obj, force=force)
+        text_obj = ocr_run(bbox_obj, lang_src, image=img, force=force)
+        tsl_obj = tsl_run(text_obj, lang_src, lang_dst, force=force)
 
         text = text_obj.text
         new = tsl_obj.text
