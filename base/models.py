@@ -58,8 +58,8 @@ class BBox(models.Model):
     
 class Text(models.Model):
     """Text extracted from an image or translated from another text"""
-    text = models.TextField(unique=True)
-    lang = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='texts')
+    text = models.TextField()
+    # lang = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='texts')
 
 class OCRBoxRun(models.Model):
     """OCR run on an image using a specific model"""
@@ -73,6 +73,8 @@ class OCRRun(models.Model):
     """OCR run on an image using a specific model"""
     options = models.JSONField()
 
+    lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='from_ocr')
+
     # image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='to_ocr')
     bbox = models.ForeignKey(BBox, on_delete=models.CASCADE, related_name='to_ocr')
     model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='runs')
@@ -81,6 +83,9 @@ class OCRRun(models.Model):
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""
     options = models.JSONField()
+
+    lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='from_trans')
+    lang_dst = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='to_trans')
     
     text = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='to_trans')
     model = models.ForeignKey(TSLModel, on_delete=models.CASCADE, related_name='runs')

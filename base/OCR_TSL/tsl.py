@@ -80,6 +80,8 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: dict = 
         'options': options,
         'text': text_obj,
         'model': tsl_model_obj,
+        'lang_src': src,
+        'lang_dst': dst,
     }
     tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
     if tsl_run_obj is None or force:
@@ -88,7 +90,6 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: dict = 
         new = tsl_pipeline(text_obj.text, id=id)
         text_obj, _ = m.Text.objects.get_or_create(
             text = new,
-            lang = dst,
             )
         params['result'] = text_obj
         tsl_run_obj = m.TranslationRun.objects.create(**params)

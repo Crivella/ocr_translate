@@ -82,6 +82,7 @@ def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None]
         params = {
             'bbox': bbox_obj,
             'model': ocr_model_obj,
+            'lang_src': lang,
             'options': options,
         }
         ocr_run = m.OCRRun.objects.filter(**params).first()
@@ -93,7 +94,6 @@ def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None]
             text = ocr(image, bbox=bbox_obj.lbrt, id=id)
             text_obj, _ = m.Text.objects.get_or_create(
                 text=text,
-                lang=lang,
                 )
             params['result'] = text_obj
             ocr_run = m.OCRRun.objects.create(**params)
