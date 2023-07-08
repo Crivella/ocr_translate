@@ -33,6 +33,8 @@ def handshake(request: HttpRequest) -> JsonResponse:
     if not request.method == 'GET':
         return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
     
+    csrf.get_token(request)
+    
     # print(str(get_ocr_model()), str(get_tsl_model()))
     lang_src = get_lang_src()
     lang_dst = get_lang_dst()
@@ -138,12 +140,6 @@ def run_tsl(request: HttpRequest) -> JsonResponse:
 
 @csrf_exempt
 def run_ocrtsl(request: HttpRequest) -> JsonResponse:
-    if request.method == 'GET':
-        csrf.get_token(request)
-        return JsonResponse({
-            'test': 'GET',
-            'objs': list(m.OCRModel.objects.all()),
-            })
     if request.method == 'POST':
         try:
             data = post_data_converter(request)
