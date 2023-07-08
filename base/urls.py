@@ -8,5 +8,5 @@ urlpatterns = [
     path('load/', views.load_models),
     path('set_lang/', views.set_lang),
     path('get_trans/', views.get_translations),
-    path('test/', views.test),
+    path('run_ocrtsl/', views.run_ocrtsl),
 ]

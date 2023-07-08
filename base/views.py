@@ -116,7 +116,7 @@ def set_lang(request: HttpRequest) -> JsonResponse:
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
 
 @csrf_exempt
-def test(request: HttpRequest) -> JsonResponse:
+def run_ocrtsl(request: HttpRequest) -> JsonResponse:
     if request.method == 'GET':
         csrf.get_token(request)
         return JsonResponse({
