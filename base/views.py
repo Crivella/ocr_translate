@@ -17,7 +17,7 @@ from .OCR_TSL.box import get_box_model, load_box_model
 from .OCR_TSL.lang import (get_lang_dst, get_lang_src, load_lang_dst,
                            load_lang_src)
 from .OCR_TSL.ocr import get_ocr_model, load_ocr_model
-from .OCR_TSL.tsl import get_tsl_model, load_tsl_model
+from .OCR_TSL.tsl import get_tsl_model, load_tsl_model, tsl_run
 from .queues import main_queue as q
 
 
@@ -114,6 +114,27 @@ def set_lang(request: HttpRequest) -> JsonResponse:
         
         return JsonResponse({})
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+@csrf_exempt
+def run_tsl(request: HttpRequest) -> JsonResponse:
+    if request.method != 'POST':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+    
+    try:
+        data = post_data_converter(request)
+    except ValueError as e:
+        return JsonResponse({'error': 'invalid content type'}, status=400)
+    
+    text = data.get('text', None)
+    if text is None:
+        return JsonResponse({'error': 'no text'}, status=400)
+    
+    src_obj, _ = m.Text.objects.get_or_create(text=text)
+    dst_obj = tsl_run(src_obj, get_lang_src(), get_lang_dst())
+
+    return JsonResponse({
+        'text': dst_obj.text,
+        })
 
 @csrf_exempt
 def run_ocrtsl(request: HttpRequest) -> JsonResponse:
