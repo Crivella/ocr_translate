@@ -21,6 +21,13 @@ from .OCR_TSL.tsl import get_tsl_model, load_tsl_model
 from .queues import main_queue as q
 
 
+def post_data_converter(request: HttpRequest) -> dict:
+    if request.content_type == 'application/json':
+        return json.loads(request.body)
+    else:
+        raise ValueError('invalid content type')
+
+
 def handshake(request: HttpRequest) -> JsonResponse:
     # import_models()
     if not request.method == 'GET':
@@ -59,11 +66,11 @@ def handshake(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 def load_models(request: HttpRequest) -> JsonResponse:
     if request.method == 'POST':
-        data = {}
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
+        try:
+            data = post_data_converter(request)
+        except ValueError as e:
             return JsonResponse({'error': 'invalid content type'}, status=400)
+
         print('LOAD', data)
         
         ocr_model_id = data.get('ocr_model_id', None)
@@ -86,10 +93,9 @@ def load_models(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 def set_lang(request: HttpRequest) -> JsonResponse:
     if request.method == 'POST':
-        data = {}
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
+        try:
+            data = post_data_converter(request)
+        except ValueError as e:
             return JsonResponse({'error': 'invalid content type'}, status=400)
         print('SET LANG', data)
         
@@ -118,19 +124,15 @@ def test(request: HttpRequest) -> JsonResponse:
             'objs': list(m.OCRModel.objects.all()),
             })
     if request.method == 'POST':
-        data = {}
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
+        try:
+            data = post_data_converter(request)
+        except ValueError as e:
             return JsonResponse({'error': 'invalid content type'}, status=400)
         
         b64 = data.get('contents', None)
         md5 = data.get('md5')
         frc = data.get('force', False)
         opt = data.get('options', {})
-        # if b64 is None:
-        #     return JsonResponse({'error': 'no contents'}, status=400)
-        # return JsonResponse({}, status=500)
 
         if b64 is None:
             if frc:
@@ -146,11 +148,10 @@ def test(request: HttpRequest) -> JsonResponse:
             if md5 != hashlib.md5(b64.encode('utf-8')).hexdigest():
                 return JsonResponse({'error': 'md5 mismatch'}, status=400)
             print('md5', md5, ' <- ', len(bin))
-            # return JsonResponse({'test failure': ''}, status=500)
 
             img = Image.open(io.BytesIO(bin))
             # Needed to make sure the image is loaded synchronously before going forward
-            # Enforce thread safety
+            # Enforce thread safety. Maybe there is a way to do it without numpy?
             np.array(img)
 
             # Check if same request is already in queue. If yes attach listener to it
@@ -165,17 +166,41 @@ def test(request: HttpRequest) -> JsonResponse:
 
             res = msg.response()
 
-            # res = ocr_tsl_pipeline_work(img, md5, force=frc, options=opt)
-            # res = []
-            # res = ocr_tsl_pipeline(md5, bin, force=frc, options=opt)
-        
-            # res = [
-            #         {'ocr': '123', 'tsl': '456', 'box': (0,0,100,100)},
-            #         {'ocr': 'abc', 'tsl': 'def', 'box': (50,50,150,150)},
-            #     ]
 
         return JsonResponse({
             'test': 'POST',
             'result': res,
             })
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+@csrf_exempt
+def get_translations(request: HttpRequest) -> JsonResponse:
+    if request.method != 'POST':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+    
+    try:
+        data = post_data_converter(request)
+    except ValueError as e:
+        return JsonResponse({'error': 'invalid content type'}, status=400)
+    
+    text = data.get('text', None)
+
+    if text is None:
+        return JsonResponse({'error': 'no text'}, status=400)
+    
+    text_obj = m.Text.objects.filter(text=text).first()
+    if text_obj is None:
+        return JsonResponse({'error': 'text not found'}, status=404)
+    
+    translations = text_obj.to_trans.filter(
+        lang_src=get_lang_src(),
+        lang_dst=get_lang_dst(),
+        )
+    return JsonResponse({
+        'translations': [{
+            'model': str(_.model),
+            'text': _.result.text,
+            } for _ in translations],
+        })
+
+
