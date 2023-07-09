@@ -40,7 +40,7 @@ def load_tsl_model(model_id):
 def get_tsl_model():
     return tsl_model_obj
 
-special = re.compile("([・・.!。?♥]+)")
+special = re.compile("([・・.!。?♥♡♪〜]+)")
 def _tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
     tsl_tokenizer.src_lang = lang_src
                            
