@@ -6,7 +6,7 @@ from PIL import Image
 from .. import models as m
 # from .base import import_models
 from .box import box_run, load_box_model
-from .lang import lang_dst, lang_src
+from .lang import get_lang_dst, get_lang_src, load_lang_dst, load_lang_src
 from .ocr import load_ocr_model, ocr_run
 from .tsl import load_tsl_model, tsl_run
 
@@ -33,8 +33,8 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
         raise ValueError(f'Image with md5 {md5} does not exist')
     bbox_obj_list = box_run(img_obj)
     for bbox_obj in bbox_obj_list:
-        text_obj = ocr_run(bbox_obj, lang_src)
-        tsl_obj = tsl_run(text_obj, lang_src, lang_dst)
+        text_obj = ocr_run(bbox_obj, get_lang_src)
+        tsl_obj = tsl_run(text_obj, get_lang_src, get_lang_dst)
 
         text = text_obj.text
         new = tsl_obj.text
@@ -65,8 +65,8 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
 
-        text_obj = ocr_run(bbox_obj, lang_src, image=img, force=force)
-        tsl_obj = tsl_run(text_obj, lang_src, lang_dst, force=force)
+        text_obj = ocr_run(bbox_obj, get_lang_src, image=img, force=force)
+        tsl_obj = tsl_run(text_obj, get_lang_src, get_lang_dst, force=force)
 
         text = text_obj.text
         new = tsl_obj.text
@@ -93,6 +93,14 @@ def init_most_used():
         load_ocr_model(ocr.name)
     if tsl:
         load_tsl_model(tsl.name)
+
+    src = m.Language.objects.annotate(count=Count('from_trans')).order_by('-count').first()
+    dst = m.Language.objects.annotate(count=Count('to_trans')).order_by('-count').first()
+
+    if src:
+        load_lang_src(src.iso1)
+    if dst:
+        load_lang_dst(dst.iso1)
 
 if os.environ.get('LOAD_ON_START', 'false').lower() == 'true':
     init_most_used()

@@ -53,7 +53,7 @@ def handshake(request: HttpRequest) -> JsonResponse:
                 )
 
     return JsonResponse({
-        'Languages': [str(_) for _ in languages],
+        'Languages': [_.iso1 for _ in languages],
         'BOXModels': [str(_) for _ in box_models],
         'OCRModels': [str(_) for _ in ocr_models],
         'TSLModels': [str(_) for _ in tsl_models],
