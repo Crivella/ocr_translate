@@ -13,7 +13,7 @@ class Language(models.Model):
     iso3 = models.CharField(max_length=10, unique=True)
 
     def __str__(self):
-        return str(self.name)
+        return str(self.iso1)
 
 class OCRModel(models.Model):
     """OCR model using hugging space naming convention"""
