@@ -1,0 +1,44 @@
+{
+    "box": [
+        {
+            "name": "easyocr"
+        }
+    ],
+    "ocr": [
+        {
+            "name": "kha-white/manga-ocr-base",
+            "lang": [
+                "ja"
+            ]
+        }
+    ],
+    "tsl": [
+        {
+            "name": "Helsinki-NLP/opus-mt-zh-en",
+            "lang_src": [
+                "zh"
+            ],
+            "lang_dst": [
+                "en"
+            ]
+        },
+        {
+            "name": "Helsinki-NLP/opus-mt-ja-en",
+            "lang_src": [
+                "ja"
+            ],
+            "lang_dst": [
+                "en"
+            ]
+        },
+        {
+            "name": "staka/fugumt-ja-en",
+            "lang_src": [
+                "ja"
+            ],
+            "lang_dst": [
+                "en"
+            ]
+        }
+    ]
+}
