@@ -2,11 +2,15 @@ from django.db import models
 
 # Create your models here.
 
-lang_length = 16
+lang_length = 32
 
 class Language(models.Model):
     """Language used for translation"""
     name = models.CharField(max_length=lang_length, unique=True)
+    iso1 = models.CharField(max_length=2, unique=True)
+    iso2b = models.CharField(max_length=3, unique=True)
+    iso2t = models.CharField(max_length=3, unique=True)
+    iso3 = models.CharField(max_length=10, unique=True)
 
     def __str__(self):
         return str(self.name)

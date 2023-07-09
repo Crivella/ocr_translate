@@ -5,7 +5,8 @@ from . import models as m
 # Register your models here.
 
 class LanguageAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'iso1', 'iso2b', 'iso2t', 'iso3')
+
 class OCRBoxModelAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
