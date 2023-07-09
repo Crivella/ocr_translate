@@ -6,6 +6,7 @@ import queue
 import time
 
 import numpy as np
+from django.db.models import Count
 from django.http import HttpRequest, JsonResponse
 from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
@@ -39,7 +40,7 @@ def handshake(request: HttpRequest) -> JsonResponse:
     lang_src = get_lang_src()
     lang_dst = get_lang_dst()
 
-    languages = m.Language.objects.all()
+    languages = m.Language.objects.annotate(count=Count('from_trans')+Count('to_trans')).order_by('-count')
     box_models = m.OCRBoxModel.objects.all()
     ocr_models = m.OCRModel.objects.all()
     tsl_models = m.TSLModel.objects.all()
