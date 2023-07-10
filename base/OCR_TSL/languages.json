@@ -385,7 +385,7 @@
         "iso3": "deu"
     },
     {
-        "name": "Greek, Modern (1453–)",
+        "name": "Greek, Modern",
         "iso1": "el",
         "iso2t": "ell",
         "iso2b": "gre",
@@ -812,7 +812,7 @@
         "iso3": "nor + 2"
     },
     {
-        "name": "Norwegian Bokmål",
+        "name": "Norwegian Bokmal",
         "iso1": "nb",
         "iso2t": "nob",
         "iso2b": "nob",
@@ -1218,7 +1218,7 @@
         "iso3": "vie"
     },
     {
-        "name": "Volapük",
+        "name": "Volapuk",
         "iso1": "vo",
         "iso2t": "vol",
         "iso2b": "vol",
