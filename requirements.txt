@@ -13,3 +13,5 @@ sentencepiece==0.1.99
 torch==2.0.1
 transformers==4.30.2
 unidic-lite==1.0.8
+psycopg2
+pymysql

@@ -78,11 +78,26 @@ WSGI_APPLICATION = 'ocr_translate.wsgi.application'
 DATABASE_ENGINE = 'django.db.backends.' + os.environ.get('DATABASE_ENGINE', 'sqlite3')
 DATABASE_NAME = os.environ.get('DATABASE_NAME', os.path.join(BASE_DIR, './db.sqlite3'))
 
+DATABASE = {
+    'ENGINE': DATABASE_ENGINE,
+    'NAME': DATABASE_NAME,
+}
+
+for k in ['USER', 'PASSWORD', 'HOST', 'PORT']:
+    if not os.environ.get('DATABASE_' + k) is None:
+        DATABASE[k] = os.environ.get('DATABASE_' + k)
+
+OPTIONS = {}
+if DATABASE_ENGINE == 'django.db.backends.mysql':
+    # https://stackoverflow.com/questions/2108824/mysql-incorrect-string-value-error-when-save-unicode-string-in-django
+    OPTIONS['charset'] = 'utf8mb4'
+
 DATABASES = {
-    'default': {
+    'default': DATABASE,
+    'sqlite': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': DATABASE_NAME,
-    }
+        'NAME': './db.sqlite3',
+    },
 }
 
 
