@@ -75,8 +75,8 @@ WSGI_APPLICATION = 'ocr_translate.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASE_ENGINE = 'django.db.backends.' + os.environ.get('DATABASE_ENGINE', 'sqlite3')
-DATABASE_NAME = os.environ.get('DATABASE_NAME', os.path.join(BASE_DIR, './db.sqlite3'))
+DATABASE_ENGINE = os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3')
+DATABASE_NAME = os.environ.get('DATABASE_NAME', os.path.join(BASE_DIR, 'db.sqlite3'))
 
 DATABASE = {
     'ENGINE': DATABASE_ENGINE,
@@ -96,8 +96,17 @@ DATABASES = {
     'default': DATABASE,
     'sqlite': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': './db.sqlite3',
+        'NAME': 'db.sqlite3',
     },
+    # 'mysql': {},
+    'postgres': {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "ocr_server",
+        "HOST": "localhost",
+        "PORT": "4001",
+        "USER": "crivella",
+        "PASSWORD": "prova123",
+    }
 }
 
 
