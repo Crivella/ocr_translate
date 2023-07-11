@@ -174,3 +174,7 @@ packages/react-devtools-timeline/dist
 # Docker
 .pip_cache
 staticfiles
+static
+db.json
+data.json
+ENV

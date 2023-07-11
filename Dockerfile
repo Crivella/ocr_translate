@@ -1,6 +1,11 @@
 FROM python:3.10.12-slim-bookworm
 
-RUN apt-get update && apt-get install nginx -y --no-install-recommends \
+# libpq-dev gcc needed for psycopg2 or psycopg (required for postgresql engine)
+RUN apt-get update && apt-get install \
+    nginx \
+    gcc \
+    libpq-dev \
+    -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/app
@@ -15,6 +20,8 @@ RUN pip install -r /opt/app/requirements.txt --cache-dir /pip_cache
 RUN pip install gunicorn --cache-dir /pip_cache
 
 RUN rm -rf /pip_cache
+RUN apt remove gcc -y
+RUN apt autoremove -y
 
 RUN mkdir -p /opt/app/main
 RUN mkdir -p /opt/app/static
@@ -50,10 +57,12 @@ ENV \
     NUM_TSL_WORKERS="1" \
     DJANGO_SUPERUSER_USERNAME="admin" \
     DJANGO_SUPERUSER_PASSWORD="password" \
-    DATABASE_ENGINE="sqlite3" \
-    DATABASE_NAME="/data/db.sqlite3"
-
-COPY empty.sqlite3 /data/db.sqlite3
+    DATABASE_ENGINE="django.db.backends.sqlite3" \
+    DATABASE_NAME="/data/db.sqlite3" \
+    DATABASE_HOST="" \
+    DATABASE_PORT="" \
+    DATABASE_USER="" \
+    DATABASE_PASSWORD=""
 
 VOLUME [ "/models" ]
 VOLUME [ "/data" ]

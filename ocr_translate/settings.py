@@ -93,20 +93,7 @@ if DATABASE_ENGINE == 'django.db.backends.mysql':
     OPTIONS['charset'] = 'utf8mb4'
 
 DATABASES = {
-    'default': DATABASE,
-    'sqlite': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db.sqlite3',
-    },
-    # 'mysql': {},
-    'postgres': {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "ocr_server",
-        "HOST": "localhost",
-        "PORT": "4001",
-        "USER": "crivella",
-        "PASSWORD": "prova123",
-    }
+    'default': DATABASE
 }
 
 
