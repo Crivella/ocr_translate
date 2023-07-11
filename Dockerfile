@@ -1,33 +1,34 @@
+FROM python:3.10.12-slim-bookworm as intermediate
+
+RUN pip install virtualenv
+RUN virtualenv /venv/
+
+RUN mkdir -p /src
+
+COPY requirements-torch.txt /src/
+COPY requirements.txt /src/
+# This might ahve to be removed when pushing the image
+COPY .pip_cache-cpu /pip_cache
+
+RUN mkdir -p /pip_cache
+RUN /venv/bin/pip install -r /src/requirements-torch.txt --cache-dir /pip_cache
+RUN /venv/bin/pip install -r /src/requirements.txt --cache-dir /pip_cache
+RUN /venv/bin/pip install gunicorn --cache-dir /pip_cache
+
+
 FROM python:3.10.12-slim-bookworm
 
-# libpq-dev gcc needed for psycopg2 or psycopg (required for postgresql engine)
 RUN apt-get update && apt-get install \
     nginx \
-    gcc \
-    libpq-dev \
     -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/app
-RUN mkdir -p /opt/app/pip_cache
 RUN mkdir -p /models
 RUN mkdir -p /data
 
-COPY requirements.txt /opt/app/
-COPY requirements-torch.txt /opt/app/
-# !!! Usefull for local development but should be removed for production !!!
-COPY .pip_cache2 /pip_cache/
+COPY --from=intermediate /venv /venv
 
-RUN mkdir -p /pip_cache
-# torch should be before requirements.txt otherwise tranformers will intall it on its own
-# and torch>=2.x defaults to cuda and install all the nvidia stuff
-RUN pip install -r /opt/app/requirements-torch.txt --cache-dir /pip_cache
-RUN pip install -r /opt/app/requirements.txt --cache-dir /pip_cache
-RUN pip install gunicorn --cache-dir /pip_cache
-
-RUN rm -rf /pip_cache
-RUN apt remove gcc -y
-RUN apt autoremove -y
 
 RUN mkdir -p /opt/app/main
 RUN mkdir -p /opt/app/static
@@ -47,7 +48,6 @@ COPY nginx.default /etc/nginx/sites-available/default
 
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
-
 
 ENV \
     LOAD_ON_START="true" \

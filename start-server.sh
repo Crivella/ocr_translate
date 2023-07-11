@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # start-server.sh
 export EASYOCR_MODULE_PATH="${TRANSFORMERS_CACHE}/.easyocr"
+source /venv/bin/activate
 chown -R www-data:www-data /data
 if [ ${DATABASE_ENGINE} == 'sqlite3' ]; then
     echo "Make sure database is readable and writable by www-data"
