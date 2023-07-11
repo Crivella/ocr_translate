@@ -14,8 +14,14 @@ RUN mkdir -p /models
 RUN mkdir -p /data
 
 COPY requirements.txt /opt/app/
-COPY .pip_cache /pip_cache/
+COPY requirements-torch.txt /opt/app/
+# !!! Usefull for local development but should be removed for production !!!
+COPY .pip_cache2 /pip_cache/
 
+RUN mkdir -p /pip_cache
+# torch should be before requirements.txt otherwise tranformers will intall it on its own
+# and torch>=2.x defaults to cuda and install all the nvidia stuff
+RUN pip install -r /opt/app/requirements-torch.txt --cache-dir /pip_cache
 RUN pip install -r /opt/app/requirements.txt --cache-dir /pip_cache
 RUN pip install gunicorn --cache-dir /pip_cache
 

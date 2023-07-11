@@ -172,7 +172,7 @@ packages/react-devtools-shell/dist
 packages/react-devtools-timeline/dist
 
 # Docker
-.pip_cache
+.pip_cache*
 staticfiles
 static
 db.json
