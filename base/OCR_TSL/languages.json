@@ -18,7 +18,8 @@
         "iso1": "af",
         "iso2t": "afr",
         "iso2b": "afr",
-        "iso3": "afr"
+        "iso3": "afr",
+        "easyocr": "af"
     },
     {
         "name": "Akan",
@@ -32,7 +33,8 @@
         "iso1": "sq",
         "iso2t": "sqi",
         "iso2b": "alb",
-        "iso3": "sqi + 4"
+        "iso3": "sqi + 4",
+        "easyocr": "sq"
     },
     {
         "name": "Amharic",
@@ -46,7 +48,8 @@
         "iso1": "ar",
         "iso2t": "ara",
         "iso2b": "ara",
-        "iso3": "ara + 29"
+        "iso3": "ara + 29",
+        "easyocr": "ar"
     },
     {
         "name": "Aragonese",
@@ -67,7 +70,8 @@
         "iso1": "as",
         "iso2t": "asm",
         "iso2b": "asm",
-        "iso3": "asm"
+        "iso3": "asm",
+        "easyocr": "as"
     },
     {
         "name": "Avaric",
@@ -95,7 +99,8 @@
         "iso1": "az",
         "iso2t": "aze",
         "iso2b": "aze",
-        "iso3": "aze + 2"
+        "iso3": "aze + 2",
+        "easyocr": "az"
     },
     {
         "name": "Bambara",
@@ -123,14 +128,16 @@
         "iso1": "be",
         "iso2t": "bel",
         "iso2b": "bel",
-        "iso3": "bel"
+        "iso3": "bel",
+        "easyocr": "be"
     },
     {
         "name": "Bengali",
         "iso1": "bn",
         "iso2t": "ben",
         "iso2b": "ben",
-        "iso3": "ben"
+        "iso3": "ben",
+        "easyocr": "bn"
     },
     {
         "name": "Bislama",
@@ -144,7 +151,8 @@
         "iso1": "bs",
         "iso2t": "bos",
         "iso2b": "bos",
-        "iso3": "bos"
+        "iso3": "bos",
+        "easyocr": "bs"
     },
     {
         "name": "Breton",
@@ -158,7 +166,8 @@
         "iso1": "bg",
         "iso2t": "bul",
         "iso2b": "bul",
-        "iso3": "bul"
+        "iso3": "bul",
+        "easyocr": "bg"
     },
     {
         "name": "Burmese",
@@ -186,7 +195,8 @@
         "iso1": "ce",
         "iso2t": "che",
         "iso2b": "che",
-        "iso3": "che"
+        "iso3": "che",
+        "easyocr": "che"
     },
     {
         "name": "Chichewa, Chewa, Nyanja",
@@ -200,7 +210,8 @@
         "iso1": "zh",
         "iso2t": "zho",
         "iso2b": "chi",
-        "iso3": "zho + 16"
+        "iso3": "zho + 16",
+        "easyocr": "ch_tra"
     },
     {
         "name": "Church Slavonic, Old Slavonic, Old Church Slavonic",
@@ -242,21 +253,24 @@
         "iso1": "hr",
         "iso2t": "hrv",
         "iso2b": "hrv",
-        "iso3": "hrv"
+        "iso3": "hrv",
+        "easyocr": "hr"
     },
     {
         "name": "Czech",
         "iso1": "cs",
         "iso2t": "ces",
         "iso2b": "cze",
-        "iso3": "ces"
+        "iso3": "ces",
+        "easyocr": "cs"
     },
     {
         "name": "Danish",
         "iso1": "da",
         "iso2t": "dan",
         "iso2b": "dan",
-        "iso3": "dan"
+        "iso3": "dan",
+        "easyocr": "da"
     },
     {
         "name": "Divehi, Dhivehi, Maldivian",
@@ -284,7 +298,8 @@
         "iso1": "en",
         "iso2t": "eng",
         "iso2b": "eng",
-        "iso3": "eng"
+        "iso3": "eng",
+        "easyocr": "en"
     },
     {
         "name": "Esperanto",
@@ -298,7 +313,8 @@
         "iso1": "et",
         "iso2t": "est",
         "iso2b": "est",
-        "iso3": "est + 2"
+        "iso3": "est + 2",
+        "easyocr": "et"
     },
     {
         "name": "Ewe",
@@ -333,7 +349,8 @@
         "iso1": "fr",
         "iso2t": "fra",
         "iso2b": "fre",
-        "iso3": "fra"
+        "iso3": "fra",
+        "easyocr": "fr"
     },
     {
         "name": "Western Frisian",
@@ -382,7 +399,8 @@
         "iso1": "de",
         "iso2t": "deu",
         "iso2b": "ger",
-        "iso3": "deu"
+        "iso3": "deu",
+        "easyocr": "de"
     },
     {
         "name": "Greek, Modern",
@@ -445,7 +463,8 @@
         "iso1": "hi",
         "iso2t": "hin",
         "iso2b": "hin",
-        "iso3": "hin"
+        "iso3": "hin",
+        "easyocr": "hi"
     },
     {
         "name": "Hiri Motu",
@@ -459,14 +478,16 @@
         "iso1": "hu",
         "iso2t": "hun",
         "iso2b": "hun",
-        "iso3": "hun"
+        "iso3": "hun",
+        "easyocr": "hu"
     },
     {
         "name": "Icelandic",
         "iso1": "is",
         "iso2t": "isl",
         "iso2b": "ice",
-        "iso3": "isl"
+        "iso3": "isl",
+        "easyocr": "is"
     },
     {
         "name": "Ido",
@@ -487,7 +508,8 @@
         "iso1": "id",
         "iso2t": "ind",
         "iso2b": "ind",
-        "iso3": "ind"
+        "iso3": "ind",
+        "easyocr": "id"
     },
     {
         "name": "Interlingua (International Auxiliary Language Association)",
@@ -522,21 +544,24 @@
         "iso1": "ga",
         "iso2t": "gle",
         "iso2b": "gle",
-        "iso3": "gle"
+        "iso3": "gle",
+        "easyocr": "ga"
     },
     {
         "name": "Italian",
         "iso1": "it",
         "iso2t": "ita",
         "iso2b": "ita",
-        "iso3": "ita"
+        "iso3": "ita",
+        "easyocr": "it"
     },
     {
         "name": "Japanese",
         "iso1": "ja",
         "iso2t": "jpn",
         "iso2b": "jpn",
-        "iso3": "jpn"
+        "iso3": "jpn",
+        "easyocr": "ja"
     },
     {
         "name": "Javanese",
@@ -550,7 +575,8 @@
         "iso1": "kn",
         "iso2t": "kan",
         "iso2b": "kan",
-        "iso3": "kan"
+        "iso3": "kan",
+        "easyocr": "kn"
     },
     {
         "name": "Kanuri",
@@ -620,7 +646,8 @@
         "iso1": "ko",
         "iso2t": "kor",
         "iso2b": "kor",
-        "iso3": "kor"
+        "iso3": "kor",
+        "easyocr": "ko"
     },
     {
         "name": "Kuanyama, Kwanyama",
@@ -634,7 +661,8 @@
         "iso1": "ku",
         "iso2t": "kur",
         "iso2b": "kur",
-        "iso3": "kur + 3"
+        "iso3": "kur + 3",
+        "easyocr": "ku"
     },
     {
         "name": "Lao",
@@ -648,14 +676,16 @@
         "iso1": "la",
         "iso2t": "lat",
         "iso2b": "lat",
-        "iso3": "lat"
+        "iso3": "lat",
+        "easyocr": "la"
     },
     {
         "name": "Latvian",
         "iso1": "lv",
         "iso2t": "lav",
         "iso2b": "lav",
-        "iso3": "lav + 2"
+        "iso3": "lav + 2",
+        "easyocr": "lv"
     },
     {
         "name": "Limburgan, Limburger, Limburgish",
@@ -676,7 +706,8 @@
         "iso1": "lt",
         "iso2t": "lit",
         "iso2b": "lit",
-        "iso3": "lit"
+        "iso3": "lit",
+        "easyocr": "lt"
     },
     {
         "name": "Luba-Katanga",
@@ -711,7 +742,8 @@
         "iso1": "ms",
         "iso2t": "msa",
         "iso2b": "may",
-        "iso3": "msa + 36"
+        "iso3": "msa + 36",
+        "easyocr": "ms"
     },
     {
         "name": "Malayalam",
@@ -725,7 +757,8 @@
         "iso1": "mt",
         "iso2t": "mlt",
         "iso2b": "mlt",
-        "iso3": "mlt"
+        "iso3": "mlt",
+        "easyocr": "mt"
     },
     {
         "name": "Manx",
@@ -739,14 +772,16 @@
         "iso1": "mi",
         "iso2t": "mri",
         "iso2b": "mao",
-        "iso3": "mri"
+        "iso3": "mri",
+        "easyocr": "mi"
     },
     {
         "name": "Marathi",
         "iso1": "mr",
         "iso2t": "mar",
         "iso2b": "mar",
-        "iso3": "mar"
+        "iso3": "mar",
+        "easyocr": "mr"
     },
     {
         "name": "Marshallese",
@@ -760,7 +795,8 @@
         "iso1": "mn",
         "iso2t": "mon",
         "iso2b": "mon",
-        "iso3": "mon + 2"
+        "iso3": "mon + 2",
+        "easyocr": "mn"
     },
     {
         "name": "Nauru",
@@ -802,14 +838,16 @@
         "iso1": "ne",
         "iso2t": "nep",
         "iso2b": "nep",
-        "iso3": "nep + 2"
+        "iso3": "nep + 2",
+        "easyocr": "ne"
     },
     {
         "name": "Norwegian",
         "iso1": "no",
         "iso2t": "nor",
         "iso2b": "nor",
-        "iso3": "nor + 2"
+        "iso3": "nor + 2",
+        "easyocr": "no"
     },
     {
         "name": "Norwegian Bokmal",
@@ -837,7 +875,8 @@
         "iso1": "oc",
         "iso2t": "oci",
         "iso2b": "oci",
-        "iso3": "oci"
+        "iso3": "oci",
+        "easyocr": "oc"
     },
     {
         "name": "Ojibwa",
@@ -872,7 +911,8 @@
         "iso1": "pi",
         "iso2t": "pli",
         "iso2b": "pli",
-        "iso3": "pli"
+        "iso3": "pli",
+        "easyocr": "pi"
     },
     {
         "name": "Pashto, Pushto",
@@ -893,14 +933,16 @@
         "iso1": "pl",
         "iso2t": "pol",
         "iso2b": "pol",
-        "iso3": "pol"
+        "iso3": "pol",
+        "easyocr": "pl"
     },
     {
         "name": "Portuguese",
         "iso1": "pt",
         "iso2t": "por",
         "iso2b": "por",
-        "iso3": "por"
+        "iso3": "por",
+        "easyocr": "pt"
     },
     {
         "name": "Punjabi, Panjabi",
@@ -942,7 +984,8 @@
         "iso1": "ru",
         "iso2t": "rus",
         "iso2b": "rus",
-        "iso3": "rus"
+        "iso3": "rus",
+        "easyocr": "ru"
     },
     {
         "name": "Northern Sami",
@@ -1012,14 +1055,16 @@
         "iso1": "sk",
         "iso2t": "slk",
         "iso2b": "slo",
-        "iso3": "slk"
+        "iso3": "slk",
+        "easyocr": "sk"
     },
     {
         "name": "Slovenian",
         "iso1": "sl",
         "iso2t": "slv",
         "iso2b": "slv",
-        "iso3": "slv"
+        "iso3": "slv",
+        "easyocr": "sl"
     },
     {
         "name": "Somali",
@@ -1054,7 +1099,8 @@
         "iso1": "sw",
         "iso2t": "swa",
         "iso2b": "swa",
-        "iso3": "swa + 2"
+        "iso3": "swa + 2",
+        "easyocr": "sw"
     },
     {
         "name": "Swati",
@@ -1068,14 +1114,16 @@
         "iso1": "sv",
         "iso2t": "swe",
         "iso2b": "swe",
-        "iso3": "swe"
+        "iso3": "swe",
+        "easyocr": "sv"
     },
     {
         "name": "Tagalog",
         "iso1": "tl",
         "iso2t": "tgl",
         "iso2b": "tgl",
-        "iso3": "tgl"
+        "iso3": "tgl",
+        "easyocr": "tl"
     },
     {
         "name": "Tahitian",
@@ -1089,14 +1137,16 @@
         "iso1": "tg",
         "iso2t": "tgk",
         "iso2b": "tgk",
-        "iso3": "tgk"
+        "iso3": "tgk",
+        "easyocr": "tjk"
     },
     {
         "name": "Tamil",
         "iso1": "ta",
         "iso2t": "tam",
         "iso2b": "tam",
-        "iso3": "tam"
+        "iso3": "tam",
+        "easyocr": "ta"
     },
     {
         "name": "Tatar",
@@ -1110,14 +1160,16 @@
         "iso1": "te",
         "iso2t": "tel",
         "iso2b": "tel",
-        "iso3": "tel"
+        "iso3": "tel",
+        "easyocr": "te"
     },
     {
         "name": "Thai",
         "iso1": "th",
         "iso2t": "tha",
         "iso2b": "tha",
-        "iso3": "tha"
+        "iso3": "tha",
+        "easyocr": "th"
     },
     {
         "name": "Tibetan",
@@ -1159,7 +1211,8 @@
         "iso1": "tr",
         "iso2t": "tur",
         "iso2b": "tur",
-        "iso3": "tur"
+        "iso3": "tur",
+        "easyocr": "tr"
     },
     {
         "name": "Turkmen",
@@ -1194,14 +1247,16 @@
         "iso1": "ur",
         "iso2t": "urd",
         "iso2b": "urd",
-        "iso3": "urd"
+        "iso3": "urd",
+        "easyocr": "ur"
     },
     {
         "name": "Uzbek",
         "iso1": "uz",
         "iso2t": "uzb",
         "iso2b": "uzb",
-        "iso3": "uzb + 2"
+        "iso3": "uzb + 2",
+        "easyocr": "uz"
     },
     {
         "name": "Venda",
@@ -1215,7 +1270,8 @@
         "iso1": "vi",
         "iso2t": "vie",
         "iso2b": "vie",
-        "iso3": "vie"
+        "iso3": "vie",
+        "easyocr": "vi"
     },
     {
         "name": "Volapuk",
@@ -1236,7 +1292,8 @@
         "iso1": "cy",
         "iso2t": "cym",
         "iso2b": "wel",
-        "iso3": "cym"
+        "iso3": "cym",
+        "easyocr": "cy"
     },
     {
         "name": "Wolof",

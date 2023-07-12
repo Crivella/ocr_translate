@@ -23,7 +23,7 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
         img_obj= m.Image.objects.get(md5=md5)
     except m.Image.DoesNotExist:
         raise ValueError(f'Image with md5 {md5} does not exist')
-    bbox_obj_list = box_run(img_obj)
+    bbox_obj_list = box_run(img_obj, get_lang_src())
     for bbox_obj in bbox_obj_list:
         text_obj = ocr_run(bbox_obj, get_lang_src())
         tsl_obj = tsl_run(text_obj, get_lang_src(), get_lang_dst())
@@ -52,7 +52,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     res = []
 
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
-    bbox_obj_list = box_run(img_obj, image=img)
+    bbox_obj_list = box_run(img_obj, get_lang_src() ,image=img)
 
     for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
@@ -75,8 +75,8 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
 def init_most_used():
     from django.db.models import Count
 
-    src = m.Language.objects.annotate(count=Count('from_trans')).order_by('-count').first()
-    dst = m.Language.objects.annotate(count=Count('to_trans')).order_by('-count').first()
+    src = m.Language.objects.annotate(count=Count('trans_src')).order_by('-count').first()
+    dst = m.Language.objects.annotate(count=Count('trans_dst')).order_by('-count').first()
 
     if src:
         load_lang_src(src.iso1)
@@ -88,7 +88,7 @@ def init_most_used():
     tsl = m.TSLModel.objects.annotate(count=Count('runs')).order_by('-count').first()
 
     if box:
-        load_box_model(box.name)
+        load_box_model(box.name, lang=src.easyocr)
     if ocr:
         load_ocr_model(ocr.name)
     if tsl:

@@ -18,49 +18,38 @@ logger = logging.getLogger('ocr.general')
 box_model_id = None
 bbox_model_obj = None
 
-def load_box_model(model_id):
+def load_box_model(model_id: str, lang: str = None):
     global bbox_model_obj, reader, box_model_id
 
     if box_model_id == model_id:
         return
 
-    if model_id == 'easyocr':
-        logger.info('Loading easyocr')
-        reader = easyocr.Reader(['ja'], gpu=(dev == "cuda"))
-        bbox_model_obj, _ = m.OCRBoxModel.objects.get_or_create(name='easyocr')
-        box_model_id = model_id
-        return
 
-    raise NotImplementedError
+    logger.info(f'Loading BOX model: {model_id}')
+    if model_id == 'easyocr':
+        if lang is None:
+            raise ValueError('Language must be specified for easyocr')
+        reader = easyocr.Reader([lang], gpu=(dev == "cuda"), recognizer=False)
+        bbox_model_obj, _ = m.OCRBoxModel.objects.get_or_create(name=model_id)
+        box_model_id = model_id
+    else:
+        raise NotImplementedError
 
 def get_box_model():
     return bbox_model_obj
 
-def bbox_to_lbrt(bbox):
-    l = bbox[0][0]
-    b = bbox[0][1]
-    r = bbox[2][0]
-    t = bbox[2][1]
-
-    return l,b,r,t
-
 def intersections(bboxes, margin=5):
     res = []
 
-    for i,bb1 in enumerate(bboxes):
-        b1 = bb1[0][1]-margin
-        t1 = bb1[2][1]+margin
-        l1 = bb1[0][0]-margin
-        r1 = bb1[2][0]+margin
-        for j,bb2 in enumerate(bboxes):
+    for i,(l1,r1,b1,t1) in enumerate(bboxes):
+        l1 -= margin
+        r1 += margin
+        b1 -= margin
+        t1 += margin
+
+        for j,(l2,r2,b2,t2) in enumerate(bboxes):
             if i == j:
                 continue
-            b2 = bb2[0][1]
-            t2 = bb2[2][1]
-            l2 = bb2[0][0]
-            r2 = bb2[2][0]
-
-            # if b1 < t2 and t1 > b2 and l1 < r2 and r1 > l2:
 
             if l1 >= r2 or r1 <= l2 or b1 >= t2 or t1 <= b2:
                 continue
@@ -74,7 +63,7 @@ def intersections(bboxes, margin=5):
 
             ptr.add(i)
             ptr.add(j)
-    
+
     return res
 
 def merge_bboxes(bboxes):
@@ -87,43 +76,41 @@ def merge_bboxes(bboxes):
     torm = set()
     for app in inters:
         app = list(app)
-        data = bboxes[app].reshape(-1,2)
+        data = bboxes[app].reshape(-1,4)
         l = data[:,0].min()
-        r = data[:,0].max()
-        b = data[:,1].min()
-        t = data[:,1].max()
+        r = data[:,1].max()
+        b = data[:,2].min()
+        t = data[:,3].max()
         
-        res.append([
-            [l,b],
-            [r,b],
-            [r,t],
-            [l,t]
-        ])
+        res.append([l,b,r,t])
 
         torm = torm.union(app)
 
     for i in lst:
         if i in torm:
             continue
-        res.append(bboxes[i])
+        l,r,b,t = bboxes[i]
+        res.append([l,b,r,t])
     
     return res
 
 def _box_pipeline(image):
     # reader.recognize(image)
-    image = image.convert('RGB')
-    results = reader.readtext(np.array(image))
-    bboxes = [_[0] for _ in results]
+    if box_model_id == 'easyocr':
+        image = image.convert('RGB')
+        results = reader.detect(np.array(image))
 
-    app = []
-    for bbox in bboxes:
-        if bbox[0][1] == bbox[1][1] and bbox[1][0] == bbox[2][0]:
-            app.append(bbox)
-    bboxes = merge_bboxes(app)
+        # Axis rectangles
+        bboxes = results[0][0]
 
-    bboxes = merge_bboxes(bboxes)
+        # Free (NOT IMPLEMENTED)
+        # ...
 
-    return [bbox_to_lbrt(_) for _ in bboxes]
+        bboxes = merge_bboxes(bboxes)
+    else:
+        raise NotImplementedError
+
+    return bboxes
 
 def box_pipeline(image, md5):
     msg = q.put(
@@ -134,11 +121,12 @@ def box_pipeline(image, md5):
 
     return msg.response()
 
-def box_run(img_obj: m.Image, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> list[m.BBox]:
+def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> list[m.BBox]:
     params = {
         'image': img_obj,
         'model': bbox_model_obj,
         'options': options,
+        'lang_src': lang,
     }
 
     bbox_run = m.OCRBoxRun.objects.filter(**params).first()

@@ -62,7 +62,15 @@ if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
         langs = json.load(f)
 
     for lang in langs:
-        m.Language.objects.get_or_create(**lang)
+        name = lang.pop('name')
+        iso1 = lang.pop('iso1')
+        iso2t = lang.pop('iso2t')
+        iso2b = lang.pop('iso2b')
+        iso3 = lang.pop('iso3')
+        l, _ = m.Language.objects.get_or_create(name=name, iso1=iso1, iso2t=iso2t, iso2b=iso2b, iso3=iso3)
+        for k,v in lang.items():
+            setattr(l, k, v)
+        l.save()
 
 if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
     cwd = Path(__file__).parent
