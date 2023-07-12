@@ -18,7 +18,7 @@ logger = logging.getLogger('ocr.general')
 box_model_id = None
 bbox_model_obj = None
 
-def load_box_model(model_id: str, lang: str = None):
+def load_box_model(model_id: str, lang: m.Language = None):
     global bbox_model_obj, reader, box_model_id
 
     if box_model_id == model_id:
@@ -29,7 +29,7 @@ def load_box_model(model_id: str, lang: str = None):
     if model_id == 'easyocr':
         if lang is None:
             raise ValueError('Language must be specified for easyocr')
-        reader = easyocr.Reader([lang], gpu=(dev == "cuda"), recognizer=False)
+        reader = easyocr.Reader([lang.easyocr], gpu=(dev == "cuda"), recognizer=False)
         bbox_model_obj, _ = m.OCRBoxModel.objects.get_or_create(name=model_id)
         box_model_id = model_id
     else:

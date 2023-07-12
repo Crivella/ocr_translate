@@ -80,15 +80,18 @@ def load_models(request: HttpRequest) -> JsonResponse:
 
         logger.info('LOAD MODELS', data)
         
+        box_model_id = data.get('box_model_id', None)
         ocr_model_id = data.get('ocr_model_id', None)
         tsl_model_id = data.get('tsl_model_id', None)
+        if box_model_id is None:
+            return JsonResponse({'error': 'no box_model_id'}, status=400)
         if ocr_model_id is None:
             return JsonResponse({'error': 'no ocr_model_id'}, status=400)
         if tsl_model_id is None:
             return JsonResponse({'error': 'no tsl_model_id'}, status=400)
 
         try:
-            load_box_model('easyocr')
+            load_box_model(box_model_id, get_lang_src())
             load_ocr_model(ocr_model_id)
             load_tsl_model(tsl_model_id)
         except Exception as e:
