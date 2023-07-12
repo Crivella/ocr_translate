@@ -1,5 +1,6 @@
 # import json
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -8,13 +9,13 @@ from transformers import (AutoImageProcessor, AutoModel, AutoModelForSeq2SeqLM,
 
 from .. import models as m
 
+logger = logging.getLogger('ocr.general')
+
 # from .. import models as m
 
 # This should be set from env variables in the container
 root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
-# print(f'Cache dir: {cache_dir}')
-# root = Path("C:\models")
-# root = Path("/home/crivella/app/AI")
+logger.debug(f'Cache dir: {root}')
 dev = os.environ.get('DEVICE', 'cpu')
 
 def load(loader, model_id: str):
@@ -22,12 +23,12 @@ def load(loader, model_id: str):
     try:
         mid = root / model_id
         # raise OSError
-        print(f'Attempt loading from store: "{loader}" "{mid}"')
+        logger.debug(f'Attempt loading from store: "{loader}" "{mid}"')
         res = loader.from_pretrained(mid)
     except Exception:
         # Needed to catch some weird exception from transformers
         # eg: huggingface_hub.utils._validators.HFValidationError: Repo id must use alphanumeric chars or '-', '_', '.', '--' and '..' are forbidden, '-' and '.' cannot start or end the name, max length is 96: ...
-        print(f'Attempt loading from cache: "{loader}" "{model_id}" "{root}"')
+        logger.debug(f'Attempt loading from cache: "{loader}" "{model_id}" "{root}"')
         res = loader.from_pretrained(model_id, cache_dir=root)
     return res
 

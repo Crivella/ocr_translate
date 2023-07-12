@@ -1,7 +1,10 @@
+import logging
 import queue
 import threading
 import time
 from typing import Callable
+
+logger = logging.getLogger('ocr.worker')
 
 
 class NotHandled():
@@ -17,7 +20,7 @@ class Message():
 
     def resolve(self):
         self._response = self.handler(*self.msg.get('args', ()), **self.msg.get('kwargs', {}))
-        print(f'Resolved {self.msg}')
+        logger.debug(f'MSG Resolved {self.msg} -> {self._response}')
         # Make sure to dereference the message to avoid keeping raw images in memory
         # since i am gonna keep the message in the queue after it is resolved (for msg caching)
         del self.msg
@@ -53,7 +56,7 @@ class Worker():
                 msg = self.q.get(timeout=1)
             except queue.Empty:
                 continue
-            print(f'Worker consuming {msg}')
+            logger.debug(f'Worker consuming {msg}')
             msg.resolve()
         self.running = False
 
@@ -66,7 +69,14 @@ class Worker():
         self.thread.join()
 
 class WorkerMessageQueue(queue.SimpleQueue):
-    def __init__(self, *args, num_workers=1, reuse_msg: bool = True, max_len: int = 0, **kwargs):
+    def __init__(
+            self, 
+            *args, 
+            num_workers: int = 1, 
+            reuse_msg: bool = True, 
+            max_len: int = 0, 
+            **kwargs
+            ):
         """
         Args:
             num_workers (int, optional): Number of workers to spawn. Defaults to 1.
@@ -82,7 +92,7 @@ class WorkerMessageQueue(queue.SimpleQueue):
 
     def put(self, id: str, msg: dict, handler: Callable) -> Message:
         if self.reuse_msg and id in self.registered:
-            print(f'Reusing message {id}')
+            logger.debug(f'Reusing message {id}')
             return self.registered[id]
         if self.max_len > 0 and self.qsize() > self.max_len:
             # TODO: Remove solved messages from cache

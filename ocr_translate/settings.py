@@ -16,6 +16,60 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': { 
+            'format': '{levelname} - {asctime} - {module} - {process:d} - {thread:d} - {message}', 
+            'style': '{', 
+            },
+        'medium': {
+            'format': '{asctime} - {levelname:>7s} - {name:>15s}:{module:<15s} - {message}',
+            'style': '{',
+            },
+        'simple': { 
+            'format': '{levelname} - {message}', 
+            'style': '{', 
+            },
+    },
+    "filters": {
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+            "formatter": "medium",
+        },
+    },
+    'loggers': {
+        "django": {
+            "handlers": ["console"],
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "ocr.general": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "filters": ["require_debug_true"],
+        },
+        "ocr.worker": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "filters": ["require_debug_true"],
+        },
+    },
+}
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -24,7 +78,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-7h+*^e963rdi*2jbdlhqvmg%xnx$9@s*ccgcfae@t219$#!)vu')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() != 'false'
+DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 

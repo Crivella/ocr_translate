@@ -61,6 +61,8 @@ ENV \
     NUM_BOX_WORKERS="1" \
     NUM_OCR_WORKERS="1" \
     NUM_TSL_WORKERS="1" \
+    DJANGO_DEBUG="false" \
+    DJANGO_LOG_LEVEL="INFO" \
     DJANGO_SUPERUSER_USERNAME="admin" \
     DJANGO_SUPERUSER_PASSWORD="password" \
     DATABASE_ENGINE="django.db.backends.sqlite3" \

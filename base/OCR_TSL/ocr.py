@@ -16,7 +16,7 @@ ocr_image_processor = None
 
 import logging
 
-logger = logging.getLogger('ocr_tsl')
+logger = logging.getLogger('ocr.general')
 
 ocr_model_obj = None
 bbox_model_obj = None
@@ -28,7 +28,7 @@ def load_ocr_model(model_id):
         return
 
     # mid = root / model_id
-    logger.debug(f'Loading OCR model: {model_id}')
+    logger.info(f'Loading OCR model: {model_id}')
     res = load_model(model_id, request=['ved_model', 'tokenizer', 'image_processor'])
     ocr_model = res['ved_model']
     ocr_tokenizer = res['tokenizer']
@@ -89,7 +89,7 @@ def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None]
         if ocr_run is None or force:
             if image is None:
                 raise ValueError('Image is required for OCR')
-            logger.debug('Running OCR')
+            logger.info('Running OCR')
             id = (bbox_obj.id, ocr_model_obj.id)
             text = ocr(image, bbox=bbox_obj.lbrt, id=id)
             text_obj, _ = m.Text.objects.get_or_create(
@@ -98,7 +98,7 @@ def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None]
             params['result'] = text_obj
             ocr_run = m.OCRRun.objects.create(**params)
         else:
-            logger.debug('Reusing OCR')
+            logger.info('Reusing OCR')
             text_obj = ocr_run.result
             # text = ocr_run.result.text
 

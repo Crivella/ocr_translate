@@ -7,20 +7,12 @@ from .. import models as m
 from ..queues import tsl_queue as q
 from .base import dev, load_model
 
-logger = logging.getLogger('ocr_tsl')
+logger = logging.getLogger('ocr.general')
 
-# tsl_model_id = "staka/fugumt-ja-en"
-
-# mid = root / 'translate' / tsl_model_id
-# tsl_model = AutoModelForSeq2SeqLM.from_pretrained(mid).to(dev)
-# tsl_tokenizer = AutoTokenizer.from_pretrained(mid)
 tsl_model_id = None
 tsl_model = None
 tsl_tokenizer = None
-
-# tsl_model = 1
 tsl_model_obj = None
-# tsl_model_obj, _ = TSLModel.objects.get_or_create(name=tsl_model_id)
 
 def load_tsl_model(model_id):
     global tsl_model_obj, tsl_model, tsl_tokenizer, tsl_model_id
@@ -28,8 +20,7 @@ def load_tsl_model(model_id):
     if tsl_model_id == model_id:
         return
 
-    # mid = root / model_id
-    logger.debug(model_id)
+    logger.info(f'Loading TSL model: {model_id}')
     res = load_model(model_id, request=['seq2seq', 'tokenizer'])
     tsl_model = res['seq2seq']
     tsl_tokenizer = res['tokenizer']
@@ -47,7 +38,7 @@ def _tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
     res = []
     text = special.sub(r"\1\n", text)
     for tok in filter(None, text.split('\n')):
-        # print(tok)
+        logger.debug(f'TSL: {tok}')
         encoded = tsl_tokenizer(tok, return_tensors="pt")
         encoded.to(dev)
 
@@ -60,7 +51,7 @@ def _tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
             **kwargs,
             )
         tsl = tsl_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
-        # print(tsl)
+        logger.debug(f'TSL: {tsl}')
         res.append(' '.join(tsl))
 
     return ' '.join(res)
@@ -85,7 +76,7 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: dict = 
     }
     tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
     if tsl_run_obj is None or force:
-        logger.debug('Running TSL')
+        logger.info('Running TSL')
         id = (text_obj.id, tsl_model_obj.id)
         new = tsl_pipeline(text_obj.text, id=id)
         text_obj, _ = m.Text.objects.get_or_create(
@@ -94,7 +85,7 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: dict = 
         params['result'] = text_obj
         tsl_run_obj = m.TranslationRun.objects.create(**params)
     else:
-        logger.debug('Reusing TSL')
+        logger.info('Reusing TSL')
         # new = tsl_run_obj.result.text
 
     return tsl_run_obj.result

@@ -2,6 +2,7 @@ import base64
 import hashlib
 import io
 import json
+import logging
 import queue
 import time
 
@@ -21,6 +22,8 @@ from .OCR_TSL.ocr import get_ocr_model, load_ocr_model
 from .OCR_TSL.tsl import get_tsl_model, load_tsl_model, tsl_run
 from .queues import main_queue as q
 
+logger = logging.getLogger('ocr.general')
+
 
 def post_data_converter(request: HttpRequest) -> dict:
     if request.content_type == 'application/json':
@@ -36,7 +39,7 @@ def handshake(request: HttpRequest) -> JsonResponse:
     
     csrf.get_token(request)
     
-    # print(str(get_ocr_model()), str(get_tsl_model()))
+    logger.debug(f'Handshake: {str(get_ocr_model())}, {str(get_tsl_model())}')
     lang_src = get_lang_src()
     lang_dst = get_lang_dst()
 
@@ -74,7 +77,7 @@ def load_models(request: HttpRequest) -> JsonResponse:
         except ValueError as e:
             return JsonResponse({'error': 'invalid content type'}, status=400)
 
-        print('LOAD', data)
+        logger.info('LOAD MODELS', data)
         
         ocr_model_id = data.get('ocr_model_id', None)
         tsl_model_id = data.get('tsl_model_id', None)
@@ -100,7 +103,7 @@ def set_lang(request: HttpRequest) -> JsonResponse:
             data = post_data_converter(request)
         except ValueError as e:
             return JsonResponse({'error': 'invalid content type'}, status=400)
-        print('SET LANG', data)
+        logger.info('SET LANG', data)
         
         lang_src = data.get('lang_src', None)
         lang_dst = data.get('lang_dst', None)
@@ -153,6 +156,7 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         opt = data.get('options', {})
 
         if b64 is None:
+            logger.info('No contents, trying to lazyload')
             if frc:
                 return JsonResponse({'error': 'Cannot force ocr without contents'}, status=400)
             try:
@@ -165,7 +169,7 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
             # Can't find a way to run md5 on the binary in JS (the blob does not work)
             if md5 != hashlib.md5(b64.encode('utf-8')).hexdigest():
                 return JsonResponse({'error': 'md5 mismatch'}, status=400)
-            print('md5', md5, ' <- ', len(bin))
+            logger.debug(f'md5 {md5} <- {len(bin)} bytes')
 
             img = Image.open(io.BytesIO(bin))
             # Needed to make sure the image is loaded synchronously before going forward

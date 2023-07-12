@@ -10,15 +10,7 @@ from .lang import get_lang_dst, get_lang_src, load_lang_dst, load_lang_src
 from .ocr import load_ocr_model, ocr_run
 from .tsl import load_tsl_model, tsl_run
 
-logger = logging.getLogger('ocr_tsl')
-logger.setLevel(logging.DEBUG)
-
-f = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-h = logging.StreamHandler()
-h.setLevel(logging.DEBUG)
-h.setFormatter(f)
-
-logger.addHandler(h)
+logger = logging.getLogger('ocr.general')
 
 def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
     """

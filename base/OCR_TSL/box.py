@@ -13,7 +13,7 @@ import logging
 from .. import models as m
 from ..queues import box_queue as q
 
-logger = logging.getLogger('ocr_tsl')
+logger = logging.getLogger('ocr.general')
 
 box_model_id = None
 bbox_model_obj = None
@@ -25,7 +25,7 @@ def load_box_model(model_id):
         return
 
     if model_id == 'easyocr':
-        logger.debug('Loading easyocr')
+        logger.info('Loading easyocr')
         reader = easyocr.Reader(['ja'], gpu=(dev == "cuda"))
         bbox_model_obj, _ = m.OCRBoxModel.objects.get_or_create(name='easyocr')
         box_model_id = model_id
@@ -145,7 +145,7 @@ def box_run(img_obj: m.Image, image: Union[Image.Image, None] = None, force: boo
     if bbox_run is None or force:
         if image is None:
             raise ValueError('Image is required for BBox OCR')
-        logger.debug('Running BBox OCR')
+        logger.info('Running BBox OCR')
         bboxes = box_pipeline(image, img_obj.md5)
         # Create it here to avoid having a failed entry in DB
         bbox_run = m.OCRBoxRun.objects.create(**params)
@@ -160,8 +160,8 @@ def box_run(img_obj: m.Image, image: Union[Image.Image, None] = None, force: boo
                 from_ocr=bbox_run,
                 )
     else:
-        logger.debug('Reusing BBox OCR')
-    logger.debug(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
+        logger.info('Reusing BBox OCR')
+    logger.info(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
 
     return list(bbox_run.result.all())
 
