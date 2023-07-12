@@ -21,7 +21,21 @@ logger = logging.getLogger('ocr.general')
 ocr_model_obj = None
 bbox_model_obj = None
 
-def load_ocr_model(model_id):
+def unload_ocr_model():
+    global ocr_model_obj, ocr_model, ocr_tokenizer, ocr_image_processor, obj_model_id
+
+    logger.info(f'Unloading OCR model: {obj_model_id}')
+    ocr_model = None
+    ocr_tokenizer = None
+    ocr_image_processor = None
+    ocr_model_obj = None
+    obj_model_id = None
+
+    if dev == 'cuda':
+        import torch
+        torch.cuda.empty_cache()
+
+def load_ocr_model(model_id: str):
     global ocr_model_obj, ocr_model, ocr_tokenizer, ocr_image_processor, obj_model_id
 
     if obj_model_id == model_id:
@@ -29,6 +43,7 @@ def load_ocr_model(model_id):
 
     # mid = root / model_id
     logger.info(f'Loading OCR model: {model_id}')
+    logger.debug(f'{type(model_id)}:  "{model_id}"')
     res = load_model(model_id, request=['ved_model', 'tokenizer', 'image_processor'])
     ocr_model = res['ved_model']
     ocr_tokenizer = res['tokenizer']
@@ -43,7 +58,7 @@ def load_ocr_model(model_id):
     logger.debug(f'OCR model loaded: {model_id}')
     logger.debug(f'OCR model object: {ocr_model_obj}')
 
-def get_ocr_model():
+def get_ocr_model() -> m.OCRModel:
     return ocr_model_obj
 
 def _ocr(img: Image.Image, bbox: tuple[int, int, int, int] = None, *args, **kwargs) -> str:

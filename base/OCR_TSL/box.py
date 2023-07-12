@@ -18,24 +18,43 @@ logger = logging.getLogger('ocr.general')
 box_model_id = None
 bbox_model_obj = None
 
+def unload_box_model():
+    global bbox_model_obj, reader, box_model_id
+
+    logger.info(f'Unloading BOX model: {box_model_id}')
+    if box_model_id == 'easyocr':
+        pass
+    reader = None
+    bbox_model_obj = None
+    box_model_id = None
+
+    if dev == 'cuda':
+        import torch
+        torch.cuda.empty_cache()
+
+
 def load_box_model(model_id: str, lang: m.Language = None):
     global bbox_model_obj, reader, box_model_id
 
     if box_model_id == model_id:
         return
 
-
-    logger.info(f'Loading BOX model: {model_id}')
+    logger.info(f'Loading BOX model: {model_id}  lang: {lang}')
     if model_id == 'easyocr':
         if lang is None:
             raise ValueError('Language must be specified for easyocr')
+        logger.debug(f'{type(model_id)}:  "{model_id}"  lang.easyocr: {lang.easyocr}')
+        
         reader = easyocr.Reader([lang.easyocr], gpu=(dev == "cuda"), recognizer=False)
         bbox_model_obj, _ = m.OCRBoxModel.objects.get_or_create(name=model_id)
         box_model_id = model_id
     else:
         raise NotImplementedError
+    
+    logger.debug(f'OCR model loaded: {model_id}')
+    logger.debug(f'OCR model object: {bbox_model_obj}')
 
-def get_box_model():
+def get_box_model() -> m.OCRBoxModel:
     return bbox_model_obj
 
 def intersections(bboxes, margin=5):

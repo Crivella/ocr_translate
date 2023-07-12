@@ -14,6 +14,19 @@ tsl_model = None
 tsl_tokenizer = None
 tsl_model_obj = None
 
+def unload_tsl_model():
+    global tsl_model_obj, tsl_model, tsl_tokenizer, tsl_model_id
+
+    logger.info(f'Unloading TSL model: {tsl_model_id}')
+    tsl_model = None
+    tsl_tokenizer = None
+    tsl_model_obj = None
+    tsl_model_id = None
+
+    if dev == 'cuda':
+        import torch
+        torch.cuda.empty_cache()
+
 def load_tsl_model(model_id):
     global tsl_model_obj, tsl_model, tsl_tokenizer, tsl_model_id
 
@@ -28,7 +41,7 @@ def load_tsl_model(model_id):
     tsl_model_obj, _ = m.TSLModel.objects.get_or_create(name=model_id)
     tsl_model_id = model_id
 
-def get_tsl_model():
+def get_tsl_model() -> m.TSLModel:
     return tsl_model_obj
 
 special = re.compile("([・・.!。?♥♡♪〜]+)")

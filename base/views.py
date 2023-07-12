@@ -15,11 +15,12 @@ from PIL import Image
 
 from . import models as m
 from .OCR_TSL import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
-from .OCR_TSL.box import get_box_model, load_box_model
+from .OCR_TSL.box import get_box_model, load_box_model, unload_box_model
 from .OCR_TSL.lang import (get_lang_dst, get_lang_src, load_lang_dst,
                            load_lang_src)
-from .OCR_TSL.ocr import get_ocr_model, load_ocr_model
-from .OCR_TSL.tsl import get_tsl_model, load_tsl_model, tsl_run
+from .OCR_TSL.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
+from .OCR_TSL.tsl import (get_tsl_model, load_tsl_model, tsl_run,
+                          unload_tsl_model)
 from .queues import main_queue as q
 
 logger = logging.getLogger('ocr.general')
@@ -56,6 +57,13 @@ def handshake(request: HttpRequest) -> JsonResponse:
                 src_languages=lang_src,
                 dst_languages=lang_dst,
                 )
+            
+    box_model = get_box_model() or ''
+    ocr_model = get_ocr_model() or ''
+    tsl_model = get_tsl_model() or ''
+
+    lang_src = lang_src or ''
+    lang_dst = lang_dst or ''
 
     return JsonResponse({
         'Languages': [str(_) for _ in languages],
@@ -63,11 +71,11 @@ def handshake(request: HttpRequest) -> JsonResponse:
         'OCRModels': [str(_) for _ in ocr_models],
         'TSLModels': [str(_) for _ in tsl_models],
 
-        'box_selected': str(get_box_model()), 
-        'ocr_selected': str(get_ocr_model()),
-        'tsl_selected': str(get_tsl_model()), 
-        'lang_src': str(get_lang_src()),
-        'lang_dst': str(get_lang_dst()),
+        'box_selected': str(box_model), 
+        'ocr_selected': str(ocr_model),
+        'tsl_selected': str(tsl_model), 
+        'lang_src': str(lang_src),
+        'lang_dst': str(lang_dst),
         })
 
 @csrf_exempt
@@ -79,21 +87,19 @@ def load_models(request: HttpRequest) -> JsonResponse:
             return JsonResponse({'error': 'invalid content type'}, status=400)
 
         logger.info('LOAD MODELS', data)
+        logger.debug(data)
         
         box_model_id = data.get('box_model_id', None)
         ocr_model_id = data.get('ocr_model_id', None)
         tsl_model_id = data.get('tsl_model_id', None)
-        if box_model_id is None:
-            return JsonResponse({'error': 'no box_model_id'}, status=400)
-        if ocr_model_id is None:
-            return JsonResponse({'error': 'no ocr_model_id'}, status=400)
-        if tsl_model_id is None:
-            return JsonResponse({'error': 'no tsl_model_id'}, status=400)
 
         try:
-            load_box_model(box_model_id, get_lang_src())
-            load_ocr_model(ocr_model_id)
-            load_tsl_model(tsl_model_id)
+            if not box_model_id is None and not box_model_id == '':
+                load_box_model(box_model_id, get_lang_src())
+            if not ocr_model_id is None and not ocr_model_id == '':
+                load_ocr_model(ocr_model_id)
+            if not tsl_model_id is None and not tsl_model_id == '':
+                load_tsl_model(tsl_model_id)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
         
@@ -116,11 +122,31 @@ def set_lang(request: HttpRequest) -> JsonResponse:
         if lang_dst is None:
             return JsonResponse({'error': 'no lang_dst'}, status=400)
 
+        old_src = get_lang_src()
+        old_dst = get_lang_dst()
         try:
             load_lang_src(lang_src)
             load_lang_dst(lang_dst)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+        new_src = get_lang_src()
+        new_dst = get_lang_dst()
+
+        c1 = old_src != new_src
+        c2 = old_dst != new_dst
+        if c1 or c2:
+            tsl_model = get_tsl_model()
+            if not tsl_model is None and (new_src not in tsl_model.src_languages.all() or new_dst not in tsl_model.dst_languages.all()):
+                unload_tsl_model()
+        if c1:
+            box_model = get_box_model()
+            ocr_model = get_ocr_model()
+            if not box_model is None and (box_model.name == 'easyocr' or new_src not in box_model.languages.all()):
+                unload_box_model()
+            if not ocr_model is None and (new_src not in ocr_model.languages.all()):
+                unload_ocr_model()
+        if c2:
+            pass
         
         return JsonResponse({})
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
