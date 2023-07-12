@@ -88,7 +88,7 @@ def init_most_used():
     tsl = m.TSLModel.objects.annotate(count=Count('runs')).order_by('-count').first()
 
     if box:
-        load_box_model(box.name, lang=src)
+        load_box_model(box.name)
     if ocr:
         load_ocr_model(ocr.name)
     if tsl:

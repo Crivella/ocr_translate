@@ -95,7 +95,7 @@ def load_models(request: HttpRequest) -> JsonResponse:
 
         try:
             if not box_model_id is None and not box_model_id == '':
-                load_box_model(box_model_id, get_lang_src())
+                load_box_model(box_model_id)
             if not ocr_model_id is None and not ocr_model_id == '':
                 load_ocr_model(ocr_model_id)
             if not tsl_model_id is None and not tsl_model_id == '':
@@ -141,7 +141,7 @@ def set_lang(request: HttpRequest) -> JsonResponse:
         if c1:
             box_model = get_box_model()
             ocr_model = get_ocr_model()
-            if not box_model is None and (box_model.name == 'easyocr' or new_src not in box_model.languages.all()):
+            if not box_model is None and (new_src not in box_model.languages.all()):
                 unload_box_model()
             if not ocr_model is None and (new_src not in ocr_model.languages.all()):
                 unload_ocr_model()
