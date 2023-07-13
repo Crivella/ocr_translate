@@ -4,6 +4,13 @@ from django.db import models
 
 lang_length = 32
 
+class OptionDict(models.Model):
+    """Dictionary of options for OCR and translation"""
+    options = models.JSONField(unique=True)
+
+    def __str__(self):
+        return str(self.options)
+
 class Language(models.Model):
     """Language used for translation"""
     name = models.CharField(max_length=64, unique=True)
@@ -77,7 +84,7 @@ class Text(models.Model):
 
 class OCRBoxRun(models.Model):
     """OCR run on an image using a specific model"""
-    options = models.JSONField()
+    options = models.ForeignKey(OptionDict, on_delete=models.CASCADE, related_name='ocr_box_options')
 
     lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='box_src')
 
@@ -87,7 +94,7 @@ class OCRBoxRun(models.Model):
 
 class OCRRun(models.Model):
     """OCR run on an image using a specific model"""
-    options = models.JSONField()
+    options = models.ForeignKey(OptionDict, on_delete=models.CASCADE, related_name='ocr_options')
 
     lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='ocr_src')
 
@@ -98,7 +105,7 @@ class OCRRun(models.Model):
 
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""
-    options = models.JSONField()
+    options = models.ForeignKey(OptionDict, on_delete=models.CASCADE, related_name='trans_options')
 
     lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='trans_src')
     lang_dst = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='trans_dst')
