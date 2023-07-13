@@ -4,7 +4,7 @@ from pathlib import Path
 
 import requests
 from PIL import Image
-from pytesseract import Output, image_to_data
+from pytesseract import Output, image_to_string
 
 from .base import root
 
@@ -68,11 +68,12 @@ def tesseract_pipeline(img: Image.Image, lang: str, conf_thr: int = 15, favor_ve
         if img.height * 1.5**e > img.width:
             psm = 5
 
-    res = image_to_data(
+    # Using image_to_string will atleast preserve spaces
+    res = image_to_string(
         img, 
         lang=lang, 
         config=f'--tessdata-dir {data_dir.as_posix()} --psm {psm}', 
         output_type=Output.DICT
         )
     
-    return ''.join([t for t,c in zip(res['text'], res['conf']) if int(c) > conf_thr])
+    return res['text']

@@ -21,6 +21,10 @@ logger = logging.getLogger('ocr.general')
 
 ocr_model_obj: m.OCRModel = None
 
+no_space_languages = [
+    'ja', 'zh', 'lo', 'my'
+]
+
 def unload_ocr_model():
     global ocr_model_obj, ocr_model, ocr_tokenizer, ocr_image_processor, obj_model_id
 
@@ -77,13 +81,7 @@ def _ocr(img: Image.Image, lang: str = None, bbox: tuple[int, int, int, int] = N
         generated_ids = ocr_model.generate(pixel_values, *args, **kwargs)
         generated_text = ocr_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-
-    # This might be specific only to kha-white model? (Having space between each char)
-    # Also besides oriental languages + more? other do need spaces
-    # Need to work on this it this has to be more general
-    res = generated_text.replace(' ', '')
-
-    return res
+    return generated_text
 
 def ocr(*args, id, **kwargs) -> str:
     msg = q.put(
@@ -111,6 +109,8 @@ def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None]
             id = (bbox_obj.id, ocr_model_obj.id, lang.id)
             mlang = getattr(lang, ocr_model_obj.language_format or 'iso1')
             text = ocr(image, lang=mlang, bbox=bbox_obj.lbrt, id=id)
+            if lang.iso1 in no_space_languages:
+                text = text.replace(' ', '')
             text_obj, _ = m.Text.objects.get_or_create(
                 text=text,
                 )
