@@ -18,6 +18,7 @@ data_dir.mkdir(exist_ok=True)
 vertical_langs = ['jpn', 'chi_tra', 'chi_sim', 'kor']
 
 download = os.getenv('TESSERACT_ALLOW_DOWNLOAD', 'false').lower() == 'true'
+config = False
 
 def download_model(lang: str):
     if not download:
@@ -38,6 +39,11 @@ def download_model(lang: str):
         download_model(lang + '_vert')
 
 def create_config():
+    global config
+    if config:
+        return
+    config = True
+    
     logger.info('Creating tesseract tsv config')
     cfg = data_dir / 'configs'
     cfg.mkdir(exist_ok=True)
