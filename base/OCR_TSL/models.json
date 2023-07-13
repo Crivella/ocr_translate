@@ -2,57 +2,45 @@
     "box": [
         {
             "name": "easyocr",
-            "lang": [
-                "en", "ja", "zh", "ko"
-            ],
+            "lang": ["en", "ja", "zh", "ko"],
             "lang_code": "easyocr"
         }
     ],
     "ocr": [
         {
             "name": "kha-white/manga-ocr-base",
-            "lang": [
-                "ja"
-            ],
+            "lang": ["ja"],
             "lang_code": "iso1"
         },
         {
             "name": "tesseract",
-            "lang": [
-                "en", "ja", "zh", "ko"
-            ],
+            "lang": ["en", "ja", "zh", "ko"],
             "lang_code": "tesseract"
         }
     ],
     "tsl": [
         {
             "name": "Helsinki-NLP/opus-mt-zh-en",
-            "lang_src": [
-                "zh"
-            ],
-            "lang_dst": [
-                "en"
-            ],
+            "lang_src": ["zh"],
+            "lang_dst": ["en"],
             "lang_code": "iso1"
         },
         {
             "name": "Helsinki-NLP/opus-mt-ja-en",
-            "lang_src": [
-                "ja"
-            ],
-            "lang_dst": [
-                "en"
-            ],
+            "lang_src": ["ja"],
+            "lang_dst": ["en"],
             "lang_code": "iso1"
         },
         {
             "name": "staka/fugumt-ja-en",
-            "lang_src": [
-                "ja"
-            ],
-            "lang_dst": [
-                "en"
-            ],
+            "lang_src": ["ja"],
+            "lang_dst": ["en"],
+            "lang_code": "iso1"
+        },
+        {
+            "name": "Helsinki-NLP/opus-mt-ko-en",
+            "lang_src": ["ko"],
+            "lang_dst": ["en"],
             "lang_code": "iso1"
         }
     ]
