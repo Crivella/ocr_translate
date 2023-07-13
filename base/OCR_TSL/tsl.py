@@ -5,7 +5,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, M2M100Tokenizer
 
 from .. import models as m
 from ..queues import tsl_queue as q
-from .base import dev, load_model
+from .base import dev, load_hugginface_model
 
 logger = logging.getLogger('ocr.general')
 
@@ -34,7 +34,7 @@ def load_tsl_model(model_id):
         return
 
     logger.info(f'Loading TSL model: {model_id}')
-    res = load_model(model_id, request=['seq2seq', 'tokenizer'])
+    res = load_hugginface_model(model_id, request=['seq2seq', 'tokenizer'])
     tsl_model = res['seq2seq']
     tsl_tokenizer = res['tokenizer']
 

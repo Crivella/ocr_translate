@@ -4,7 +4,7 @@ import easyocr
 import numpy as np
 from PIL import Image
 
-from .base import dev, load_model
+from .base import dev, load_hugginface_model
 
 reader = None
 

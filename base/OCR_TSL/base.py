@@ -40,7 +40,7 @@ mapping = {
     'seq2seq': AutoModelForSeq2SeqLM
 }
 
-def load_model(model_id: str, request: list[str]):
+def load_hugginface_model(model_id: str, request: list[str]):
     res = {}
     for r in request:
         if r not in mapping:
@@ -78,20 +78,32 @@ if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
         models = json.load(f)
 
     for box in models['box']:
+        lang = box.pop('lang')
+        lcode = box.pop('lang_code')
         model, _ = m.OCRBoxModel.objects.get_or_create(**box)
+        model.language_format = lcode
+        for l in lang:
+            model.languages.add(m.Language.objects.get(iso1=l))
+        model.save()
 
     for ocr in models['ocr']:
         lang = ocr.pop('lang')
+        lcode = ocr.pop('lang_code')
         model, _ = m.OCRModel.objects.get_or_create(**ocr)
+        model.language_format = lcode
         for l in lang:
             model.languages.add(m.Language.objects.get(iso1=l))
+        model.save()
 
     for tsl in models['tsl']:
         src = tsl.pop('lang_src')
         dst = tsl.pop('lang_dst')
+        lcode = tsl.pop('lang_code', None)
         model, _ = m.TSLModel.objects.get_or_create(**tsl)
+        model.language_format = lcode
         for l in src:
             model.src_languages.add(m.Language.objects.get(iso1=l))
 
         for l in dst:
             model.dst_languages.add(m.Language.objects.get(iso1=l))
+        model.save()

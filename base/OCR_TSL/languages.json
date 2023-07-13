@@ -19,7 +19,8 @@
         "iso2t": "afr",
         "iso2b": "afr",
         "iso3": "afr",
-        "easyocr": "af"
+        "easyocr": "af",
+        "tesseract": "afr"
     },
     {
         "name": "Akan",
@@ -34,14 +35,16 @@
         "iso2t": "sqi",
         "iso2b": "alb",
         "iso3": "sqi + 4",
-        "easyocr": "sq"
+        "easyocr": "sq",
+        "tesseract": "sqi"
     },
     {
         "name": "Amharic",
         "iso1": "am",
         "iso2t": "amh",
         "iso2b": "amh",
-        "iso3": "amh"
+        "iso3": "amh",
+        "tesseract": "amh"
     },
     {
         "name": "Arabic",
@@ -49,7 +52,8 @@
         "iso2t": "ara",
         "iso2b": "ara",
         "iso3": "ara + 29",
-        "easyocr": "ar"
+        "easyocr": "ar",
+        "tesseract": "ara"
     },
     {
         "name": "Aragonese",
@@ -63,7 +67,8 @@
         "iso1": "hy",
         "iso2t": "hye",
         "iso2b": "arm",
-        "iso3": "hye"
+        "iso3": "hye",
+        "tesseract": "hye"
     },
     {
         "name": "Assamese",
@@ -71,7 +76,8 @@
         "iso2t": "asm",
         "iso2b": "asm",
         "iso3": "asm",
-        "easyocr": "as"
+        "easyocr": "as",
+        "tesseract": "asm"
     },
     {
         "name": "Avaric",
@@ -100,7 +106,8 @@
         "iso2t": "aze",
         "iso2b": "aze",
         "iso3": "aze + 2",
-        "easyocr": "az"
+        "easyocr": "az",
+        "tesseract": "aze"
     },
     {
         "name": "Bambara",
@@ -121,7 +128,8 @@
         "iso1": "eu",
         "iso2t": "eus",
         "iso2b": "baq",
-        "iso3": "eus"
+        "iso3": "eus",
+        "tesseract": "eus"
     },
     {
         "name": "Belarusian",
@@ -129,7 +137,8 @@
         "iso2t": "bel",
         "iso2b": "bel",
         "iso3": "bel",
-        "easyocr": "be"
+        "easyocr": "be",
+        "tesseract": "bel"
     },
     {
         "name": "Bengali",
@@ -137,7 +146,8 @@
         "iso2t": "ben",
         "iso2b": "ben",
         "iso3": "ben",
-        "easyocr": "bn"
+        "easyocr": "bn",
+        "tesseract": "ben"
     },
     {
         "name": "Bislama",
@@ -152,14 +162,16 @@
         "iso2t": "bos",
         "iso2b": "bos",
         "iso3": "bos",
-        "easyocr": "bs"
+        "easyocr": "bs",
+        "tesseract": "bos"
     },
     {
         "name": "Breton",
         "iso1": "br",
         "iso2t": "bre",
         "iso2b": "bre",
-        "iso3": "bre"
+        "iso3": "bre",
+        "tesseract": "bre"
     },
     {
         "name": "Bulgarian",
@@ -167,14 +179,16 @@
         "iso2t": "bul",
         "iso2b": "bul",
         "iso3": "bul",
-        "easyocr": "bg"
+        "easyocr": "bg",
+        "tesseract": "bul"
     },
     {
         "name": "Burmese",
         "iso1": "my",
         "iso2t": "mya",
         "iso2b": "bur",
-        "iso3": "mya"
+        "iso3": "mya",
+        "tesseract": "mya"
     },
     {
         "name": "Catalan, Valencian",
@@ -211,7 +225,8 @@
         "iso2t": "zho",
         "iso2b": "chi",
         "iso3": "zho + 16",
-        "easyocr": "ch_tra"
+        "easyocr": "ch_sim",
+        "tesseract": "chi_sim"
     },
     {
         "name": "Church Slavonic, Old Slavonic, Old Church Slavonic",
@@ -239,7 +254,8 @@
         "iso1": "co",
         "iso2t": "cos",
         "iso2b": "cos",
-        "iso3": "cos"
+        "iso3": "cos",
+        "tesseract": "cos"
     },
     {
         "name": "Cree",
@@ -254,7 +270,8 @@
         "iso2t": "hrv",
         "iso2b": "hrv",
         "iso3": "hrv",
-        "easyocr": "hr"
+        "easyocr": "hr",
+        "tesseract": "hrv"
     },
     {
         "name": "Czech",
@@ -262,7 +279,8 @@
         "iso2t": "ces",
         "iso2b": "cze",
         "iso3": "ces",
-        "easyocr": "cs"
+        "easyocr": "cs",
+        "tesseract": "ces"
     },
     {
         "name": "Danish",
@@ -270,7 +288,8 @@
         "iso2t": "dan",
         "iso2b": "dan",
         "iso3": "dan",
-        "easyocr": "da"
+        "easyocr": "da",
+        "tesseract": "dan"
     },
     {
         "name": "Divehi, Dhivehi, Maldivian",
@@ -291,7 +310,8 @@
         "iso1": "dz",
         "iso2t": "dzo",
         "iso2b": "dzo",
-        "iso3": "dzo"
+        "iso3": "dzo",
+        "tesseract": "dzo"
     },
     {
         "name": "English",
@@ -299,14 +319,16 @@
         "iso2t": "eng",
         "iso2b": "eng",
         "iso3": "eng",
-        "easyocr": "en"
+        "easyocr": "en",
+        "tesseract": "eng"
     },
     {
         "name": "Esperanto",
         "iso1": "eo",
         "iso2t": "epo",
         "iso2b": "epo",
-        "iso3": "epo"
+        "iso3": "epo",
+        "tesseract": "epo"
     },
     {
         "name": "Estonian",
@@ -314,7 +336,8 @@
         "iso2t": "est",
         "iso2b": "est",
         "iso3": "est + 2",
-        "easyocr": "et"
+        "easyocr": "et",
+        "tesseract": "est"
     },
     {
         "name": "Ewe",
@@ -328,7 +351,8 @@
         "iso1": "fo",
         "iso2t": "fao",
         "iso2b": "fao",
-        "iso3": "fao"
+        "iso3": "fao",
+        "tesseract": "fao"
     },
     {
         "name": "Fijian",
@@ -342,7 +366,8 @@
         "iso1": "fi",
         "iso2t": "fin",
         "iso2b": "fin",
-        "iso3": "fin"
+        "iso3": "fin",
+        "tesseract": "fin"
     },
     {
         "name": "French",
@@ -350,14 +375,16 @@
         "iso2t": "fra",
         "iso2b": "fre",
         "iso3": "fra",
-        "easyocr": "fr"
+        "easyocr": "fr",
+        "tesseract": "fra"
     },
     {
         "name": "Western Frisian",
         "iso1": "fy",
         "iso2t": "fry",
         "iso2b": "fry",
-        "iso3": "fry"
+        "iso3": "fry",
+        "tesseract": "fry"
     },
     {
         "name": "Fulah",
@@ -378,7 +405,8 @@
         "iso1": "gl",
         "iso2t": "glg",
         "iso2b": "glg",
-        "iso3": "glg"
+        "iso3": "glg",
+        "tesseract": "glg"
     },
     {
         "name": "Ganda",
@@ -392,7 +420,8 @@
         "iso1": "ka",
         "iso2t": "kat",
         "iso2b": "geo",
-        "iso3": "kat"
+        "iso3": "kat",
+        "tesseract": "kat"
     },
     {
         "name": "German",
@@ -400,7 +429,8 @@
         "iso2t": "deu",
         "iso2b": "ger",
         "iso3": "deu",
-        "easyocr": "de"
+        "easyocr": "de",
+        "tesseract": "deu"
     },
     {
         "name": "Greek, Modern",
@@ -428,7 +458,8 @@
         "iso1": "gu",
         "iso2t": "guj",
         "iso2b": "guj",
-        "iso3": "guj"
+        "iso3": "guj",
+        "tesseract": "guj"
     },
     {
         "name": "Haitian, Haitian Creole",
@@ -449,7 +480,8 @@
         "iso1": "he",
         "iso2t": "heb",
         "iso2b": "heb",
-        "iso3": "heb"
+        "iso3": "heb",
+        "tesseract": "heb"
     },
     {
         "name": "Herero",
@@ -464,7 +496,8 @@
         "iso2t": "hin",
         "iso2b": "hin",
         "iso3": "hin",
-        "easyocr": "hi"
+        "easyocr": "hi",
+        "tesseract": "hin"
     },
     {
         "name": "Hiri Motu",
@@ -479,7 +512,8 @@
         "iso2t": "hun",
         "iso2b": "hun",
         "iso3": "hun",
-        "easyocr": "hu"
+        "easyocr": "hu",
+        "tesseract": "hun"
     },
     {
         "name": "Icelandic",
@@ -487,7 +521,8 @@
         "iso2t": "isl",
         "iso2b": "ice",
         "iso3": "isl",
-        "easyocr": "is"
+        "easyocr": "is",
+        "tesseract": "isl"
     },
     {
         "name": "Ido",
@@ -509,7 +544,8 @@
         "iso2t": "ind",
         "iso2b": "ind",
         "iso3": "ind",
-        "easyocr": "id"
+        "easyocr": "id",
+        "tesseract": "ind"
     },
     {
         "name": "Interlingua (International Auxiliary Language Association)",
@@ -530,7 +566,8 @@
         "iso1": "iu",
         "iso2t": "iku",
         "iso2b": "iku",
-        "iso3": "iku + 2"
+        "iso3": "iku + 2",
+        "tesseract": "iku"
     },
     {
         "name": "Inupiaq",
@@ -545,7 +582,8 @@
         "iso2t": "gle",
         "iso2b": "gle",
         "iso3": "gle",
-        "easyocr": "ga"
+        "easyocr": "ga",
+        "tesseract": "gle"
     },
     {
         "name": "Italian",
@@ -553,7 +591,8 @@
         "iso2t": "ita",
         "iso2b": "ita",
         "iso3": "ita",
-        "easyocr": "it"
+        "easyocr": "it",
+        "tesseract": "ita"
     },
     {
         "name": "Japanese",
@@ -561,14 +600,16 @@
         "iso2t": "jpn",
         "iso2b": "jpn",
         "iso3": "jpn",
-        "easyocr": "ja"
+        "easyocr": "ja",
+        "tesseract": "jpn"
     },
     {
         "name": "Javanese",
         "iso1": "jv",
         "iso2t": "jav",
         "iso2b": "jav",
-        "iso3": "jav"
+        "iso3": "jav",
+        "tesseract": "jav"
     },
     {
         "name": "Kannada",
@@ -576,7 +617,8 @@
         "iso2t": "kan",
         "iso2b": "kan",
         "iso3": "kan",
-        "easyocr": "kn"
+        "easyocr": "kn",
+        "tesseract": "kan"
     },
     {
         "name": "Kanuri",
@@ -597,14 +639,16 @@
         "iso1": "kk",
         "iso2t": "kaz",
         "iso2b": "kaz",
-        "iso3": "kaz"
+        "iso3": "kaz",
+        "tesseract": "kaz"
     },
     {
         "name": "Central Khmer",
         "iso1": "km",
         "iso2t": "khm",
         "iso2b": "khm",
-        "iso3": "khm"
+        "iso3": "khm",
+        "tesseract": "khm"
     },
     {
         "name": "Kikuyu, Gikuyu",
@@ -647,7 +691,8 @@
         "iso2t": "kor",
         "iso2b": "kor",
         "iso3": "kor",
-        "easyocr": "ko"
+        "easyocr": "ko",
+        "tesseract": "kor"
     },
     {
         "name": "Kuanyama, Kwanyama",
@@ -669,7 +714,8 @@
         "iso1": "lo",
         "iso2t": "lao",
         "iso2b": "lao",
-        "iso3": "lao"
+        "iso3": "lao",
+        "tesseract": "lao"
     },
     {
         "name": "Latin",
@@ -677,7 +723,8 @@
         "iso2t": "lat",
         "iso2b": "lat",
         "iso3": "lat",
-        "easyocr": "la"
+        "easyocr": "la",
+        "tesseract": "lat"
     },
     {
         "name": "Latvian",
@@ -685,7 +732,8 @@
         "iso2t": "lav",
         "iso2b": "lav",
         "iso3": "lav + 2",
-        "easyocr": "lv"
+        "easyocr": "lv",
+        "tesseract": "lav"
     },
     {
         "name": "Limburgan, Limburger, Limburgish",
@@ -707,7 +755,8 @@
         "iso2t": "lit",
         "iso2b": "lit",
         "iso3": "lit",
-        "easyocr": "lt"
+        "easyocr": "lt",
+        "tesseract": "lit"
     },
     {
         "name": "Luba-Katanga",
@@ -728,7 +777,8 @@
         "iso1": "mk",
         "iso2t": "mkd",
         "iso2b": "mac",
-        "iso3": "mkd"
+        "iso3": "mkd",
+        "tesseract": "mkd"
     },
     {
         "name": "Malagasy",
@@ -743,14 +793,16 @@
         "iso2t": "msa",
         "iso2b": "may",
         "iso3": "msa + 36",
-        "easyocr": "ms"
+        "easyocr": "ms",
+        "tesseract": "msa"
     },
     {
         "name": "Malayalam",
         "iso1": "ml",
         "iso2t": "mal",
         "iso2b": "mal",
-        "iso3": "mal"
+        "iso3": "mal",
+        "tesseract": "mal"
     },
     {
         "name": "Maltese",
@@ -758,7 +810,8 @@
         "iso2t": "mlt",
         "iso2b": "mlt",
         "iso3": "mlt",
-        "easyocr": "mt"
+        "easyocr": "mt",
+        "tesseract": "mlt"
     },
     {
         "name": "Manx",
@@ -773,7 +826,8 @@
         "iso2t": "mri",
         "iso2b": "mao",
         "iso3": "mri",
-        "easyocr": "mi"
+        "easyocr": "mi",
+        "tesseract": "mri"
     },
     {
         "name": "Marathi",
@@ -781,7 +835,8 @@
         "iso2t": "mar",
         "iso2b": "mar",
         "iso3": "mar",
-        "easyocr": "mr"
+        "easyocr": "mr",
+        "tesseract": "mar"
     },
     {
         "name": "Marshallese",
@@ -796,7 +851,8 @@
         "iso2t": "mon",
         "iso2b": "mon",
         "iso3": "mon + 2",
-        "easyocr": "mn"
+        "easyocr": "mn",
+        "tesseract": "mon"
     },
     {
         "name": "Nauru",
@@ -839,7 +895,8 @@
         "iso2t": "nep",
         "iso2b": "nep",
         "iso3": "nep + 2",
-        "easyocr": "ne"
+        "easyocr": "ne",
+        "tesseract": "nep"
     },
     {
         "name": "Norwegian",
@@ -847,7 +904,8 @@
         "iso2t": "nor",
         "iso2b": "nor",
         "iso3": "nor + 2",
-        "easyocr": "no"
+        "easyocr": "no",
+        "tesseract": "nor"
     },
     {
         "name": "Norwegian Bokmal",
@@ -890,7 +948,8 @@
         "iso1": "or",
         "iso2t": "ori",
         "iso2b": "ori",
-        "iso3": "ori + 2"
+        "iso3": "ori + 2",
+        "tesseract": "ori"
     },
     {
         "name": "Oromo",
@@ -926,7 +985,8 @@
         "iso1": "fa",
         "iso2t": "fas",
         "iso2b": "per",
-        "iso3": "fas + 2"
+        "iso3": "fas + 2",
+        "tesseract": "fas"
     },
     {
         "name": "Polish",
@@ -934,7 +994,8 @@
         "iso2t": "pol",
         "iso2b": "pol",
         "iso3": "pol",
-        "easyocr": "pl"
+        "easyocr": "pl",
+        "tesseract": "pol"
     },
     {
         "name": "Portuguese",
@@ -942,7 +1003,8 @@
         "iso2t": "por",
         "iso2b": "por",
         "iso3": "por",
-        "easyocr": "pt"
+        "easyocr": "pt",
+        "tesseract": "por"
     },
     {
         "name": "Punjabi, Panjabi",
@@ -956,7 +1018,8 @@
         "iso1": "qu",
         "iso2t": "que",
         "iso2b": "que",
-        "iso3": "que + 43"
+        "iso3": "que + 43",
+        "tesseract": "que"
     },
     {
         "name": "Romanian, Moldavian, Moldovan",
@@ -985,7 +1048,8 @@
         "iso2t": "rus",
         "iso2b": "rus",
         "iso3": "rus",
-        "easyocr": "ru"
+        "easyocr": "ru",
+        "tesseract": "rus"
     },
     {
         "name": "Northern Sami",
@@ -1013,7 +1077,8 @@
         "iso1": "sa",
         "iso2t": "san",
         "iso2b": "san",
-        "iso3": "san"
+        "iso3": "san",
+        "tesseract": "san"
     },
     {
         "name": "Sardinian",
@@ -1027,7 +1092,8 @@
         "iso1": "sr",
         "iso2t": "srp",
         "iso2b": "srp",
-        "iso3": "srp"
+        "iso3": "srp",
+        "tesseract": "srp"
     },
     {
         "name": "Shona",
@@ -1041,7 +1107,8 @@
         "iso1": "sd",
         "iso2t": "snd",
         "iso2b": "snd",
-        "iso3": "snd"
+        "iso3": "snd",
+        "tesseract": "snd"
     },
     {
         "name": "Sinhala, Sinhalese",
@@ -1056,7 +1123,8 @@
         "iso2t": "slk",
         "iso2b": "slo",
         "iso3": "slk",
-        "easyocr": "sk"
+        "easyocr": "sk",
+        "tesseract": "slk"
     },
     {
         "name": "Slovenian",
@@ -1064,7 +1132,8 @@
         "iso2t": "slv",
         "iso2b": "slv",
         "iso3": "slv",
-        "easyocr": "sl"
+        "easyocr": "sl",
+        "tesseract": "slv"
     },
     {
         "name": "Somali",
@@ -1092,7 +1161,8 @@
         "iso1": "su",
         "iso2t": "sun",
         "iso2b": "sun",
-        "iso3": "sun"
+        "iso3": "sun",
+        "tesseract": "sun"
     },
     {
         "name": "Swahili",
@@ -1100,7 +1170,8 @@
         "iso2t": "swa",
         "iso2b": "swa",
         "iso3": "swa + 2",
-        "easyocr": "sw"
+        "easyocr": "sw",
+        "tesseract": "swa"
     },
     {
         "name": "Swati",
@@ -1115,7 +1186,8 @@
         "iso2t": "swe",
         "iso2b": "swe",
         "iso3": "swe",
-        "easyocr": "sv"
+        "easyocr": "sv",
+        "tesseract": "swe"
     },
     {
         "name": "Tagalog",
@@ -1138,7 +1210,8 @@
         "iso2t": "tgk",
         "iso2b": "tgk",
         "iso3": "tgk",
-        "easyocr": "tjk"
+        "easyocr": "tjk",
+        "tesseract": "tgk"
     },
     {
         "name": "Tamil",
@@ -1146,14 +1219,16 @@
         "iso2t": "tam",
         "iso2b": "tam",
         "iso3": "tam",
-        "easyocr": "ta"
+        "easyocr": "ta",
+        "tesseract": "tam"
     },
     {
         "name": "Tatar",
         "iso1": "tt",
         "iso2t": "tat",
         "iso2b": "tat",
-        "iso3": "tat"
+        "iso3": "tat",
+        "tesseract": "tat"
     },
     {
         "name": "Telugu",
@@ -1161,7 +1236,8 @@
         "iso2t": "tel",
         "iso2b": "tel",
         "iso3": "tel",
-        "easyocr": "te"
+        "easyocr": "te",
+        "tesseract": "tel"
     },
     {
         "name": "Thai",
@@ -1169,21 +1245,24 @@
         "iso2t": "tha",
         "iso2b": "tha",
         "iso3": "tha",
-        "easyocr": "th"
+        "easyocr": "th",
+        "tesseract": "tha"
     },
     {
         "name": "Tibetan",
         "iso1": "bo",
         "iso2t": "bod",
         "iso2b": "tib",
-        "iso3": "bod"
+        "iso3": "bod",
+        "tesseract": "bod"
     },
     {
         "name": "Tigrinya",
         "iso1": "ti",
         "iso2t": "tir",
         "iso2b": "tir",
-        "iso3": "tir"
+        "iso3": "tir",
+        "tesseract": "tir"
     },
     {
         "name": "Tonga (Tonga Islands)",
@@ -1212,7 +1291,8 @@
         "iso2t": "tur",
         "iso2b": "tur",
         "iso3": "tur",
-        "easyocr": "tr"
+        "easyocr": "tr",
+        "tesseract": "tur"
     },
     {
         "name": "Turkmen",
@@ -1240,7 +1320,8 @@
         "iso1": "uk",
         "iso2t": "ukr",
         "iso2b": "ukr",
-        "iso3": "ukr"
+        "iso3": "ukr",
+        "tesseract": "ukr"
     },
     {
         "name": "Urdu",
@@ -1248,7 +1329,8 @@
         "iso2t": "urd",
         "iso2b": "urd",
         "iso3": "urd",
-        "easyocr": "ur"
+        "easyocr": "ur",
+        "tesseract": "urd"
     },
     {
         "name": "Uzbek",
@@ -1256,7 +1338,8 @@
         "iso2t": "uzb",
         "iso2b": "uzb",
         "iso3": "uzb + 2",
-        "easyocr": "uz"
+        "easyocr": "uz",
+        "tesseract": "uzb"
     },
     {
         "name": "Venda",
@@ -1271,7 +1354,8 @@
         "iso2t": "vie",
         "iso2b": "vie",
         "iso3": "vie",
-        "easyocr": "vi"
+        "easyocr": "vi",
+        "tesseract": "vie"
     },
     {
         "name": "Volapuk",
@@ -1293,7 +1377,8 @@
         "iso2t": "cym",
         "iso2b": "wel",
         "iso3": "cym",
-        "easyocr": "cy"
+        "easyocr": "cy",
+        "tesseract": "cym"
     },
     {
         "name": "Wolof",
@@ -1314,14 +1399,16 @@
         "iso1": "yi",
         "iso2t": "yid",
         "iso2b": "yid",
-        "iso3": "yid + 2"
+        "iso3": "yid + 2",
+        "tesseract": "yid"
     },
     {
         "name": "Yoruba",
         "iso1": "yo",
         "iso2t": "yor",
         "iso2b": "yor",
-        "iso3": "yor"
+        "iso3": "yor",
+        "tesseract": "yor"
     },
     {
         "name": "Zhuang, Chuang",

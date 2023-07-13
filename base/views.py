@@ -207,8 +207,13 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
             np.array(img)
 
             # Check if same request is already in queue. If yes attach listener to it
+            lang_src = get_lang_src()
+            lang_dst = get_lang_dst()
+            box_model = get_box_model()
+            ocr_model = get_ocr_model()
+            tsl_model = get_tsl_model()
             msg = q.put(
-                id = md5,
+                id = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id),
                 msg = {
                     'args': (img, md5),
                     'kwargs': {'force': frc, 'options': opt},

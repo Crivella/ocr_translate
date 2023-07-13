@@ -13,6 +13,7 @@ class Language(models.Model):
     iso3 = models.CharField(max_length=32, unique=True)
 
     easyocr = models.CharField(max_length=32, unique=True, null=True)
+    tesseract = models.CharField(max_length=32, unique=True, null=True)
 
     def __str__(self):
         return str(self.iso1)
@@ -22,6 +23,8 @@ class OCRModel(models.Model):
     name = models.CharField(max_length=128)
     languages = models.ManyToManyField(Language, related_name='ocr_models')
 
+    language_format = models.CharField(max_length=32, null=True)
+
     def __str__(self):
         return str(self.name)
 
@@ -29,6 +32,8 @@ class OCRBoxModel(models.Model):
     """OCR model for bounding boxes"""
     name = models.CharField(max_length=128)
     languages = models.ManyToManyField(Language, related_name='box_models')
+
+    language_format = models.CharField(max_length=32, null=True)
 
     def __str__(self):
         return str(self.name)
@@ -38,6 +43,8 @@ class TSLModel(models.Model):
     name = models.CharField(max_length=128)
     src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')
     dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
+
+    language_format = models.CharField(max_length=32, null=True)
     
     def __str__(self):
         return str(self.name)
