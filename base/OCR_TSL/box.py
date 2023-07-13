@@ -136,11 +136,11 @@ def box_pipeline(image, md5):
 
     return msg.response()
 
-def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> list[m.BBox]:
+def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] = None, force: bool = False, options: m.OptionDict = None) -> list[m.BBox]:
     params = {
         'image': img_obj,
         'model': bbox_model_obj,
-        'options': options,
+        'options': options or m.OptionDict.objects.get(options={}),
         'lang_src': lang,
     }
 

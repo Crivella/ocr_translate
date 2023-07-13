@@ -78,10 +78,10 @@ def tsl_pipeline(*args, id, **kwargs):
 
     return msg.response()
 
-def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: dict = {}, force: bool = False) -> m.Text:
+def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.OptionDict = None, force: bool = False) -> m.Text:
     global tsl_model_obj
     params = {
-        'options': options,
+        'options': options or m.OptionDict.objects.get(options={}),
         'text': text_obj,
         'model': tsl_model_obj,
         'lang_src': src,

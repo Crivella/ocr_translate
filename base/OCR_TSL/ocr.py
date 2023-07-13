@@ -94,13 +94,13 @@ def ocr(*args, id, **kwargs) -> str:
 
     return msg.response()
 
-def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None] = None, force: bool = False, options: dict = {}) -> m.Text:
+def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None] = None, force: bool = False, options: m.OptionDict = None) -> m.Text:
         global ocr_model_obj
         params = {
             'bbox': bbox_obj,
             'model': ocr_model_obj,
             'lang_src': lang,
-            'options': options,
+            'options': options or m.OptionDict.objects.get(options={}),
         }
         ocr_run = m.OCRRun.objects.filter(**params).first()
         if ocr_run is None or force:

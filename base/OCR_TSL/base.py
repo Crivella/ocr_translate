@@ -107,3 +107,5 @@ if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
         for l in dst:
             model.dst_languages.add(m.Language.objects.get(iso1=l))
         model.save()
+
+    base_option, _ = m.OptionDict.objects.get_or_create(options={})
