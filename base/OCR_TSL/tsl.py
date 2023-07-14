@@ -44,8 +44,20 @@ def load_tsl_model(model_id):
 def get_tsl_model() -> m.TSLModel:
     return tsl_model_obj
 
+def pre_tokenize(text: str, ignore_chars=None, break_chars=None, break_newlines=True) -> list[str]:
+    if break_chars is not None:
+        text = re.sub(f'[{break_chars}]', '\n', text)
+    if ignore_chars is not None:
+        text = re.sub(f'[{ignore_chars}]', '', text)
+    text = re.sub(r'\n+', '\n', text)
+    if break_newlines:
+        tokens = text.split('\n')
+    else:
+        tokens = text
+    return list(filter(None, tokens))
+
 special = re.compile("([・・.!。?♥♡♪〜]+)")
-def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}):
+def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}, batch=False) -> str:
     tsl_tokenizer.src_lang = lang_src
 
     break_newlines = options.get('break_newlines', True)
@@ -57,15 +69,7 @@ def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}):
     max_new_tokens = options.get('max_new_tokens', 10)
     max_new_tokens_ratio = options.get('max_new_tokens_ratio', 1)
                            
-    if break_chars is not None:
-        text = re.sub(f'[{break_chars}]', '\n', text)
-    if ignore_chars is not None:
-        text = re.sub(f'[{ignore_chars}]', '', text)
-    text = re.sub(r'\n+', '\n', text)
-    if break_newlines:
-        tokens = text.split('\n')
-    else:
-        tokens = text
+    tokens = pre_tokenize(text, ignore_chars, break_chars, break_newlines)
 
     logger.debug(f'TSL: {tokens}')
     encoded = tsl_tokenizer(tokens, return_tensors="pt", padding=True, truncation=True)
