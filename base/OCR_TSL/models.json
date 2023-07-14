@@ -42,6 +42,18 @@
             "lang_src": ["ko"],
             "lang_dst": ["en"],
             "lang_code": "iso1"
+        },
+        {
+            "name": "facebook/m2m100_418M",
+            "lang_src": ["af", "am", "ar", "az", "ba", "be", "bg", "bn", "br", "bs", "cs", "cy", "da", "de", "en", "et", "fa", "ff", "fi", "fr", "fy", "ga", "gl", "gu", "ha", "he", "hi", "hr", "hu", "hy", "id", "ig", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "lg", "ln", "lo", "lt", "lv", "mg", "mk", "ml", "mn", "mr", "ms", "my", "ne", "no", "oc", "or", "pl", "pt", "ru", "sd", "sk", "sl", "so", "sq", "sr", "ss", "su", "sv", "sw", "ta", "th", "tl", "tn", "tr", "uk", "ur", "uz", "vi", "wo", "xh", "yi", "yo", "zh", "zu"],
+            "lang_dst": ["af", "am", "ar", "az", "ba", "be", "bg", "bn", "br", "bs", "cs", "cy", "da", "de", "en", "et", "fa", "ff", "fi", "fr", "fy", "ga", "gl", "gu", "ha", "he", "hi", "hr", "hu", "hy", "id", "ig", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "lg", "ln", "lo", "lt", "lv", "mg", "mk", "ml", "mn", "mr", "ms", "my", "ne", "no", "oc", "or", "pl", "pt", "ru", "sd", "sk", "sl", "so", "sq", "sr", "ss", "su", "sv", "sw", "ta", "th", "tl", "tn", "tr", "uk", "ur", "uz", "vi", "wo", "xh", "yi", "yo", "zh", "zu"],
+            "lang_code": "facebookM2M"
+        },
+        {
+            "name": "facebook/m2m100_1.2B",
+            "lang_src": ["af", "am", "ar", "az", "ba", "be", "bg", "bn", "br", "bs", "cs", "cy", "da", "de", "en", "et", "fa", "ff", "fi", "fr", "fy", "ga", "gl", "gu", "ha", "he", "hi", "hr", "hu", "hy", "id", "ig", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "lg", "ln", "lo", "lt", "lv", "mg", "mk", "ml", "mn", "mr", "ms", "my", "ne", "no", "oc", "or", "pl", "pt", "ru", "sd", "sk", "sl", "so", "sq", "sr", "ss", "su", "sv", "sw", "ta", "th", "tl", "tn", "tr", "uk", "ur", "uz", "vi", "wo", "xh", "yi", "yo", "zh", "zu"],
+            "lang_dst": ["af", "am", "ar", "az", "ba", "be", "bg", "bn", "br", "bs", "cs", "cy", "da", "de", "en", "et", "fa", "ff", "fi", "fr", "fy", "ga", "gl", "gu", "ha", "he", "hi", "hr", "hu", "hy", "id", "ig", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "lg", "ln", "lo", "lt", "lv", "mg", "mk", "ml", "mn", "mr", "ms", "my", "ne", "no", "oc", "or", "pl", "pt", "ru", "sd", "sk", "sl", "so", "sq", "sr", "ss", "su", "sv", "sw", "ta", "th", "tl", "tn", "tr", "uk", "ur", "uz", "vi", "wo", "xh", "yi", "yo", "zh", "zu"],
+            "lang_code": "facebookM2M"
         }
     ]
 }

@@ -21,6 +21,7 @@ class Language(models.Model):
 
     easyocr = models.CharField(max_length=32, unique=True, null=True)
     tesseract = models.CharField(max_length=32, unique=True, null=True)
+    facebookM2M = models.CharField(max_length=32, unique=True, null=True)
 
     def __str__(self):
         return str(self.iso1)
