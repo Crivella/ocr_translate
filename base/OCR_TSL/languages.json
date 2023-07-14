@@ -639,7 +639,9 @@
         "iso3": "jpn",
         "easyocr": "ja",
         "tesseract": "jpn",
-        "facebookM2M": "ja"
+        "facebookM2M": "ja",
+        "break_chars": "!。?！？",
+        "ignore_chars": "♥♡♪〜・.、"
     },
     {
         "name": "Javanese",

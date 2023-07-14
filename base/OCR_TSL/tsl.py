@@ -48,17 +48,30 @@ special = re.compile("([・・.!。?♥♡♪〜]+)")
 def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}):
     tsl_tokenizer.src_lang = lang_src
 
+    break_newlines = options.get('break_newlines', True)
+    break_chars = options.get('break_chars', None)
+    ignore_chars = options.get('ignore_chars', None)
+
     min_max_new_tokens = options.get('min_max_new_tokens', 10)
     max_max_new_tokens = options.get('min_max_new_tokens', 512)
     max_new_tokens = options.get('max_new_tokens', 10)
     max_new_tokens_ratio = options.get('max_new_tokens_ratio', 1)
                            
+    if break_chars is not None:
+        text = re.sub(f'[{break_chars}]', '\n', text)
+    if ignore_chars is not None:
+        text = re.sub(f'[{ignore_chars}]', '', text)
+    text = re.sub(r'\n+', '\n', text)
+    if break_newlines:
+        tokens = text.split('\n')
+    else:
+        tokens = [text] 
+   
     res = []
-    text = special.sub(r"\1\n", text)
-    for tok in filter(None, text.split('\n')):
+    for tok in filter(None, tokens):
         logger.debug(f'TSL: {tok}')
         encoded = tsl_tokenizer(tok, return_tensors="pt")
-        ntok = encoded.input_ids.flatten().size()[1]
+        ntok = encoded['input_ids'].flatten().size()[0]
         encoded.to(dev)
 
         mnt = min(
@@ -96,19 +109,29 @@ def tsl_pipeline(*args, id, **kwargs):
     return msg.response()
 
 def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.OptionDict = None, force: bool = False) -> m.Text:
-    global tsl_model_obj
+    model_obj = get_tsl_model()
+    options_obj = options or m.OptionDict.objects.get(options={})
     params = {
-        'options': options or m.OptionDict.objects.get(options={}),
+        'options': options_obj,
         'text': text_obj,
-        'model': tsl_model_obj,
+        'model': model_obj,
         'lang_src': src,
         'lang_dst': dst,
     }
     tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
     if tsl_run_obj is None or force:
         logger.info('Running TSL')
-        id = (text_obj.id, tsl_model_obj.id)
-        new = tsl_pipeline(text_obj.text, id=id, options=options.options)
+        id = (text_obj.id, model_obj.id)
+        opt_dct = options_obj.options
+        opt_dct.setdefault('break_chars', src.break_chars)
+        opt_dct.setdefault('ignore_chars', src.ignore_chars)
+        new = tsl_pipeline(
+            text_obj.text,
+            getattr(src, model_obj.language_format),
+            getattr(dst, model_obj.language_format),
+            id=id, 
+            options=opt_dct
+            )
         text_obj, _ = m.Text.objects.get_or_create(
             text = new,
             )

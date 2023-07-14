@@ -64,7 +64,7 @@ def load_ocr_model(model_id: str):
 def get_ocr_model() -> m.OCRModel:
     return ocr_model_obj
 
-def _ocr(img: Image.Image, lang: str = None, bbox: tuple[int, int, int, int] = None, *args, **kwargs) -> str:
+def _ocr(img: Image.Image, lang: str = None, bbox: tuple[int, int, int, int] = None, options: dict = {}) -> str:
     if not isinstance(img, Image.Image):
         raise TypeError(f"img should be PIL Image, but got {type(img)}")
     img = img.convert("RGB")
@@ -78,7 +78,7 @@ def _ocr(img: Image.Image, lang: str = None, bbox: tuple[int, int, int, int] = N
         pixel_values = ocr_image_processor(img, return_tensors="pt").pixel_values
         if dev == 'cuda':
             pixel_values = pixel_values.cuda()
-        generated_ids = ocr_model.generate(pixel_values, *args, **kwargs)
+        generated_ids = ocr_model.generate(pixel_values)
         generated_text = ocr_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
     return generated_text
@@ -94,11 +94,12 @@ def ocr(*args, id, **kwargs) -> str:
 
 def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None] = None, force: bool = False, options: m.OptionDict = None) -> m.Text:
         global ocr_model_obj
+        options_obj = m.OptionDict.objects.get(options={})
         params = {
             'bbox': bbox_obj,
             'model': ocr_model_obj,
             'lang_src': lang,
-            'options': options or m.OptionDict.objects.get(options={}),
+            'options': options_obj,
         }
         ocr_run = m.OCRRun.objects.filter(**params).first()
         if ocr_run is None or force:
@@ -108,7 +109,14 @@ def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None]
 
             id = (bbox_obj.id, ocr_model_obj.id, lang.id)
             mlang = getattr(lang, ocr_model_obj.language_format or 'iso1')
-            text = ocr(image, lang=mlang, bbox=bbox_obj.lbrt, id=id)
+            opt_dct = options_obj.options
+            text = ocr(
+                image, 
+                lang=mlang, 
+                bbox=bbox_obj.lbrt, 
+                id=id,
+                options=opt_dct,
+                )
             if lang.iso1 in no_space_languages:
                 text = text.replace(' ', '')
             text_obj, _ = m.Text.objects.get_or_create(

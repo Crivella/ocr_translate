@@ -109,7 +109,7 @@ def merge_bboxes(bboxes):
     
     return res
 
-def _box_pipeline(image):
+def _box_pipeline(image: Image.Image, options: dict = {}):
     # reader.recognize(image)
     if box_model_id == 'easyocr':
         image = image.convert('RGB')
@@ -127,20 +127,21 @@ def _box_pipeline(image):
 
     return bboxes
 
-def box_pipeline(image, md5):
+def box_pipeline(*args, id, **kwargs):
     msg = q.put(
-        id = md5,
-        msg = {'args': (image,)},
+        id = id,
+        msg = {'args': args, 'kwargs': kwargs},
         handler = _box_pipeline,
     )
 
     return msg.response()
 
 def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] = None, force: bool = False, options: m.OptionDict = None) -> list[m.BBox]:
+    options_obj = options or m.OptionDict.objects.get(options={})
     params = {
         'image': img_obj,
         'model': bbox_model_obj,
-        'options': options or m.OptionDict.objects.get(options={}),
+        'options': options_obj,
         'lang_src': lang,
     }
 
@@ -149,7 +150,12 @@ def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] 
         if image is None:
             raise ValueError('Image is required for BBox OCR')
         logger.info('Running BBox OCR')
-        bboxes = box_pipeline(image, img_obj.md5)
+        opt_dct = options_obj.options
+        bboxes = box_pipeline(
+            image, 
+            id=img_obj.md5,
+            options=opt_dct,
+            )
         # Create it here to avoid having a failed entry in DB
         bbox_run = m.OCRBoxRun.objects.create(**params)
         for bbox in bboxes:

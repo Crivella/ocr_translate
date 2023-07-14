@@ -23,6 +23,9 @@ class Language(models.Model):
     tesseract = models.CharField(max_length=32, unique=True, null=True)
     facebookM2M = models.CharField(max_length=32, unique=True, null=True)
 
+    break_chars = models.CharField(max_length=512, null=True)
+    ignore_chars = models.CharField(max_length=512, null=True) 
+
     def __str__(self):
         return str(self.iso1)
 
