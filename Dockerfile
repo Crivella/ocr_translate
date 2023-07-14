@@ -14,12 +14,14 @@ RUN mkdir -p /pip_cache
 RUN /venv/bin/pip install -r /src/requirements-torch.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install -r /src/requirements.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install gunicorn --cache-dir /pip_cache
+RUN /venv/bin/pip install pytesseract --cache-dir /pip_cache
 
 
 FROM python:3.10.12-slim-bookworm
 
 RUN apt-get update && apt-get install \
     nginx \
+    tesseract-ocr \
     -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
