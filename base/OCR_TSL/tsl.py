@@ -45,17 +45,34 @@ def get_tsl_model() -> m.TSLModel:
     return tsl_model_obj
 
 special = re.compile("([・・.!。?♥♡♪〜]+)")
-def _tsl_pipeline(text: str, lang_src: str = 'ja', lang_dst: str = 'en'):
+def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}):
     tsl_tokenizer.src_lang = lang_src
+
+    min_max_new_tokens = options.get('min_max_new_tokens', 10)
+    max_max_new_tokens = options.get('min_max_new_tokens', 512)
+    max_new_tokens = options.get('max_new_tokens', 10)
+    max_new_tokens_ratio = options.get('max_new_tokens_ratio', 1)
                            
     res = []
     text = special.sub(r"\1\n", text)
     for tok in filter(None, text.split('\n')):
         logger.debug(f'TSL: {tok}')
         encoded = tsl_tokenizer(tok, return_tensors="pt")
+        ntok = encoded.input_ids.flatten().size()[1]
         encoded.to(dev)
 
-        kwargs = {}
+        mnt = min(
+            max_max_new_tokens, 
+            max(
+                min_max_new_tokens, 
+                max_new_tokens, 
+                max_new_tokens_ratio * ntok
+            )
+        )
+
+        kwargs = {
+            "max_new_tokens": mnt,
+        }
         if isinstance(tsl_tokenizer, M2M100Tokenizer):
             kwargs["forced_bos_token_id"] = tsl_tokenizer.get_lang_id(lang_dst)
 
@@ -91,7 +108,7 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.Optio
     if tsl_run_obj is None or force:
         logger.info('Running TSL')
         id = (text_obj.id, tsl_model_obj.id)
-        new = tsl_pipeline(text_obj.text, id=id)
+        new = tsl_pipeline(text_obj.text, id=id, options=options.options)
         text_obj, _ = m.Text.objects.get_or_create(
             text = new,
             )
