@@ -90,7 +90,7 @@ class OCRBoxRun(models.Model):
     lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='box_src')
 
     image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='to_box')
-    model = models.ForeignKey(OCRBoxModel, on_delete=models.CASCADE, related_name='runs')
+    model = models.ForeignKey(OCRBoxModel, on_delete=models.CASCADE, related_name='box_runs')
     # result = models.ForeignKey(BBox, on_delete=models.CASCADE, related_name='from_ocr')
 
 class OCRRun(models.Model):
@@ -101,7 +101,7 @@ class OCRRun(models.Model):
 
     # image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='to_ocr')
     bbox = models.ForeignKey(BBox, on_delete=models.CASCADE, related_name='to_ocr')
-    model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='runs')
+    model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='ocr_runs')
     result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr')
 
 class TranslationRun(models.Model):
@@ -112,6 +112,6 @@ class TranslationRun(models.Model):
     lang_dst = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='trans_dst')
     
     text = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='to_trans')
-    model = models.ForeignKey(TSLModel, on_delete=models.CASCADE, related_name='runs')
+    model = models.ForeignKey(TSLModel, on_delete=models.CASCADE, related_name='tsl_runs')
     result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_trans')
 

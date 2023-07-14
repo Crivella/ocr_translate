@@ -83,9 +83,9 @@ def init_most_used():
     if dst:
         load_lang_dst(dst.iso1)
 
-    box = m.OCRBoxModel.objects.annotate(count=Count('runs')).order_by('-count').first()
-    ocr = m.OCRModel.objects.annotate(count=Count('runs')).order_by('-count').first()
-    tsl = m.TSLModel.objects.annotate(count=Count('runs')).order_by('-count').first()
+    box = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count').first()
+    ocr = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count').first()
+    tsl = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count').first()
 
     if box:
         load_box_model(box.name)
