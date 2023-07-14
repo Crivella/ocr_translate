@@ -65,39 +65,37 @@ def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}):
     if break_newlines:
         tokens = text.split('\n')
     else:
-        tokens = [text] 
-   
-    res = []
-    for tok in filter(None, tokens):
-        logger.debug(f'TSL: {tok}')
-        encoded = tsl_tokenizer(tok, return_tensors="pt")
-        ntok = encoded['input_ids'].flatten().size()[0]
-        encoded.to(dev)
+        tokens = text
 
-        mnt = min(
-            max_max_new_tokens, 
-            max(
-                min_max_new_tokens, 
-                max_new_tokens, 
-                max_new_tokens_ratio * ntok
-            )
+    logger.debug(f'TSL: {tokens}')
+    encoded = tsl_tokenizer(tokens, return_tensors="pt", padding=True, truncation=True)
+    ntok = encoded['input_ids'].shape[1]
+    encoded.to(dev)
+
+    mnt = min(
+        max_max_new_tokens, 
+        max(
+            min_max_new_tokens, 
+            max_new_tokens, 
+            max_new_tokens_ratio * ntok
         )
+    )
 
-        kwargs = {
-            "max_new_tokens": mnt,
-        }
-        if isinstance(tsl_tokenizer, M2M100Tokenizer):
-            kwargs["forced_bos_token_id"] = tsl_tokenizer.get_lang_id(lang_dst)
+    kwargs = {
+        "max_new_tokens": mnt,
+    }
+    if isinstance(tsl_tokenizer, M2M100Tokenizer):
+        kwargs["forced_bos_token_id"] = tsl_tokenizer.get_lang_id(lang_dst)
 
-        generated_tokens = tsl_model.generate(
-            **encoded,
-            **kwargs,
-            )
-        tsl = tsl_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
-        logger.debug(f'TSL: {tsl}')
-        res.append(' '.join(tsl))
+    generated_tokens = tsl_model.generate(
+        **encoded,
+        **kwargs,
+        )
+    
+    tsl = tsl_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+    logger.debug(f'TSL: {tsl}')
 
-    return ' '.join(res)
+    return ' '.join(tsl)
 
 def tsl_pipeline(*args, id, **kwargs):
     msg = q.put(
