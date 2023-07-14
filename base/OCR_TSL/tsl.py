@@ -1,6 +1,7 @@
 import logging
 import re
 
+from django.db.models import Count
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, M2M100Tokenizer
 
 from .. import models as m
@@ -144,3 +145,26 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.Optio
         # new = tsl_run_obj.result.text
 
     return tsl_run_obj.result
+
+def tsl_run_batch(texts: list[m.Text], src: m.Language, dst: m.Language, options: m.OptionDict = None, force: bool = False) -> list[m.Text]:
+    model_obj = get_tsl_model()
+    options_obj = options or m.OptionDict.objects.get(options={})
+    params = {
+        'options': options_obj,
+        # 'text': text_obj,
+        'model': model_obj,
+        'lang_src': src,
+        'lang_dst': dst,
+    }
+
+    id_list = [t.id for t in texts]
+    query = m.BatchTranslationRun.objects.annotate(count=Count('text')).filter(text__in=id_list, **params)
+    for id in id_list:
+        query = query.filter(text__id=id)
+    btsl_run_obj = query.first()
+    if btsl_run_obj is None or force:
+        raise NotImplementedError
+    else:
+        logger.info('Reusing Batch TSL')
+
+    return list(btsl_run_obj.result)
