@@ -107,6 +107,17 @@ class OCRRun(models.Model):
     model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='ocr_runs')
     result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr')
 
+class BatchTranslationRun(models.Model):
+    """Batch translation run on a groups of texts using a specific model"""
+    options = models.ForeignKey(OptionDict, on_delete=models.CASCADE, related_name='batch_trans_options')
+
+    lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='batch_trans_src')
+    lang_dst = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='batch_trans_dst')
+
+    text = models.ManyToManyField(Text, related_name='to_batch_trans')
+    model = models.ForeignKey(TSLModel, on_delete=models.CASCADE, related_name='batch_tsl_runs')
+    result = models.ManyToManyField(Text, related_name='from_batch_trans')
+
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""
     options = models.ForeignKey(OptionDict, on_delete=models.CASCADE, related_name='trans_options')
@@ -117,4 +128,8 @@ class TranslationRun(models.Model):
     text = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='to_trans')
     model = models.ForeignKey(TSLModel, on_delete=models.CASCADE, related_name='tsl_runs')
     result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_trans')
+
+    from_batch = models.ForeignKey(BatchTranslationRun, on_delete=models.CASCADE, related_name='single_equivalent', null=True)
+
+    
 
