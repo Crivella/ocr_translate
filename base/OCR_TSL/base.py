@@ -58,7 +58,7 @@ def load_hugginface_model(model_id: str, request: list[str]):
 
 if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
     cwd = Path(__file__).parent
-    with open(cwd / 'languages.json') as f:
+    with open(cwd / 'languages.json', encoding='utf-8') as f:
         langs = json.load(f)
 
     for lang in langs:

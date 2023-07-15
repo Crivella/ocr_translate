@@ -66,13 +66,15 @@ def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}, b
     ignore_chars = options.get('ignore_chars', None)
 
     min_max_new_tokens = options.get('min_max_new_tokens', 10)
-    max_max_new_tokens = options.get('min_max_new_tokens', 512)
+    max_max_new_tokens = options.get('max_max_new_tokens', 512)
     max_new_tokens = options.get('max_new_tokens', 10)
     max_new_tokens_ratio = options.get('max_new_tokens_ratio', 1)
                            
     tokens = pre_tokenize(text, ignore_chars, break_chars, break_newlines)
 
     logger.debug(f'TSL: {tokens}')
+    if len(tokens) == 0:
+        return ''
     encoded = tsl_tokenizer(tokens, return_tensors="pt", padding=True, truncation=True)
     ntok = encoded['input_ids'].shape[1]
     encoded.to(dev)
