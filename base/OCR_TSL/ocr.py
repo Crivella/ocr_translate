@@ -125,7 +125,7 @@ def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None]
             params['result'] = text_obj
             ocr_run = m.OCRRun.objects.create(**params)
         else:
-            logger.info('Reusing OCR')
+            logger.info(f'Reusing OCR <{ocr_run.id}>')
             text_obj = ocr_run.result
             # text = ocr_run.result.text
 

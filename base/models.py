@@ -14,14 +14,14 @@ class OptionDict(models.Model):
 class Language(models.Model):
     """Language used for translation"""
     name = models.CharField(max_length=64, unique=True)
-    iso1 = models.CharField(max_length=2, unique=True)
-    iso2b = models.CharField(max_length=3, unique=True)
-    iso2t = models.CharField(max_length=3, unique=True)
+    iso1 = models.CharField(max_length=8, unique=True)
+    iso2b = models.CharField(max_length=8, unique=True)
+    iso2t = models.CharField(max_length=8, unique=True)
     iso3 = models.CharField(max_length=32, unique=True)
 
-    easyocr = models.CharField(max_length=32, unique=True, null=True)
-    tesseract = models.CharField(max_length=32, unique=True, null=True)
-    facebookM2M = models.CharField(max_length=32, unique=True, null=True)
+    easyocr = models.CharField(max_length=32, null=True)
+    tesseract = models.CharField(max_length=32, null=True)
+    facebookM2M = models.CharField(max_length=32, null=True)
 
     break_chars = models.CharField(max_length=512, null=True)
     ignore_chars = models.CharField(max_length=512, null=True) 

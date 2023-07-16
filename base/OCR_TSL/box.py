@@ -169,7 +169,7 @@ def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] 
                 from_ocr=bbox_run,
                 )
     else:
-        logger.info('Reusing BBox OCR')
+        logger.info(f'Reusing BBox OCR <{bbox_run.id}>')
     logger.info(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
 
     return list(bbox_run.result.all())

@@ -65,10 +65,10 @@ def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}, b
     break_chars = options.get('break_chars', None)
     ignore_chars = options.get('ignore_chars', None)
 
-    min_max_new_tokens = options.get('min_max_new_tokens', 10)
+    min_max_new_tokens = options.get('min_max_new_tokens', 20)
     max_max_new_tokens = options.get('max_max_new_tokens', 512)
-    max_new_tokens = options.get('max_new_tokens', 10)
-    max_new_tokens_ratio = options.get('max_new_tokens_ratio', 1)
+    max_new_tokens = options.get('max_new_tokens', 20)
+    max_new_tokens_ratio = options.get('max_new_tokens_ratio', 3)
                            
     tokens = pre_tokenize(text, ignore_chars, break_chars, break_newlines)
 
@@ -94,6 +94,8 @@ def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}, b
     if isinstance(tsl_tokenizer, M2M100Tokenizer):
         kwargs["forced_bos_token_id"] = tsl_tokenizer.get_lang_id(lang_dst)
 
+    logger.debug(f'TSL ENCODED: {encoded}')
+    logger.debug(f'TSL KWARGS: {kwargs}')
     generated_tokens = tsl_model.generate(
         **encoded,
         **kwargs,
@@ -143,7 +145,7 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.Optio
         params['result'] = text_obj
         tsl_run_obj = m.TranslationRun.objects.create(**params)
     else:
-        logger.info('Reusing TSL')
+        logger.info(f'Reusing TSL <{tsl_run_obj.id}>')
         # new = tsl_run_obj.result.text
 
     return tsl_run_obj.result

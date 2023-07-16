@@ -233,13 +233,23 @@
         "iso3": "nya"
     },
     {
-        "name": "Chinese",
+        "name": "Chinese Simplified",
         "iso1": "zh",
         "iso2t": "zho",
         "iso2b": "chi",
         "iso3": "zho + 16",
         "easyocr": "ch_sim",
         "tesseract": "chi_sim",
+        "facebookM2M": "zh"
+    },
+    {
+        "name": "Chinese Traditional",
+        "iso1": "zht",
+        "iso2t": "zhot",
+        "iso2b": "chit",
+        "iso3": "zho + 16t",
+        "easyocr": "ch_tra",
+        "tesseract": "chi_tra",
         "facebookM2M": "zh"
     },
     {
