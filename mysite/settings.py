@@ -92,7 +92,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'base.apps.OCT_TSLconfig'
+    'ocr_translate'
 ]
 
 MIDDLEWARE = [
@@ -105,7 +105,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'ocr_translate.urls'
+ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [
     {
@@ -123,7 +123,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ocr_translate.wsgi.application'
+WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
 # Database

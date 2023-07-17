@@ -38,8 +38,8 @@ RUN mkdir -p /opt/app/media
 
 COPY start-server.sh /opt/app/
 COPY manage.py /opt/app/
-COPY base /opt/app/base/
 COPY ocr_translate /opt/app/ocr_translate/
+COPY mysite /opt/app/mysite/
 COPY staticfiles /opt/app/static/
 COPY media /opt/app/media/
 
