@@ -36,6 +36,9 @@ dependencies = [
     "Pillow==9.5.0",
     "opencv-python-headless==4.8.0.74",
 
+    "torch==2.0.1",
+    "torchvision==0.15.2",
+
     "transformers==4.30.2",
     "easyocr==1.7.0",
     "fugashi==1.2.1",
@@ -73,3 +76,9 @@ postgres = [
 
 [tool.flit.module]
 name = "ocr_translate"
+
+[tool.flit.sdist]
+exclude = [
+    "Dockerfile", "nginix.default", "start-server.sh", 
+    "mysite/", "mysite/*", "manage.py"
+    ]

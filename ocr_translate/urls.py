@@ -2,7 +2,7 @@ from django.urls import path
 
 from ocr_translate import views
 
-app_name = 'base'
+app_name = 'ocr_translate'
 urlpatterns = [
     path('', views.handshake),
     path('load/', views.load_models),
