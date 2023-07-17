@@ -6,6 +6,7 @@ opencv-python-headless==4.8.0.74
 
 transformers==4.30.2
 easyocr==1.7.0
+pytesseract==0.3.10
 fugashi==1.2.1
 unidic-lite==1.0.8
 sacremoses==0.0.53
