@@ -26,7 +26,9 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = {}) -> list[dict]:
     bbox_obj_list = box_run(img_obj, get_lang_src())
     for bbox_obj in bbox_obj_list:
         text_obj = ocr_run(bbox_obj, get_lang_src())
-        tsl_obj = tsl_run(text_obj, get_lang_src(), get_lang_dst())
+        text_obj = next(text_obj)
+        tsl_obj = tsl_run(text_obj, get_lang_src(), get_lang_dst(), lazy=True)
+        tsl_obj = next(tsl_obj)
 
         text = text_obj.text
         new = tsl_obj.text
@@ -54,12 +56,27 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
     bbox_obj_list = box_run(img_obj, get_lang_src() ,image=img)
 
+    texts = []
     for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
 
-        text_obj = ocr_run(bbox_obj, get_lang_src(), image=img, force=force)
-        tsl_obj = tsl_run(text_obj, get_lang_src(), get_lang_dst(), force=force)
+        text_obj = ocr_run(bbox_obj, get_lang_src(), image=img, force=force, block=False)
+        next(text_obj)
+        texts.append(text_obj)
 
+    texts = [next(_) for _ in texts]
+    logger.debug(f'OCR DONE: {texts}')
+
+    trans = []
+    for text_obj in texts:
+        tsl_obj = tsl_run(text_obj, get_lang_src(), get_lang_dst(), force=force, block=False)
+        next(tsl_obj)
+        trans.append(tsl_obj)
+
+    trans = [next(_) for _ in trans]
+    logger.debug(f'TRANSLATION DONE: {trans}')
+
+    for bbox_obj, text_obj, tsl_obj in zip(bbox_obj_list, texts, trans):
         text = text_obj.text
         new = tsl_obj.text
 

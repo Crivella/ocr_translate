@@ -167,6 +167,7 @@ def run_tsl(request: HttpRequest) -> JsonResponse:
     
     src_obj, _ = m.Text.objects.get_or_create(text=text)
     dst_obj = tsl_run(src_obj, get_lang_src(), get_lang_dst())
+    dst_obj = next(dst_obj)
 
     return JsonResponse({
         'text': dst_obj.text,

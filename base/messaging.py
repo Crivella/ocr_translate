@@ -159,6 +159,7 @@ class WorkerMessageQueue(queue.SimpleQueue):
         self.registered = {}
         self.batch_pools = {}
         self.msg_to_batch_pool = {}
+        self.batch_resolve_flagged = []
         self.reuse_msg = reuse_msg
         self.max_len = max_len
         self.allow_batching = allow_batching
@@ -175,29 +176,38 @@ class WorkerMessageQueue(queue.SimpleQueue):
             # TODO: Remove solved messages from cache
             #  Only 1by1 or all?
             raise NotImplementedError('Max len reached')
+        
+        res = Message(id, msg, handler, batch_args=self.batch_args, batch_kwargs=self.batch_kwargs)
         if self.allow_batching and batch_id is not None:
             self.msg_to_batch_pool[id] = batch_id
             ptr = self.batch_pools.setdefault(batch_id, [])
-            ptr.append(msg)
+            ptr.append(res)
 
-        msg = Message(id, msg, handler, batch_args=self.batch_args, batch_kwargs=self.batch_kwargs)
-        self.registered[id] = msg
+        self.registered[id] = res
 
-        super().put(msg)
+        super().put(res)
 
-        return msg
+        return res
     
     def get(self, *args, **kwargs) -> Union[Message, list[Message]]:
         msg = super().get(*args, **kwargs)
+        while msg.id in self.batch_resolve_flagged:
+            self.batch_resolve_flagged.remove(msg.id)
+            msg = super().get(*args, **kwargs)
 
         if self.allow_batching and msg.id in self.msg_to_batch_pool:
             # Wait for more messages to come
+            logger.debug(f'Batching message {msg.id}')
             time.sleep(self.batch_timeout)
 
+            logger.debug(f'Batching message {msg.id} done')
             pool_id = self.msg_to_batch_pool[msg.id]
+            logger.debug(f'Batching message {msg.id} pool id {pool_id}')
             pool = self.batch_pools.pop(pool_id)
+            logger.debug(f'Batching message {msg.id} pool {pool}')
             for msg in pool:
                 self.msg_to_batch_pool.pop(msg.id)
+                self.batch_resolve_flagged.append(msg.id)
             if len(pool) > 1:
                 return pool
 

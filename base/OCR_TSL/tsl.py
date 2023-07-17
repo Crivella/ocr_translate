@@ -1,10 +1,12 @@
 import logging
 import re
+from typing import Generator, Hashable, Union
 
 from django.db.models import Count
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, M2M100Tokenizer
 
 from .. import models as m
+from ..messaging import Message
 from ..queues import tsl_queue as q
 from .base import dev, load_hugginface_model
 
@@ -57,8 +59,7 @@ def pre_tokenize(text: str, ignore_chars=None, break_chars=None, break_newlines=
         tokens = text
     return list(filter(None, tokens))
 
-special = re.compile("([・・.!。?♥♡♪〜]+)")
-def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}, batch=False) -> str:
+def _tsl_pipeline(text: Union[str,list[str]], lang_src: str, lang_dst: str, options: dict = {}) -> Union[str,list[str]]:
     tsl_tokenizer.src_lang = lang_src
 
     break_newlines = options.get('break_newlines', True)
@@ -69,13 +70,25 @@ def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}, b
     max_max_new_tokens = options.get('max_max_new_tokens', 512)
     max_new_tokens = options.get('max_new_tokens', 20)
     max_new_tokens_ratio = options.get('max_new_tokens_ratio', 3)
-                           
-    tokens = pre_tokenize(text, ignore_chars, break_chars, break_newlines)
+
+    args = (ignore_chars, break_chars, break_newlines)      
+    if isinstance(text, list):
+        tokens = [pre_tokenize(t, *args) for t in text]
+    elif isinstance(text, str):
+        tokens = pre_tokenize(text, *args)
+    else:
+        raise TypeError(f'Unsupported type for text: {type(text)}')
 
     logger.debug(f'TSL: {tokens}')
     if len(tokens) == 0:
         return ''
-    encoded = tsl_tokenizer(tokens, return_tensors="pt", padding=True, truncation=True)
+    encoded = tsl_tokenizer(
+        tokens, 
+        return_tensors="pt", 
+        padding=True, 
+        truncation=True, 
+        is_split_into_words=True
+        )
     ntok = encoded['input_ids'].shape[1]
     encoded.to(dev)
 
@@ -103,19 +116,30 @@ def _tsl_pipeline(text: str, lang_src: str, lang_dst: str, options: dict = {}, b
     
     tsl = tsl_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
     logger.debug(f'TSL: {tsl}')
+    
+    if isinstance(text, str):
+        tsl = tsl[0]
+    return tsl
 
-    return ' '.join(tsl)
-
-def tsl_pipeline(*args, id, **kwargs):
+def tsl_pipeline(*args, id: Hashable, batch_id: Hashable = None, block: bool = True, **kwargs):
     msg = q.put(
         id = id,
+        batch_id = batch_id,
         msg = {'args': args, 'kwargs': kwargs},
         handler = _tsl_pipeline,
     )
 
-    return msg.response()
+    if block:
+        return msg.response()
+    
+    return msg
 
-def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.OptionDict = None, force: bool = False) -> m.Text:
+def tsl_run(
+        text_obj: m.Text, src: m.Language, dst: m.Language, options: m.OptionDict = None, 
+        force: bool = False, block: bool = True, lazy: bool = False
+        ) -> Generator[Union[Message, m.Text], None, None]:
+    if lazy and force:
+        raise ValueError('Cannot force + lazy TSL run')
     model_obj = get_tsl_model()
     options_obj = options or m.OptionDict.objects.get(options={})
     params = {
@@ -127,8 +151,11 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.Optio
     }
     tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
     if tsl_run_obj is None or force:
+        if lazy:
+            raise ValueError('Value not found for lazy TSL run')
         logger.info('Running TSL')
-        id = (text_obj.id, model_obj.id)
+        id = (text_obj.id, model_obj.id, options_obj.id, src.id, dst.id)
+        batch_id = (model_obj.id, options_obj.id, src.id, dst.id)
         opt_dct = options_obj.options
         opt_dct.setdefault('break_chars', src.break_chars)
         opt_dct.setdefault('ignore_chars', src.ignore_chars)
@@ -136,19 +163,28 @@ def tsl_run(text_obj: m.Text, src: m.Language, dst: m.Language, options: m.Optio
             text_obj.text,
             getattr(src, model_obj.language_format),
             getattr(dst, model_obj.language_format),
+            options=opt_dct,
             id=id, 
-            options=opt_dct
+            batch_id=batch_id,
+            block=block,
             )
+        if not block:
+            yield new
+            new = new.response()
         text_obj, _ = m.Text.objects.get_or_create(
             text = new,
             )
         params['result'] = text_obj
         tsl_run_obj = m.TranslationRun.objects.create(**params)
     else:
+        if not block:
+            # Both branches should have the same number of yields
+            yield None
         logger.info(f'Reusing TSL <{tsl_run_obj.id}>')
         # new = tsl_run_obj.result.text
 
-    return tsl_run_obj.result
+    yield tsl_run_obj.result
+
 
 def tsl_run_batch(texts: list[m.Text], src: m.Language, dst: m.Language, options: m.OptionDict = None, force: bool = False) -> list[m.Text]:
     model_obj = get_tsl_model()
@@ -167,7 +203,32 @@ def tsl_run_batch(texts: list[m.Text], src: m.Language, dst: m.Language, options
         query = query.filter(text__id=id)
     btsl_run_obj = query.first()
     if btsl_run_obj is None or force:
-        raise NotImplementedError
+        # raise NotImplementedError
+        logger.info('Running TSL-BATCH')
+        text_ids = [t.id for t in texts]
+        id = (model_obj.id, *text_ids)
+        opt_dct = options_obj.options
+        opt_dct.setdefault('break_chars', src.break_chars)
+        opt_dct.setdefault('ignore_chars', src.ignore_chars)
+        new = tsl_pipeline(
+            [t.text for t in texts],
+            getattr(src, model_obj.language_format),
+            getattr(dst, model_obj.language_format),
+            id=id, 
+            options=opt_dct
+            )
+        btsl_run_obj = m.BatchTranslationRun.objects.create(**params)
+        btsl_run_obj.text.set(texts)
+        for t_src, t_dst in zip(texts, new):
+            text_obj, _ = m.Text.objects.get_or_create(
+                text = t_dst,
+                )
+            params['text'] = t_src
+            params['result'] = text_obj
+            tsl_run_obj = m.TranslationRun.objects.create(**params)
+            btsl_run_obj.result.add(text_obj)
+            btsl_run_obj.single_equivalent.add(tsl_run_obj)
+            btsl_run_obj.save()
     else:
         logger.info('Reusing Batch TSL')
 

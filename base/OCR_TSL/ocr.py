@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import Union
+from typing import Generator, Hashable, Union
 
 from PIL import Image
 from transformers import (BertJapaneseTokenizer, VisionEncoderDecoderModel,
                           ViTImageProcessor)
 
 from .. import models as m
+from ..messaging import Message
 from ..queues import ocr_queue as q
 from .base import dev, load_hugginface_model
 from .tesseract import tesseract_pipeline
@@ -83,50 +84,62 @@ def _ocr(img: Image.Image, lang: str = None, bbox: tuple[int, int, int, int] = N
 
     return generated_text
 
-def ocr(*args, id, **kwargs) -> str:
+def ocr(*args, id: Hashable, block: bool = True, **kwargs) -> Union[str, Message]:
     msg = q.put(
         id = id,
         msg = {'args': args, 'kwargs': kwargs},
         handler = _ocr,
     )
 
-    return msg.response()
+    if block:
+        return msg.response()
+    return msg
 
-def ocr_run(bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None] = None, force: bool = False, options: m.OptionDict = None) -> m.Text:
-        global ocr_model_obj
-        options_obj = m.OptionDict.objects.get(options={})
-        params = {
-            'bbox': bbox_obj,
-            'model': ocr_model_obj,
-            'lang_src': lang,
-            'options': options_obj,
-        }
-        ocr_run = m.OCRRun.objects.filter(**params).first()
-        if ocr_run is None or force:
-            if image is None:
-                raise ValueError('Image is required for OCR')
-            logger.info('Running OCR')
+def ocr_run(
+        bbox_obj: m.BBox, lang: m.Language,  image: Union[Image.Image, None] = None, options: m.OptionDict = None,
+        force: bool = False, block: bool = True,
+        ) -> Generator[Union[Message, m.Text], None, None]:
+    global ocr_model_obj
+    options_obj = m.OptionDict.objects.get(options={})
+    params = {
+        'bbox': bbox_obj,
+        'model': ocr_model_obj,
+        'lang_src': lang,
+        'options': options_obj,
+    }
+    ocr_run = m.OCRRun.objects.filter(**params).first()
+    if ocr_run is None or force:
+        if image is None:
+            raise ValueError('Image is required for OCR')
+        logger.info('Running OCR')
 
-            id = (bbox_obj.id, ocr_model_obj.id, lang.id)
-            mlang = getattr(lang, ocr_model_obj.language_format or 'iso1')
-            opt_dct = options_obj.options
-            text = ocr(
-                image, 
-                lang=mlang, 
-                bbox=bbox_obj.lbrt, 
-                id=id,
-                options=opt_dct,
-                )
-            if lang.iso1 in no_space_languages:
-                text = text.replace(' ', '')
-            text_obj, _ = m.Text.objects.get_or_create(
-                text=text,
-                )
-            params['result'] = text_obj
-            ocr_run = m.OCRRun.objects.create(**params)
-        else:
-            logger.info(f'Reusing OCR <{ocr_run.id}>')
-            text_obj = ocr_run.result
-            # text = ocr_run.result.text
+        id = (bbox_obj.id, ocr_model_obj.id, lang.id)
+        mlang = getattr(lang, ocr_model_obj.language_format or 'iso1')
+        opt_dct = options_obj.options
+        text = ocr(
+            image, 
+            lang=mlang, 
+            bbox=bbox_obj.lbrt, 
+            options=opt_dct,
+            id=id,
+            block=block,
+            )
+        if not block:
+            yield text
+            text = text.response()
+        if lang.iso1 in no_space_languages:
+            text = text.replace(' ', '')
+        text_obj, _ = m.Text.objects.get_or_create(
+            text=text,
+            )
+        params['result'] = text_obj
+        ocr_run = m.OCRRun.objects.create(**params)
+    else:
+        if not block:
+            # Both branches should have the same number of yields
+            yield None
+        logger.info(f'Reusing OCR <{ocr_run.id}>')
+        text_obj = ocr_run.result
+        # text = ocr_run.result.text
 
-        return text_obj
+    yield text_obj
