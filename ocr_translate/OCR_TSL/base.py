@@ -108,12 +108,12 @@ if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
         for l in src:
             logger.debug(f'Adding src language: {l}')
             kw = {lcode: l}
-            model.src_languages.add(m.Language.objects.get(**kw))
+            model.src_languages.add(*m.Language.objects.filter(**kw))
 
         for l in dst:
             logger.debug(f'Adding dst language: {l}')
             kw = {lcode: l}
-            model.dst_languages.add(m.Language.objects.get(**kw))
+            model.dst_languages.add(*m.Language.objects.filter(**kw))
         model.save()
 
     base_option, _ = m.OptionDict.objects.get_or_create(options={})
