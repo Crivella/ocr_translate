@@ -116,7 +116,7 @@ def _tsl_pipeline(text: Union[str,list[str]], lang_src: str, lang_dst: str, opti
     
     tsl = tsl_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
     logger.debug(f'TSL: {tsl}')
-    
+
     if isinstance(text, str):
         tsl = tsl[0]
     return tsl
@@ -184,52 +184,3 @@ def tsl_run(
         # new = tsl_run_obj.result.text
 
     yield tsl_run_obj.result
-
-
-def tsl_run_batch(texts: list[m.Text], src: m.Language, dst: m.Language, options: m.OptionDict = None, force: bool = False) -> list[m.Text]:
-    model_obj = get_tsl_model()
-    options_obj = options or m.OptionDict.objects.get(options={})
-    params = {
-        'options': options_obj,
-        # 'text': text_obj,
-        'model': model_obj,
-        'lang_src': src,
-        'lang_dst': dst,
-    }
-
-    id_list = [t.id for t in texts]
-    query = m.BatchTranslationRun.objects.annotate(count=Count('text')).filter(text__in=id_list, **params)
-    for id in id_list:
-        query = query.filter(text__id=id)
-    btsl_run_obj = query.first()
-    if btsl_run_obj is None or force:
-        # raise NotImplementedError
-        logger.info('Running TSL-BATCH')
-        text_ids = [t.id for t in texts]
-        id = (model_obj.id, *text_ids)
-        opt_dct = options_obj.options
-        opt_dct.setdefault('break_chars', src.break_chars)
-        opt_dct.setdefault('ignore_chars', src.ignore_chars)
-        new = tsl_pipeline(
-            [t.text for t in texts],
-            getattr(src, model_obj.language_format),
-            getattr(dst, model_obj.language_format),
-            id=id, 
-            options=opt_dct
-            )
-        btsl_run_obj = m.BatchTranslationRun.objects.create(**params)
-        btsl_run_obj.text.set(texts)
-        for t_src, t_dst in zip(texts, new):
-            text_obj, _ = m.Text.objects.get_or_create(
-                text = t_dst,
-                )
-            params['text'] = t_src
-            params['result'] = text_obj
-            tsl_run_obj = m.TranslationRun.objects.create(**params)
-            btsl_run_obj.result.add(text_obj)
-            btsl_run_obj.single_equivalent.add(tsl_run_obj)
-            btsl_run_obj.save()
-    else:
-        logger.info('Reusing Batch TSL')
-
-    return list(btsl_run_obj.result)
