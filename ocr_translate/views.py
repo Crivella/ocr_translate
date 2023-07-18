@@ -249,15 +249,10 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
 
 @csrf_exempt
 def get_translations(request: HttpRequest) -> JsonResponse:
-    if request.method != 'POST':
+    if request.method != 'GET':
         return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-    
-    try:
-        data = post_data_converter(request)
-    except ValueError as e:
-        return JsonResponse({'error': 'invalid content type'}, status=400)
-    
-    text = data.get('text', None)
+
+    text = request.GET.get('text', None)
 
     if text is None:
         return JsonResponse({'error': 'no text'}, status=400)
