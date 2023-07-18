@@ -55,8 +55,10 @@ You will also have to modify the `ALLOWED_HOSTS` in case you plan to access the 
 
 The Github repo provides not only the Django app files, but also the already configured project files used to start the server.
 
-Initialize your database by running
-`python manage.py migrate`
+Create/Initialize your database by running
+
+- `python manage.py migrate`
+
 inside your project folder.
 
 Run the server using for example one of the following options:
@@ -99,6 +101,8 @@ Run the command:
 
 See the [Environment variables](#environment-variables) section for configuring your environment variable file. Additionaly the docker image defines 2 other variable to automatically create an admin user for managing the database via the django-admin interface:
 
+- `UID`: UID of the user owning the files in /models and /data
+- `GID`: GID of the user owning the files in /models and /data
 - `NUM_WEB_WORKERS`: Number of gunicorn workers for the server
 - `DJANGO_SUPERUSER_USERNAME`: The username of the admin user to be created.
 - `DJANGO_SUPERUSER_PASSWORD`: The password of the admin user to be created.

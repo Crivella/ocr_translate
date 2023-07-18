@@ -53,6 +53,8 @@ mapping = {
     'seq2seq': AutoModelForSeq2SeqLM
 }
 
+accept_device = ['ved_model', 'seq2seq', 'model']
+
 def load_hugginface_model(model_id: str, request: list[str]):
     res = {}
     for r in request:
@@ -62,7 +64,7 @@ def load_hugginface_model(model_id: str, request: list[str]):
         if v is None:
             raise ValueError(f'Could not load model: {model_id}')
         
-        if r in ['ved_model', 'seq2seq', 'model']:
+        if r in accept_device:
             v = v.to(dev)
 
         res[r] = v

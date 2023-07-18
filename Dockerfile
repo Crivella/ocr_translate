@@ -11,7 +11,7 @@ COPY requirements.txt /src/
 COPY .pip_cache-cpu /pip_cache
 
 RUN mkdir -p /pip_cache
-RUN /venv/bin/pip install -r /src/requirements-torch.txt --cache-dir /pip_cache
+RUN /venv/bin/pip install -r /src/requirements-torch-cpu.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install -r /src/requirements.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install gunicorn --cache-dir /pip_cache
 RUN /venv/bin/pip install pytesseract --cache-dir /pip_cache
@@ -52,6 +52,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
 ENV \
+    UID=1000 \
+    GID=1000 \
     LOAD_ON_START="true" \
     AUTOCREATE_LANGUAGES="true" \
     AUTOCREATE_VALIDATED_MODELS="true" \
@@ -65,8 +67,8 @@ ENV \
     NUM_TSL_WORKERS="1" \
     DJANGO_DEBUG="false" \
     DJANGO_LOG_LEVEL="INFO" \
-    DJANGO_SUPERUSER_USERNAME="admin" \
-    DJANGO_SUPERUSER_PASSWORD="password" \
+    DJANGO_SUPERUSER_USERNAME="" \
+    DJANGO_SUPERUSER_PASSWORD="" \
     DATABASE_ENGINE="django.db.backends.sqlite3" \
     DATABASE_NAME="/data/db.sqlite3" \
     DATABASE_HOST="" \
