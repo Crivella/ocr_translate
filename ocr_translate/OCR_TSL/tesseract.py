@@ -1,3 +1,21 @@
+###################################################################################
+# ocr_translate - a django app to perform OCR and translation of images.          #
+# Copyright (C) 2023-present Davide Grassano                                      #
+#                                                                                 #
+# This program is free software: you can redistribute it and/or modify            #
+# it under the terms of the GNU General Public License as published by            #
+# the Free Software Foundation, either version 3 of the License.                  #
+#                                                                                 #
+# This program is distributed in the hope that it will be useful,                 #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                  #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                   #
+# GNU General Public License for more details.                                    #
+#                                                                                 #
+# You should have received a copy of the GNU General Public License               #
+# along with this program.  If not, see {http://www.gnu.org/licenses/}.           #
+#                                                                                 #
+# Home: https://github.com/Crivella/ocr_translate                                 #
+###################################################################################
 import logging
 import os
 from pathlib import Path
@@ -13,7 +31,6 @@ logger = logging.getLogger('ocr.general')
 model_url = 'https://github.com/tesseract-ocr/tessdata_best/raw/main/{}.traineddata'
 
 data_dir = Path(os.getenv('TESSERACT_PREFIX', root / 'tesseract'))
-data_dir.mkdir(exist_ok=True)
 
 vertical_langs = ['jpn', 'chi_tra', 'chi_sim', 'kor']
 
@@ -23,6 +40,7 @@ config = False
 def download_model(lang: str):
     if not download:
         raise ValueError('Downloading models is not allowed')
+    create_config()
     
     logger.info(f'Downloading tesseract model for language {lang}')
     dst = data_dir / f'{lang}.traineddata'
@@ -46,7 +64,7 @@ def create_config():
     
     logger.info('Creating tesseract tsv config')
     cfg = data_dir / 'configs'
-    cfg.mkdir(exist_ok=True)
+    cfg.mkdir(exist_ok=True, parents=True)
 
     dst = cfg / 'tsv'
     if dst.exists():
@@ -54,8 +72,22 @@ def create_config():
     with dst.open('w') as f:
         f.write('tessedit_create_tsv 1')
 
-
-
+# Page segmentation modes:
+#   0    Orientation and script detection (OSD) only.
+#   1    Automatic page segmentation with OSD.
+#   2    Automatic page segmentation, but no OSD, or OCR.
+#   3    Fully automatic page segmentation, but no OSD. (Default)
+#   4    Assume a single column of text of variable sizes.
+#   5    Assume a single uniform block of vertically aligned text.
+#   6    Assume a single uniform block of text.
+#   7    Treat the image as a single text line.
+#   8    Treat the image as a single word.
+#   9    Treat the image as a single word in a circle.
+#  10    Treat the image as a single character.
+#  11    Sparse text. Find as much text as possible in no particular order.
+#  12    Sparse text with OSD.
+#  13    Raw line. Treat the image as a single text line,
+#        bypassing hacks that are Tesseract-specific.
 def tesseract_pipeline(img: Image.Image, lang: str, conf_thr: int = 15, favor_vertical: bool = True) -> str:
     create_config()
     if not (data_dir / f'{lang}.traineddata').exists():

@@ -1,4 +1,21 @@
-# import json
+###################################################################################
+# ocr_translate - a django app to perform OCR and translation of images.          #
+# Copyright (C) 2023-present Davide Grassano                                      #
+#                                                                                 #
+# This program is free software: you can redistribute it and/or modify            #
+# it under the terms of the GNU General Public License as published by            #
+# the Free Software Foundation, either version 3 of the License.                  #
+#                                                                                 #
+# This program is distributed in the hope that it will be useful,                 #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                  #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                   #
+# GNU General Public License for more details.                                    #
+#                                                                                 #
+# You should have received a copy of the GNU General Public License               #
+# along with this program.  If not, see {http://www.gnu.org/licenses/}.           #
+#                                                                                 #
+# Home: https://github.com/Crivella/ocr_translate                                 #
+###################################################################################
 import json
 import logging
 import os
@@ -11,9 +28,6 @@ from .. import models as m
 
 logger = logging.getLogger('ocr.general')
 
-# from .. import models as m
-
-# This should be set from env variables in the container
 root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
 logger.debug(f'Cache dir: {root}')
 dev = os.environ.get('DEVICE', 'cpu')
@@ -22,7 +36,6 @@ def load(loader, model_id: str):
     res = None
     try:
         mid = root / model_id
-        # raise OSError
         logger.debug(f'Attempt loading from store: "{loader}" "{mid}"')
         res = loader.from_pretrained(mid)
     except Exception:
