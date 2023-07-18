@@ -5,9 +5,9 @@ RUN virtualenv /venv/
 
 RUN mkdir -p /src
 
-COPY requirements-torch.txt /src/
+COPY requirements-torch-cpu.txt /src/
 COPY requirements.txt /src/
-# This might ahve to be removed when pushing the image
+# This might have to be removed when pushing the image?
 COPY .pip_cache-cpu /pip_cache
 
 RUN mkdir -p /pip_cache
