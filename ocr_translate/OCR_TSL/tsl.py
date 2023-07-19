@@ -75,7 +75,10 @@ def pre_tokenize(text: str, ignore_chars=None, break_chars=None, break_newlines=
         tokens = text.split('\n')
     else:
         tokens = text
-    return list(filter(None, tokens))
+
+    res = list(filter(None, tokens))
+
+    return res if len(res) else [' ']
 
 def _tsl_pipeline(text: Union[str,list[str]], lang_src: str, lang_dst: str, options: dict = {}) -> Union[str,list[str]]:
     tsl_tokenizer.src_lang = lang_src
