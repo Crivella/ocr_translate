@@ -39,4 +39,3 @@ main_queue.start_workers()
 box_queue.start_workers()
 ocr_queue.start_workers()
 tsl_queue.start_workers()
-

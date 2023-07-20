@@ -39,51 +39,51 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'verbose': { 
-            'format': '{levelname} - {asctime} - {module} - {process:d} - {thread:d} - {message}', 
-            'style': '{', 
+        'verbose': {
+            'format': '{levelname} - {asctime} - {module} - {process:d} - {thread:d} - {message}',
+            'style': '{',
             },
         'medium': {
             'format': '{asctime} - {levelname:>7s} - {name:>15s}:{module:<15s} - {message}',
             'style': '{',
             },
-        'simple': { 
-            'format': '{levelname} - {message}', 
-            'style': '{', 
+        'simple': {
+            'format': '{levelname} - {message}',
+            'style': '{',
             },
     },
-    "filters": {
-        "require_debug_true": {
-            "()": "django.utils.log.RequireDebugTrue",
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
         },
     },
-    "handlers": {
-        "console": {
-            "level": os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
-            "filters": ["require_debug_true"],
-            "class": "logging.StreamHandler",
-            "formatter": "medium",
+    'handlers': {
+        'console': {
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'medium',
         },
     },
     'loggers': {
-        "django": {
-            "handlers": ["console"],
-            "propagate": True,
+        'django': {
+            'handlers': ['console'],
+            'propagate': True,
         },
-        "django.request": {
-            "handlers": ["console"],
-            "level": "ERROR",
-            "propagate": False,
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
         },
-        "ocr.general": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "filters": ["require_debug_true"],
+        'ocr.general': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
         },
-        "ocr.worker": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "filters": ["require_debug_true"],
+        'ocr.worker': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
         },
     },
 }
@@ -216,8 +216,8 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'), 
-    ) 
+    os.path.join(BASE_DIR, 'static'),
+    )
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-MEDIA_URL = '/media/' 
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

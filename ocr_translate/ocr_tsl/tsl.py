@@ -16,12 +16,13 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Functions and piplines to perform translation on text."""
 import logging
 import re
 from typing import Generator, Hashable, Union
 
-from django.db.models import Count
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, M2M100Tokenizer
+import torch
+from transformers import M2M100Tokenizer
 
 from .. import models as m
 from ..messaging import Message
@@ -30,42 +31,58 @@ from .base import dev, load_hugginface_model
 
 logger = logging.getLogger('ocr.general')
 
-tsl_model_id = None
-tsl_model = None
-tsl_tokenizer = None
-tsl_model_obj = None
+TSL_MODEL_ID = None
+TSL_MODEL = None
+TSL_TOKENIZER = None
+TSL_MODEL_OBJ = None
 
 def unload_tsl_model():
-    global tsl_model_obj, tsl_model, tsl_tokenizer, tsl_model_id
+    """Remove the current TSL model from memory."""
+    global TSL_MODEL_OBJ, TSL_MODEL, TSL_TOKENIZER, TSL_MODEL_ID
 
-    logger.info(f'Unloading TSL model: {tsl_model_id}')
-    tsl_model = None
-    tsl_tokenizer = None
-    tsl_model_obj = None
-    tsl_model_id = None
+    logger.info(f'Unloading TSL model: {TSL_MODEL_ID}')
+    TSL_MODEL = None
+    TSL_TOKENIZER = None
+    TSL_MODEL_OBJ = None
+    TSL_MODEL_ID = None
 
     if dev == 'cuda':
-        import torch
         torch.cuda.empty_cache()
 
 def load_tsl_model(model_id):
-    global tsl_model_obj, tsl_model, tsl_tokenizer, tsl_model_id
+    """Load a TSL model into memory."""
+    global TSL_MODEL_OBJ, TSL_MODEL, TSL_TOKENIZER, TSL_MODEL_ID
 
-    if tsl_model_id == model_id:
+    if TSL_MODEL_ID == model_id:
         return
 
     logger.info(f'Loading TSL model: {model_id}')
     res = load_hugginface_model(model_id, request=['seq2seq', 'tokenizer'])
-    tsl_model = res['seq2seq']
-    tsl_tokenizer = res['tokenizer']
+    TSL_MODEL = res['seq2seq']
+    TSL_TOKENIZER = res['tokenizer']
 
-    tsl_model_obj, _ = m.TSLModel.objects.get_or_create(name=model_id)
-    tsl_model_id = model_id
+    TSL_MODEL_OBJ, _ = m.TSLModel.objects.get_or_create(name=model_id)
+    TSL_MODEL_ID = model_id
 
 def get_tsl_model() -> m.TSLModel:
-    return tsl_model_obj
+    """Get the current TSL model."""
+    return TSL_MODEL_OBJ
 
-def pre_tokenize(text: str, ignore_chars=None, break_chars=None, break_newlines=True) -> list[str]:
+def pre_tokenize(
+        text: str,
+        ignore_chars: str = None, break_chars: str = None, break_newlines: bool = True
+        ) -> list[str]:
+    """Pre-tokenize a text string.
+
+    Args:
+        text (str): Text to tokenize.
+        ignore_chars (str, optional): String of characters to ignore. Defaults to None.
+        break_chars (str, optional): String of characters to break on. Defaults to None.
+        break_newlines (bool, optional): Whether to break on newlines. Defaults to True.
+
+    Returns:
+        list[str]: List of string tokens.
+    """
     if break_chars is not None:
         text = re.sub(f'[{break_chars}]', '\n', text)
     if ignore_chars is not None:
@@ -77,8 +94,28 @@ def pre_tokenize(text: str, ignore_chars=None, break_chars=None, break_newlines=
         tokens = text
     return list(filter(None, tokens))
 
-def _tsl_pipeline(text: Union[str,list[str]], lang_src: str, lang_dst: str, options: dict = {}) -> Union[str,list[str]]:
-    tsl_tokenizer.src_lang = lang_src
+def _tsl_pipeline(
+        text: Union[str,list[str]],
+        lang_src: str, lang_dst: str,
+        options: dict = None
+        ) -> Union[str,list[str]]:
+    """Translate a text using a TSL model.
+
+    Args:
+        text (Union[str,list[str]]): Text to translate. Can be batched to a list of strings.
+        lang_src (str): Source language.
+        lang_dst (str): Destination language.
+        options (dict, optional): Options for the translation. Defaults to {}.
+
+    Raises:
+        TypeError: If text is not a string or a list of strings.
+
+    Returns:
+        Union[str,list[str]]: Translated text. If text is a list, returns a list of translated strings.
+    """
+    if options is None:
+        options = {}
+    TSL_TOKENIZER.src_lang = lang_src
 
     break_newlines = options.get('break_newlines', True)
     break_chars = options.get('break_chars', None)
@@ -89,7 +126,7 @@ def _tsl_pipeline(text: Union[str,list[str]], lang_src: str, lang_dst: str, opti
     max_new_tokens = options.get('max_new_tokens', 20)
     max_new_tokens_ratio = options.get('max_new_tokens_ratio', 3)
 
-    args = (ignore_chars, break_chars, break_newlines)      
+    args = (ignore_chars, break_chars, break_newlines)
     if isinstance(text, list):
         tokens = [pre_tokenize(t, *args) for t in text]
     elif isinstance(text, str):
@@ -100,48 +137,57 @@ def _tsl_pipeline(text: Union[str,list[str]], lang_src: str, lang_dst: str, opti
     logger.debug(f'TSL: {tokens}')
     if len(tokens) == 0:
         return ''
-    encoded = tsl_tokenizer(
-        tokens, 
-        return_tensors="pt", 
-        padding=True, 
-        truncation=True, 
+    encoded = TSL_TOKENIZER(
+        tokens,
+        return_tensors='pt',
+        padding=True,
+        truncation=True,
         is_split_into_words=True
         )
     ntok = encoded['input_ids'].shape[1]
     encoded.to(dev)
 
     mnt = min(
-        max_max_new_tokens, 
+        max_max_new_tokens,
         max(
-            min_max_new_tokens, 
-            max_new_tokens, 
+            min_max_new_tokens,
+            max_new_tokens,
             max_new_tokens_ratio * ntok
         )
     )
 
     kwargs = {
-        "max_new_tokens": mnt,
+        'max_new_tokens': mnt,
     }
-    if isinstance(tsl_tokenizer, M2M100Tokenizer):
-        kwargs["forced_bos_token_id"] = tsl_tokenizer.get_lang_id(lang_dst)
+    if isinstance(TSL_TOKENIZER, M2M100Tokenizer):
+        kwargs['forced_bos_token_id'] = TSL_TOKENIZER.get_lang_id(lang_dst)
 
     logger.debug(f'TSL ENCODED: {encoded}')
     logger.debug(f'TSL KWARGS: {kwargs}')
-    generated_tokens = tsl_model.generate(
+    generated_tokens = TSL_MODEL.generate(
         **encoded,
         **kwargs,
         )
-    
-    tsl = tsl_tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+
+    tsl = TSL_TOKENIZER.batch_decode(generated_tokens, skip_special_tokens=True)
     logger.debug(f'TSL: {tsl}')
 
     if isinstance(text, str):
         tsl = tsl[0]
     return tsl
 
-def tsl_pipeline(*args, id: Hashable, batch_id: Hashable = None, block: bool = True, **kwargs):
+def tsl_pipeline(*args, id_: Hashable, batch_id: Hashable = None, block: bool = True, **kwargs):
+    """Queue a text translation pipeline.
+
+    Args:
+        id_ (Hashable): A unique identifier for the OCR task.
+        block (bool, optional): Whether to block until the task is complete. Defaults to True.
+
+    Returns:
+        Union[str, Message]: The text extracted from the image (block=True) or a Message object (block=False).
+    """
     msg = q.put(
-        id = id,
+        id_ = id_,
         batch_id = batch_id,
         msg = {'args': args, 'kwargs': kwargs},
         handler = _tsl_pipeline,
@@ -149,13 +195,33 @@ def tsl_pipeline(*args, id: Hashable, batch_id: Hashable = None, block: bool = T
 
     if block:
         return msg.response()
-    
     return msg
 
 def tsl_run(
-        text_obj: m.Text, src: m.Language, dst: m.Language, options: m.OptionDict = None, 
-        force: bool = False, block: bool = True, lazy: bool = False
+        text_obj: m.Text, src: m.Language, dst: m.Language, options: m.OptionDict = None,
+        force: bool = False,
+        block: bool = True,
+        lazy: bool = False
         ) -> Generator[Union[Message, m.Text], None, None]:
+    """Run a TSL pipeline on a text object.
+
+    Args:
+        text_obj (m.Text): Text object from the database to translate.
+        src (m.Language): Source language object from the database.
+        dst (m.Language): Destination language object from the database.
+        options (m.OptionDict, optional): OptionDict object from the database. Defaults to None.
+        force (bool, optional): Whether to force a new TSL run. Defaults to False.
+        block (bool, optional): Whether to block until the task is complete. Defaults to True.
+        lazy (bool, optional): Whether to raise an error if the TSL run is not found. Defaults to False.
+
+    Raises:
+        ValueError: If lazy and force are both True or if lazy is True and the TSL run is not found.
+
+    Yields:
+        Generator[Union[Message, m.Text], None, None]:
+            If block is True, yields a Message object for the TSL run first and the resulting Text object second.
+            If block is False, yields the resulting Text object.
+    """
     if lazy and force:
         raise ValueError('Cannot force + lazy TSL run')
     model_obj = get_tsl_model()
@@ -172,7 +238,7 @@ def tsl_run(
         if lazy:
             raise ValueError('Value not found for lazy TSL run')
         logger.info('Running TSL')
-        id = (text_obj.id, model_obj.id, options_obj.id, src.id, dst.id)
+        id_ = (text_obj.id, model_obj.id, options_obj.id, src.id, dst.id)
         batch_id = (model_obj.id, options_obj.id, src.id, dst.id)
         opt_dct = options_obj.options
         opt_dct.setdefault('break_chars', src.break_chars)
@@ -182,7 +248,7 @@ def tsl_run(
             getattr(src, model_obj.language_format),
             getattr(dst, model_obj.language_format),
             options=opt_dct,
-            id=id, 
+            id_=id_,
             batch_id=batch_id,
             block=block,
             )

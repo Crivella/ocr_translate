@@ -1,0 +1,48 @@
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.1.0
+      hooks:
+          - id: double-quote-string-fixer
+          - id: end-of-file-fixer
+            exclude: &exclude >-
+                (?x)^(
+                    tests/.*fixtures|
+                    .*/migrations/.*|
+                    .*\.json|
+                    .*\.txt
+                )$
+          - id: mixed-line-ending
+          - id: trailing-whitespace
+            exclude: *exclude
+
+    - repo: https://github.com/ikamensh/flynt/
+      rev: "0.76"
+      hooks:
+          - id: flynt
+
+    - repo: https://github.com/pycqa/isort
+      rev: "5.12.0"
+      hooks:
+          - id: isort
+            exclude: *exclude
+
+    # - repo: local
+    #   hooks:
+    #       - id: pylint
+    #         name: pylint
+    #         entry: pylint
+    #         language: system
+    #         types: [python]
+    #         exclude: >
+    #             (?x)^(
+    #                 docs/.*|
+    #                 tests/.*(?<!\.py)$
+    #             )$
+    #         args:
+    #             - "--load-plugins=pylint_pytest"
+    #             - "--load-plugins=pylint_django"
+    #             # - "--disable=W0212" # protected-access. Needed for parser
+    #             # - "--disable=W0612" # unused-variable. Needed for clarity when expanding variables
+    #             # - "--disable=R1710" # inconsistent return statements. Needed for rasing errors in workchain
+    #             # - "--disable=C0411" # import order. Isort will take care of this
+    #             # - "--disable=W0707" # Consider explicitly re-raising.

@@ -60,20 +60,21 @@ mysql = [
 postgres = [
     "psycopg[binary]==3.1.9",
 ]
-# tests = [
-#     "pytest",
-#     "pytest-cov",
-#     "pytest-regressions~=2.4",
-#     "pytest-datadir~=1.3.1",
-#     "pgtest~=1.3.1"
-# ]
-# pre-commit = [
-#     "pre-commit",
-#     "pylint",
-#     "pylint-pytest",
-#     "prospector>=1.3.1",
-#     "ruamel.yaml"
-# ]
+tests = [
+    "pytest",
+    # "pytest-cov",
+    # "pytest-regressions~=2.4",
+    # "pytest-datadir~=1.3.1",
+    # "pgtest~=1.3.1"
+]
+pre-commit = [
+    "pre-commit",
+    "pylint",
+    "pylint-pytest",
+    "pylint-django",
+    # "prospector>=1.3.1",
+    # "ruamel.yaml"
+]
 
 [tool.flit.module]
 name = "ocr_translate"
@@ -81,6 +82,37 @@ name = "ocr_translate"
 [tool.flit.sdist]
 exclude = [
     ".gitignore",
-    "Dockerfile", "nginx.default", "start-server.sh", 
+    "Dockerfile", "nginx.default", "start-server.sh",
     "mysite/", "mysite/*", "manage.py"
     ]
+
+[tool.pylint.main]
+load-plugins = [
+    "pylint_django",
+    "pylint_pytest"
+]
+django-settings-module = "mysite.settings"
+
+[tool.pylint.messages_control]
+disable = [
+    "logging-fstring-interpolation",
+    "global-statement",
+    "broad-exception-caught"
+]
+
+
+[tool.pylint.format]
+max-line-length = 120
+good-names = [
+    "_",
+    "l", "r", "b", "t",
+    "l1", "r1", "b1", "t1",
+    "l2", "r2", "b2", "t2",
+    "i", "j",
+    "k", "v",
+    "f",
+]
+
+[tool.pylint.design]
+max-args = 10
+max-locals = 20

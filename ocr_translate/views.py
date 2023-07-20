@@ -30,12 +30,12 @@ from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 
 from . import models as m
-from .OCR_TSL import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
-from .OCR_TSL.box import get_box_model, load_box_model, unload_box_model
-from .OCR_TSL.lang import (get_lang_dst, get_lang_src, load_lang_dst,
+from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
+from .ocr_tsl.full import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
+from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
                            load_lang_src)
-from .OCR_TSL.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
-from .OCR_TSL.tsl import (get_tsl_model, load_tsl_model, tsl_run,
+from .ocr_tsl.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
+from .ocr_tsl.tsl import (get_tsl_model, load_tsl_model, tsl_run,
                           unload_tsl_model)
 from .queues import main_queue as q
 
@@ -53,9 +53,9 @@ def handshake(request: HttpRequest) -> JsonResponse:
     # import_models()
     if not request.method == 'GET':
         return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-    
+
     csrf.get_token(request)
-    
+
     logger.debug(f'Handshake: {str(get_ocr_model())}, {str(get_tsl_model())}')
     lang_src = get_lang_src()
     lang_dst = get_lang_dst()
@@ -73,7 +73,7 @@ def handshake(request: HttpRequest) -> JsonResponse:
                 src_languages=lang_src,
                 dst_languages=lang_dst,
                 )
-            
+
     box_model = get_box_model() or ''
     ocr_model = get_ocr_model() or ''
     tsl_model = get_tsl_model() or ''
@@ -87,9 +87,9 @@ def handshake(request: HttpRequest) -> JsonResponse:
         'OCRModels': [str(_) for _ in ocr_models],
         'TSLModels': [str(_) for _ in tsl_models],
 
-        'box_selected': str(box_model), 
+        'box_selected': str(box_model),
         'ocr_selected': str(ocr_model),
-        'tsl_selected': str(tsl_model), 
+        'tsl_selected': str(tsl_model),
         'lang_src': str(lang_src),
         'lang_dst': str(lang_dst),
         })
@@ -104,7 +104,7 @@ def load_models(request: HttpRequest) -> JsonResponse:
 
         logger.info('LOAD MODELS', data)
         logger.debug(data)
-        
+
         box_model_id = data.get('box_model_id', None)
         ocr_model_id = data.get('ocr_model_id', None)
         tsl_model_id = data.get('tsl_model_id', None)
@@ -118,7 +118,7 @@ def load_models(request: HttpRequest) -> JsonResponse:
                 load_tsl_model(tsl_model_id)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
-        
+
         return JsonResponse({})
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
 
@@ -130,7 +130,7 @@ def set_lang(request: HttpRequest) -> JsonResponse:
         except ValueError as e:
             return JsonResponse({'error': 'invalid content type'}, status=400)
         logger.info('SET LANG', data)
-        
+
         lang_src = data.get('lang_src', None)
         lang_dst = data.get('lang_dst', None)
         if lang_src is None:
@@ -163,7 +163,7 @@ def set_lang(request: HttpRequest) -> JsonResponse:
                 unload_ocr_model()
         if c2:
             pass
-        
+
         return JsonResponse({})
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
 
@@ -171,16 +171,16 @@ def set_lang(request: HttpRequest) -> JsonResponse:
 def run_tsl(request: HttpRequest) -> JsonResponse:
     if request.method != 'POST':
         return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-    
+
     try:
         data = post_data_converter(request)
     except ValueError as e:
         return JsonResponse({'error': 'invalid content type'}, status=400)
-    
+
     text = data.get('text', None)
     if text is None:
         return JsonResponse({'error': 'no text'}, status=400)
-    
+
     src_obj, _ = m.Text.objects.get_or_create(text=text)
     dst_obj = tsl_run(src_obj, get_lang_src(), get_lang_dst())
     dst_obj = next(dst_obj)
@@ -196,7 +196,7 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
             data = post_data_converter(request)
         except ValueError as e:
             return JsonResponse({'error': 'invalid content type'}, status=400)
-        
+
         b64 = data.get('contents', None)
         md5 = data.get('md5')
         frc = data.get('force', False)
@@ -230,7 +230,7 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
             ocr_model = get_ocr_model()
             tsl_model = get_tsl_model()
             msg = q.put(
-                id = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id),
+                id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id),
                 msg = {
                     'args': (img, md5),
                     'kwargs': {'force': frc, 'options': opt},
@@ -256,11 +256,11 @@ def get_translations(request: HttpRequest) -> JsonResponse:
 
     if text is None:
         return JsonResponse({'error': 'no text'}, status=400)
-    
+
     text_obj = m.Text.objects.filter(text=text).first()
     if text_obj is None:
         return JsonResponse({'error': 'text not found'}, status=404)
-    
+
     translations = text_obj.to_trans.filter(
         lang_src=get_lang_src(),
         lang_dst=get_lang_dst(),
@@ -271,5 +271,3 @@ def get_translations(request: HttpRequest) -> JsonResponse:
             'text': _.result.text,
             } for _ in translations],
         })
-
-

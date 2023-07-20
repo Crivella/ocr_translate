@@ -31,7 +31,7 @@ class NotHandled():
 class Message():
     NotHandled = NotHandled
     def __init__(
-            self, id: Hashable, msg: dict, handler: Callable,
+            self, id_: Hashable, msg: dict, handler: Callable,
             batch_args: tuple = (), batch_kwargs: Iterable = ()
             ):
         """Message object to be used in WorkerMessageQueue.
@@ -42,7 +42,7 @@ class Message():
             batch_args (tuple, optional): Indexes of the args to be batched. Defaults to ().
             batch_kwargs (Iterable, optional): Keys of the kwargs to be batched. Defaults to ().
         """
-        self.id = id
+        self.id = id_
         self.msg = msg
         self.handler = handler
         self.batch_args = batch_args
@@ -77,7 +77,7 @@ class Message():
         if any([set(_.msg['kwargs'].keys()) != check for _ in others]):
             raise ValueError('All messages must have the same kwargs')
         # Should also check that the non-batched args and kwargs are the same for all messages
-        
+
         args = [[a] if i in self.batch_args else a for i, a in enumerate(self.msg['args'])]
         kwargs = {k:[v] if i in self.batch_kwargs else v for i, (k, v) in enumerate(self.msg['kwargs'].items())}
 
@@ -99,7 +99,7 @@ class Message():
     @property
     def is_resolved(self):
         return self._response is not NotHandled
-    
+
     def response(self, timeout: float = 0, poll: float = 0.2):
         start = time.time()
 
@@ -109,7 +109,7 @@ class Message():
             time.sleep(poll)
 
         return self._response
-    
+
     def __str__(self):
         return f'Message({self.msg}), Handler: {self.handler.__name__}'
 
@@ -151,13 +151,13 @@ class Worker():
 
 class WorkerMessageQueue(queue.SimpleQueue):
     def __init__(
-            self, 
-            *args, 
-            num_workers: int = 1, 
-            reuse_msg: bool = True, 
-            max_len: int = 0, 
-            allow_batching: bool = False, 
-            batch_timeout: float = 0.5, 
+            self,
+            *args,
+            num_workers: int = 1,
+            reuse_msg: bool = True,
+            max_len: int = 0,
+            allow_batching: bool = False,
+            batch_timeout: float = 0.5,
             batch_args: tuple = (), batch_kwargs: Iterable = (),
             **kwargs
             ):
@@ -186,27 +186,27 @@ class WorkerMessageQueue(queue.SimpleQueue):
         self.batch_kwargs = batch_kwargs
         self.workers = [Worker(self) for _ in range(num_workers)]
 
-    def put(self, id: Hashable, msg: dict, handler: Callable, batch_id: Hashable = None) -> Message:
-        if self.reuse_msg and id in self.registered:
-            logger.debug(f'Reusing message {id}')
-            return self.registered[id]
+    def put(self, id_: Hashable, msg: dict, handler: Callable, batch_id: Hashable = None) -> Message:
+        if self.reuse_msg and id_ in self.registered:
+            logger.debug(f'Reusing message {id_}')
+            return self.registered[id_]
         if self.max_len > 0 and self.qsize() > self.max_len:
             # TODO: Remove solved messages from cache
             #  Only 1by1 or all?
             raise NotImplementedError('Max len reached')
-        
-        res = Message(id, msg, handler, batch_args=self.batch_args, batch_kwargs=self.batch_kwargs)
+
+        res = Message(id_, msg, handler, batch_args=self.batch_args, batch_kwargs=self.batch_kwargs)
         if self.allow_batching and batch_id is not None:
-            self.msg_to_batch_pool[id] = batch_id
+            self.msg_to_batch_pool[id_] = batch_id
             ptr = self.batch_pools.setdefault(batch_id, [])
             ptr.append(res)
 
-        self.registered[id] = res
+        self.registered[id_] = res
 
         super().put(res)
 
         return res
-    
+
     def get(self, *args, **kwargs) -> Union[Message, list[Message]]:
         msg = super().get(*args, **kwargs)
         while msg.id in self.batch_resolve_flagged:
@@ -233,7 +233,7 @@ class WorkerMessageQueue(queue.SimpleQueue):
 
     def get_msg(self, msg_id: str):
         return self.registered.get(msg_id, None)
-    
+
     def start_workers(self):
         for w in self.workers:
             w.start()
@@ -241,6 +241,3 @@ class WorkerMessageQueue(queue.SimpleQueue):
     def stop_workers(self):
         for w in self.workers:
             w.stop()
-    
-
-    
