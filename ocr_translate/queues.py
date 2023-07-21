@@ -16,6 +16,7 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Queues definition for the ocr_translate app."""
 import os
 
 from .messaging import WorkerMessageQueue

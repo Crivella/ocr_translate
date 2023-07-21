@@ -16,9 +16,10 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Django models for the ocr_translate app."""
 from django.db import models
 
-lang_length = 32
+LANG_LENGTH = 32
 
 class OptionDict(models.Model):
     """Dictionary of options for OCR and translation"""
@@ -92,6 +93,7 @@ class BBox(models.Model):
 
     @property
     def lbrt(self):
+        """Return the bounding box as a tuple of (left, bottom, right, top)"""
         return self.l, self.b, self.r, self.t
 
     def __str__(self):

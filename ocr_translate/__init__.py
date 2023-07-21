@@ -16,6 +16,6 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
-
+"""OCR and translation of images."""
 
 __version__ = '0.1.2'

@@ -16,6 +16,7 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Django routing for the ocr_translate app."""
 from django.urls import path
 
 from ocr_translate import views

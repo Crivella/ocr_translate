@@ -16,22 +16,26 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Admin interface for ocr_translate app."""
 from django.contrib import admin
 
 from . import models as m
 
-# Register your models here.
 
 class LanguageAdmin(admin.ModelAdmin):
+    """Admin interface for Language model"""
     list_display = ('name', 'iso1', 'iso2b', 'iso2t', 'iso3')
 
 class OCRBoxModelAdmin(admin.ModelAdmin):
+    """Admin interface for OCRBoxModel model"""
     list_display = ('name',)
 
 class OCRModelAdmin(admin.ModelAdmin):
+    """Admin interface for OCRModel model"""
     list_display = ('name',)
 
 class TSLModelAdmin(admin.ModelAdmin):
+    """Admin interface for TSLModel model"""
     list_display = ('name',)
 
 

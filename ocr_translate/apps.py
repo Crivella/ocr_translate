@@ -16,9 +16,11 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""App configuration for ocr_translate."""
 from django.apps import AppConfig
 
 
-class OCR_TSLconfig(AppConfig):
+class OCRTSLconfig(AppConfig):
+    """App configuration for ocr_translate."""
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'ocr_translate'

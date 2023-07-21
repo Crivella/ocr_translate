@@ -97,7 +97,8 @@ django-settings-module = "mysite.settings"
 disable = [
     "logging-fstring-interpolation",
     "global-statement",
-    "broad-exception-caught"
+    "broad-exception-caught",
+    "too-few-public-methods",
 ]
 
 
@@ -116,3 +117,4 @@ good-names = [
 [tool.pylint.design]
 max-args = 10
 max-locals = 20
+max-attributes = 12

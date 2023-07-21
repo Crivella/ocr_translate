@@ -26,23 +26,18 @@ repos:
           - id: isort
             exclude: *exclude
 
-    # - repo: local
-    #   hooks:
-    #       - id: pylint
-    #         name: pylint
-    #         entry: pylint
-    #         language: system
-    #         types: [python]
-    #         exclude: >
-    #             (?x)^(
-    #                 docs/.*|
-    #                 tests/.*(?<!\.py)$
-    #             )$
-    #         args:
-    #             - "--load-plugins=pylint_pytest"
-    #             - "--load-plugins=pylint_django"
-    #             # - "--disable=W0212" # protected-access. Needed for parser
-    #             # - "--disable=W0612" # unused-variable. Needed for clarity when expanding variables
-    #             # - "--disable=R1710" # inconsistent return statements. Needed for rasing errors in workchain
-    #             # - "--disable=C0411" # import order. Isort will take care of this
-    #             # - "--disable=W0707" # Consider explicitly re-raising.
+    - repo: local
+      hooks:
+          - id: pylint
+            name: pylint
+            entry: pylint
+            language: system
+            types: [python]
+            exclude: >
+                (?x)^(
+                    manage\.py|
+                    mysite/.*|
+                    .*/migrations/.*|
+                    docs/.*|
+                    tests/.*(?<!\.py)$
+                )$
