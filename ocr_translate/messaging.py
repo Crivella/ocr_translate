@@ -56,7 +56,11 @@ class Message():
     def resolve(self):
         """Resolve the message by calling the handler with the message.
         This operation is synchronous and will block the exection until the handler is done."""
-        self._response = self.handler(*self.msg.get('args', ()), **self.msg.get('kwargs', {}))
+        try:
+            self._response = self.handler(*self.msg.get('args', ()), **self.msg.get('kwargs', {}))
+        except Exception as exc:
+            self._response = exc
+            raise
         logger.debug(f'MSG Resolved {self.msg} -> {self._response}')
 
         # Make sure to dereference the message to avoid keeping raw images in memory
@@ -84,7 +88,7 @@ class Message():
         # Should also check that the non-batched args and kwargs are the same for all messages
 
         args = [[a] if i in self.batch_args else a for i, a in enumerate(self.msg['args'])]
-        kwargs = {k:[v] if i in self.batch_kwargs else v for i, (k, v) in enumerate(self.msg['kwargs'].items())}
+        kwargs = {k:[v] if k in self.batch_kwargs else v for k, v in self.msg['kwargs'].items()}
 
         for msg in others:
             for i in self.batch_args:
@@ -127,56 +131,37 @@ class Message():
         start = time.time()
 
         while not self.is_resolved:
+
             if time.time() - start > timeout > 0:
                 raise TimeoutError('Message resolution timed out')
             time.sleep(poll)
 
         return self._response
 
+    def __repr__(self):
+        return f'Message({self.msg}), Handler: {self.handler.__name__}'
+
     def __str__(self):
         return f'Message({self.msg}), Handler: {self.handler.__name__}'
 
-class Worker():
-    """Worker object to be used in WorkerMessageQueue."""
-    def __init__(self, attached_queue: queue.SimpleQueue[Message]):
-        self.queue = attached_queue
-        self.kill = False
-        self.running = False
-        self.thread = None
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Message):
+            return False
 
-    def _worker(self):
-        """Worker function that consumes messages from the queue and resolves them."""
-        self.running = True
-        while not self.kill:
-            try:
-                msg = self.queue.get(timeout=1)
-            except queue.Empty:
-                continue
-            logger.debug(f'Worker consuming {msg}')
-            if isinstance(msg, Message):
-                msg.resolve()
-            elif isinstance(msg, list):
-                if len(msg) == 0:
-                    continue
-                if len(msg) == 1:
-                    msg[0].resolve()
-                else:
-                    msg[0].batch_resolve(msg[1:])
-            else:
-                raise ValueError(f'Invalid message type: {type(msg)}')
-        self.running = False
+        res = True
+        res &= self.id_ == __value.id_
+        res &= self.msg == __value.msg
+        res &= self.handler == __value.handler
+        return res
 
-    def start(self):
-        """Start the worker thread."""
-        self.thread = threading.Thread(target=self._worker, daemon=True)
-        self.thread.start()
+    def copy(self) -> 'Message':
+        """Return a copy of the message. Used for tests."""
+        return Message(
+            self.id_, dict(self.msg), self.handler,
+            batch_args=self.batch_args, batch_kwargs=self.batch_kwargs
+            )
 
-    def stop(self):
-        """Stop the worker thread."""
-        self.kill = True
-        self.thread.join()
-
-class WorkerMessageQueue(queue.SimpleQueue):
+class MessageQueue(queue.SimpleQueue):
     """Message queue with worker threads to resolve messages. This class extends queue.SimpleQueue, by adding:
         - Message caching/reuse (When a new message with the same id is put in the queue, the old one is returned)
         - Message batching (Messages with the same batch_id are grouped together and resolved with one handler call)
@@ -184,7 +169,6 @@ class WorkerMessageQueue(queue.SimpleQueue):
     def __init__(
             self,
             *args,
-            num_workers: int = 1,
             reuse_msg: bool = True,
             max_len: int = 0,
             allow_batching: bool = False,
@@ -195,7 +179,6 @@ class WorkerMessageQueue(queue.SimpleQueue):
         """Create a new WorkerMessageQueue.
 
         Args:
-            num_workers (int, optional): Number of workers to spawn. Defaults to 1.
             reuse_msg (bool, optional): Whether to reuse messages with the same id. Defaults to True.
             max_len (int, optional): Max number of messages in queue before starting to remove solved messages
                 from cache. Defaults to 0 (no limit).
@@ -212,11 +195,13 @@ class WorkerMessageQueue(queue.SimpleQueue):
         self.batch_resolve_flagged = []
         self.reuse_msg = reuse_msg
         self.max_len = max_len
+        if allow_batching:
+            if len(batch_args) == 0 and len(batch_kwargs) == 0:
+                raise ValueError('At least one batch arg or kwarg must be specified with batching enabled.')
         self.allow_batching = allow_batching
         self.batch_timeout = batch_timeout
         self.batch_args = batch_args
         self.batch_kwargs = batch_kwargs
-        self.workers = [Worker(self) for _ in range(num_workers)]
 
     def put(self, id_: Hashable, msg: dict, handler: Callable, batch_id: Hashable = None) -> Message:
         """Put a new message in the queue.
@@ -233,6 +218,9 @@ class WorkerMessageQueue(queue.SimpleQueue):
         Returns:
             Message: The message object.
         """
+        if batch_id is not None and not self.allow_batching:
+            raise ValueError('Batching is not allowed')
+
         if self.reuse_msg and id_ in self.registered:
             logger.debug(f'Reusing message {id_}')
             return self.registered[id_]
@@ -247,7 +235,8 @@ class WorkerMessageQueue(queue.SimpleQueue):
             ptr = self.batch_pools.setdefault(batch_id, [])
             ptr.append(res)
 
-        self.registered[id_] = res
+        if self.reuse_msg:
+            self.registered[id_] = res
 
         super().put(res)
 
@@ -277,8 +266,7 @@ class WorkerMessageQueue(queue.SimpleQueue):
             for msg in pool:
                 self.msg_to_batch_pool.pop(msg.id_)
                 self.batch_resolve_flagged.append(msg.id_)
-            if len(pool) > 1:
-                return pool
+            return pool
 
         return msg
 
@@ -291,7 +279,74 @@ class WorkerMessageQueue(queue.SimpleQueue):
         Returns:
             _type_: The message object or None.
         """
+        if not self.reuse_msg:
+            raise ValueError('Message caching is disabled')
+
         return self.registered.get(msg_id, None)
+
+class Worker():
+    """Worker object to be used in WorkerMessageQueue."""
+    def __init__(self, attached_queue: MessageQueue, poll_interval: float = .2):
+        self.queue = attached_queue
+        self.kill = False
+        self.running = False
+        self.thread = None
+        self.poll_interval = poll_interval
+
+    def _worker(self):
+        """Worker function that consumes messages from the queue and resolves them."""
+        self.running = True
+        while not self.kill:
+            try:
+                msg = self.queue.get(timeout=self.poll_interval)
+            except queue.Empty:
+                continue
+            logger.debug(f'Worker consuming {msg}')
+            if isinstance(msg, Message):
+                msg.resolve()
+            elif isinstance(msg, list):
+                if len(msg) == 0:
+                    continue
+                if len(msg) == 1:
+                    msg[0].resolve()
+                else:
+                    msg[0].batch_resolve(msg[1:])
+            else:
+                raise TypeError(f'Invalid message type: {type(msg)}')
+        self.running = False
+
+    def start(self):
+        """Start the worker thread."""
+        self.thread = threading.Thread(target=self._worker, daemon=True)
+        self.thread.start()
+
+    def stop(self):
+        """Stop the worker thread."""
+        self.kill = True
+        self.thread.join()
+
+class WorkerMessageQueue():
+    """Bundle together the queue and its workers."""
+    def __init__(self, *args, num_workers: int = 1, **kwargs):
+        """Create a new WorkerMessageQueue.
+
+        Args:
+            num_workers (int, optional): Number of workers to spawn. Defaults to 1.
+        """
+        self.msg_queue = MessageQueue(*args, **kwargs)
+        self.workers = [Worker(self.msg_queue) for _ in range(num_workers)]
+
+    def put(self, id_: Hashable, msg: dict, handler: Callable, batch_id: Hashable = None) -> Message:
+        """Call the put method of the queue."""
+        return self.msg_queue.put(id_, msg, handler, batch_id=batch_id)
+
+    def get(self, *args, **kwargs) -> Union[Message, list[Message]]:
+        """Call the get method of the queue."""
+        return self.msg_queue.get(*args, **kwargs)
+
+    def get_msg(self, msg_id: str):
+        """Call the get_msg method of the queue."""
+        return self.msg_queue.get_msg(msg_id)
 
     def start_workers(self):
         """Start all the worker threads registered to this queue."""
