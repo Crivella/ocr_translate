@@ -1,0 +1,56 @@
+res:
+- options: {}
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string.? With a special break character.
+  - And a newline.
+- options:
+    break_newlines: false
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - 'This is a test string.? With a special break character.
+
+    And a newline.'
+- options:
+    break_chars: ?.!
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string
+  - ' With a special break character'
+  - And a newline
+- options:
+    ignore_chars: ?.!
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string With a special break character
+  - And a newline
+- options:
+    break_chars: ?.!
+    break_newlines: false
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string
+  - ' With a special break character'
+  - '
+
+    And a newline'
+- options:
+    break_newlines: false
+    ignore_chars: ?.!
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - 'This is a test string With a special break character
+
+    And a newline'

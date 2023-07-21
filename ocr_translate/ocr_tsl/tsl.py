@@ -83,15 +83,20 @@ def pre_tokenize(
     Returns:
         list[str]: List of string tokens.
     """
-    if break_chars is not None:
-        text = re.sub(f'[{break_chars}]', '\n', text)
     if ignore_chars is not None:
-        text = re.sub(f'[{ignore_chars}]', '', text)
-    text = re.sub(r'\n+', '\n', text)
+        text = re.sub(f'[{ignore_chars}]+', '', text)
+    if break_chars is None:
+        break_chars = ''
     if break_newlines:
-        tokens = text.split('\n')
-    else:
-        tokens = text
+        break_chars += '\n'
+
+    break_chars = re.escape(break_chars)
+    tokens = text
+    if len(break_chars) > 0:
+        tokens = re.split(f'[{break_chars}+]', text)
+
+    if isinstance(tokens, str):
+        tokens = [text]
     return list(filter(None, tokens))
 
 def _tsl_pipeline(

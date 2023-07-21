@@ -1,0 +1,76 @@
+res:
+- options: {}
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string.
+  - With a newline.
+  - And another.
+- options:
+    break_newlines: false
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - 'This is a test string.
+
+    With a newline.
+
+    And another.'
+- options:
+    break_chars: ?.!
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string
+  - With a newline
+  - And another
+- options:
+    ignore_chars: ?.!
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string
+  - With a newline
+  - And another
+- options:
+    break_chars: ?.!
+    break_newlines: false
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string
+  - '
+
+    With a newline'
+  - '
+
+    And another'
+- options:
+    break_newlines: false
+    ignore_chars: ?.!
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - 'This is a test string
+
+    With a newline
+
+    And another'
