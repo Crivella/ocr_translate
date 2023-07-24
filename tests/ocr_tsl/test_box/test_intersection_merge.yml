@@ -1,0 +1,265 @@
+res:
+- box_lst:
+  - - 10
+    - 30
+    - 10
+    - 30
+  - - 15
+    - 20
+    - 15
+    - 20
+  idx: b2_inside_b1
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 10
+    - 10
+    - 30
+    - 30
+- box_lst:
+  - - 15
+    - 20
+    - 15
+    - 20
+  - - 10
+    - 30
+    - 10
+    - 30
+  idx: b1_inside_b2
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 10
+    - 10
+    - 30
+    - 30
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 10
+    - 20
+    - 10
+    - 35
+  idx: l1_>_r2
+  intersection: []
+  merge:
+  - - 30
+    - 30
+    - 50
+    - 50
+  - - 10
+    - 10
+    - 20
+    - 35
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 55
+    - 75
+    - 10
+    - 35
+  idx: r1_<_l2
+  intersection: []
+  merge:
+  - - 30
+    - 30
+    - 50
+    - 50
+  - - 55
+    - 10
+    - 75
+    - 35
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 10
+    - 35
+    - 10
+    - 20
+  idx: b1_>_t2
+  intersection: []
+  merge:
+  - - 30
+    - 30
+    - 50
+    - 50
+  - - 10
+    - 10
+    - 35
+    - 20
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 10
+    - 35
+    - 55
+    - 75
+  idx: t1_<_b2
+  intersection: []
+  merge:
+  - - 30
+    - 30
+    - 50
+    - 50
+  - - 10
+    - 55
+    - 35
+    - 75
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 10
+    - 35
+    - 10
+    - 35
+  idx: b2-tr_inside_b1
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 10
+    - 10
+    - 50
+    - 50
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 45
+    - 75
+    - 10
+    - 35
+  idx: b2-tl_inside_b1
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 30
+    - 10
+    - 75
+    - 50
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 40
+    - 75
+    - 45
+    - 75
+  idx: b2-bl_inside_b1
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 30
+    - 30
+    - 75
+    - 75
+- box_lst:
+  - - 30
+    - 50
+    - 30
+    - 50
+  - - 10
+    - 35
+    - 45
+    - 75
+  idx: b2-br_inside_b1
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 10
+    - 30
+    - 50
+    - 75
+- box_lst:
+  - - 10
+    - 70
+    - 50
+    - 60
+  - - 50
+    - 60
+    - 10
+    - 70
+  idx: int_nocorners
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 10
+    - 10
+    - 70
+    - 70
+- box_lst:
+  - - 10
+    - 30
+    - 10
+    - 30
+  - - 29
+    - 51
+    - 29
+    - 40
+  - - 50
+    - 60
+    - 10
+    - 30
+  idx: 3x_intersection
+  intersection:
+  - !!set
+    0: null
+    1: null
+    2: null
+  merge:
+  - - 10
+    - 10
+    - 60
+    - 40
+- box_lst:
+  - - 10
+    - 30
+    - 10
+    - 30
+  - - 29
+    - 51
+    - 29
+    - 40
+  - - 60
+    - 70
+    - 10
+    - 30
+  idx: 2x_intersection_+_1
+  intersection:
+  - !!set
+    0: null
+    1: null
+  merge:
+  - - 10
+    - 10
+    - 51
+    - 40
+  - - 60
+    - 10
+    - 70
+    - 30

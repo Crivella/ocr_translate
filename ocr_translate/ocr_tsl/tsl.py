@@ -99,6 +99,26 @@ def pre_tokenize(
         tokens = [text]
     return list(filter(None, tokens))
 
+def get_mnt(ntok: int, options: dict) -> int:
+    """Get the maximum number of new tokens to generate."""
+    min_max_new_tokens = options.get('min_max_new_tokens', 20)
+    max_max_new_tokens = options.get('max_max_new_tokens', 512)
+    max_new_tokens = options.get('max_new_tokens', 20)
+    max_new_tokens_ratio = options.get('max_new_tokens_ratio', 3)
+
+    if min_max_new_tokens > max_max_new_tokens:
+        raise ValueError('min_max_new_tokens must be less than max_max_new_tokens')
+
+    mnt = min(
+        max_max_new_tokens,
+        max(
+            min_max_new_tokens,
+            max_new_tokens,
+            max_new_tokens_ratio * ntok
+        )
+    )
+    return mnt
+
 def _tsl_pipeline(
         text: Union[str,list[str]],
         lang_src: str, lang_dst: str,
@@ -126,11 +146,6 @@ def _tsl_pipeline(
     break_chars = options.get('break_chars', None)
     ignore_chars = options.get('ignore_chars', None)
 
-    min_max_new_tokens = options.get('min_max_new_tokens', 20)
-    max_max_new_tokens = options.get('max_max_new_tokens', 512)
-    max_new_tokens = options.get('max_new_tokens', 20)
-    max_new_tokens_ratio = options.get('max_new_tokens_ratio', 3)
-
     args = (ignore_chars, break_chars, break_newlines)
     if isinstance(text, list):
         tokens = [pre_tokenize(t, *args) for t in text]
@@ -152,14 +167,7 @@ def _tsl_pipeline(
     ntok = encoded['input_ids'].shape[1]
     encoded.to(dev)
 
-    mnt = min(
-        max_max_new_tokens,
-        max(
-            min_max_new_tokens,
-            max_new_tokens,
-            max_new_tokens_ratio * ntok
-        )
-    )
+    mnt = get_mnt(ntok, options)
 
     kwargs = {
         'max_new_tokens': mnt,
