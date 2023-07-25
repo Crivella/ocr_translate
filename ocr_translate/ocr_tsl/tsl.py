@@ -99,7 +99,7 @@ def pre_tokenize(
         tokens = [text]
 
     res = list(filter(None, tokens))
-    return res if len(res) == 0 else [' ']
+    return res if len(res) > 0 else [' ']
 
 def get_mnt(ntok: int, options: dict) -> int:
     """Get the maximum number of new tokens to generate."""
