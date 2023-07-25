@@ -17,6 +17,7 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Django views for the ocr_translate app."""
+# pylint: disable=too-many-return-statements
 import base64
 import hashlib
 import io
@@ -97,7 +98,7 @@ def handshake(request: HttpRequest) -> JsonResponse:
         })
 
 @csrf_exempt
-def load_models(request: HttpRequest) -> JsonResponse:
+def set_models(request: HttpRequest) -> JsonResponse:
     """Handle a POST request to load models.
     Expected data:
     {
@@ -114,9 +115,12 @@ def load_models(request: HttpRequest) -> JsonResponse:
 
         logger.info(f'LOAD MODELS: {data}')
 
-        box_model_id = data.get('box_model_id', None)
-        ocr_model_id = data.get('ocr_model_id', None)
-        tsl_model_id = data.get('tsl_model_id', None)
+        box_model_id = data.pop('box_model_id', None)
+        ocr_model_id = data.pop('ocr_model_id', None)
+        tsl_model_id = data.pop('tsl_model_id', None)
+
+        if len(data) > 0:
+            return JsonResponse({'error': f'invalid data: {data}'}, status=400)
 
         try:
             if not box_model_id is None and not box_model_id == '':
@@ -149,12 +153,14 @@ def set_lang(request: HttpRequest) -> JsonResponse:
         return JsonResponse({'error': 'invalid content type'}, status=400)
     logger.info(f'SET LANG: {data}')
 
-    lang_src = data.get('lang_src', None)
-    lang_dst = data.get('lang_dst', None)
+    lang_src = data.pop('lang_src', None)
+    lang_dst = data.pop('lang_dst', None)
     if lang_src is None:
         return JsonResponse({'error': 'no lang_src'}, status=400)
     if lang_dst is None:
         return JsonResponse({'error': 'no lang_dst'}, status=400)
+    if len(data) > 0:
+        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
 
     old_src = get_lang_src()
     old_dst = get_lang_dst()
@@ -205,9 +211,12 @@ def run_tsl(request: HttpRequest) -> JsonResponse:
     except ValueError:
         return JsonResponse({'error': 'invalid content type'}, status=400)
 
-    text = data.get('text', None)
+    text = data.pop('text', None)
     if text is None:
         return JsonResponse({'error': 'no text'}, status=400)
+    if len(data) > 0:
+        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+
 
     src_obj, _ = m.Text.objects.get_or_create(text=text)
     dst_obj = tsl_run(src_obj, get_lang_src(), get_lang_dst())
@@ -234,10 +243,15 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         except ValueError:
             return JsonResponse({'error': 'invalid content type'}, status=400)
 
-        b64 = data.get('contents', None)
-        md5 = data.get('md5')
-        frc = data.get('force', False)
-        opt = data.get('options', {})
+        b64 = data.pop('contents', None)
+        md5 = data.pop('md5', None)
+        frc = data.pop('force', False)
+        opt = data.pop('options', {})
+
+        if md5 is None:
+            return JsonResponse({'error': 'no md5'}, status=400)
+        if len(data) > 0:
+            return JsonResponse({'error': f'invalid data: {data}'}, status=400)
 
         if b64 is None:
             logger.info('No contents, trying to lazyload')
@@ -266,8 +280,14 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
             box_model = get_box_model()
             ocr_model = get_ocr_model()
             tsl_model = get_tsl_model()
+
+            try:
+                id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id)
+            except AttributeError:
+                return JsonResponse({'error': 'No models selected'}, status=400)
+
             msg = q.put(
-                id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id),
+                id_ = id_,
                 msg = {
                     'args': (img, md5),
                     'kwargs': {'force': frc, 'options': opt},
@@ -279,7 +299,6 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
 
 
         return JsonResponse({
-            'test': 'POST',
             'result': res,
             })
     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
@@ -295,8 +314,11 @@ def get_translations(request: HttpRequest) -> JsonResponse:
     if request.method != 'GET':
         return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
 
-    text = request.GET.get('text', None)
+    params = request.GET.dict()
+    text = params.pop('text', None)
 
+    if len(params) > 0:
+        return JsonResponse({'error': f'invalid data: {params}'}, status=400)
     if text is None:
         return JsonResponse({'error': 'no text'}, status=400)
 

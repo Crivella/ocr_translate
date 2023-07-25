@@ -4,7 +4,10 @@ import numpy as np
 import pytest
 from PIL import Image
 
+import ocr_translate
 from ocr_translate import models as m
+from ocr_translate import ocr_tsl, views
+from ocr_translate.ocr_tsl import box, lang, ocr, tsl
 
 
 @pytest.fixture()
@@ -101,15 +104,15 @@ def tsl_model(language, tsl_model_dict):
     return res
 
 @pytest.fixture()
-def ocr_box_run(language, image, ocr_box_model, option_dict):
+def box_run(language, image, ocr_box_model, option_dict):
     """OCRBoxRun database object."""
     return m.OCRBoxRun.objects.create(lang_src=language, image=image, model=ocr_box_model, options=option_dict)
 
 
 @pytest.fixture()
-def bbox(image, ocr_box_run):
+def bbox(image, box_run):
     """BBox database object."""
-    return m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4, from_ocr=ocr_box_run)
+    return m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4, from_ocr=box_run)
 
 @pytest.fixture()
 def ocr_run(language, bbox, ocr_model, option_dict, text):
@@ -122,3 +125,47 @@ def tsl_run(language, text, tsl_model, option_dict):
     return m.TranslationRun.objects.create(
         lang_src=language, lang_dst=language, text=text, model=tsl_model, options=option_dict, result=text
         )
+
+@pytest.fixture()
+def mock_loaded(monkeypatch, language, ocr_box_model, ocr_model, tsl_model):
+    """Mock models being loaded"""
+    monkeypatch.setattr(box, 'BOX_MODEL_ID', ocr_box_model.name)
+    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', ocr_box_model)
+    monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', ocr_model.name)
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_ID', tsl_model.name)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(lang, 'LANG_DST', language)
+
+@pytest.fixture()
+def mock_loaders(monkeypatch):
+    """Mock the load functions."""
+    def mock_load_lang_src(name):
+        lang.LANG_SRC = m.Language.objects.get(iso1=name)
+    def mock_load_lang_dst(name):
+        lang.LANG_DST = m.Language.objects.get(iso1=name)
+    def mock_load_box_model(name):
+        box.BOX_MODEL_ID = name
+        box.BBOX_MODEL_OBJ = m.OCRBoxModel.objects.get(name=name)
+    def mock_load_ocr_model(name):
+        ocr.OBJ_MODEL_ID = name
+        ocr.OCR_MODEL_OBJ = m.OCRModel.objects.get(name=name)
+    def mock_load_tsl_model(name):
+        tsl.TSL_MODEL_ID = name
+        tsl.TSL_MODEL_OBJ = m.TSLModel.objects.get(name=name)
+
+    dct = {
+        'load_lang_src': mock_load_lang_src,
+        'load_lang_dst': mock_load_lang_dst,
+        'load_box_model': mock_load_box_model,
+        'load_ocr_model': mock_load_ocr_model,
+        'load_tsl_model': mock_load_tsl_model,
+    }
+
+    for mod in [ocr_translate, ocr_tsl, box, lang, ocr, tsl, views]:
+        for fname, mock in dct.items():
+            try:
+                monkeypatch.setattr(mod, fname, mock)
+            except AttributeError:
+                pass
