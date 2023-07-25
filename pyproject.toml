@@ -32,7 +32,7 @@ requires-python = ">=3.10"
 dependencies = [
     "regex==2023.6.3",
     "requests==2.31.0",
-    "Django==4.2.2",
+    "Django==4.2.3",
     "Pillow==9.5.0",
     "opencv-python-headless==4.8.0.74",
 
