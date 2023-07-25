@@ -49,7 +49,6 @@ def test_get_translations_get_valid_notslrun(client, get_kwargs):
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
 
-    print(response.json())
     assert response.status_code == 200
     content = response.json()
 
@@ -63,7 +62,6 @@ def test_get_translations_get_valid_tslrun(client, get_kwargs, mock_loaded, tsl_
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
 
-    print(response.json())
     assert response.status_code == 200
     content = response.json()
 

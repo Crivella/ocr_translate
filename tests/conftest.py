@@ -45,13 +45,6 @@ def tsl_model_dict():
         'language_format': 'iso1'
     }
 
-# @pytest.fixture(autouse=True)
-# def globaldb(db):
-#     """Fixture to load db"""
-#     print('------------Loading db')
-#     yield
-#     print('------------Unloading db')
-
 @pytest.fixture()
 def option_dict():
     """OptionDict database object."""
@@ -142,18 +135,18 @@ def mock_loaded(monkeypatch, language, ocr_box_model, ocr_model, tsl_model):
 def mock_loaders(monkeypatch):
     """Mock the load functions."""
     def mock_load_lang_src(name):
-        lang.LANG_SRC = m.Language.objects.get(iso1=name)
+        monkeypatch.setattr(lang, 'LANG_SRC', m.Language.objects.get(iso1=name))
     def mock_load_lang_dst(name):
-        lang.LANG_DST = m.Language.objects.get(iso1=name)
+        monkeypatch.setattr(lang, 'LANG_DST', m.Language.objects.get(iso1=name))
     def mock_load_box_model(name):
-        box.BOX_MODEL_ID = name
-        box.BBOX_MODEL_OBJ = m.OCRBoxModel.objects.get(name=name)
+        monkeypatch.setattr(box, 'BOX_MODEL_ID', name)
+        monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', m.OCRBoxModel.objects.get(name=name))
     def mock_load_ocr_model(name):
-        ocr.OBJ_MODEL_ID = name
-        ocr.OCR_MODEL_OBJ = m.OCRModel.objects.get(name=name)
+        monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', name)
+        monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', m.OCRModel.objects.get(name=name))
     def mock_load_tsl_model(name):
-        tsl.TSL_MODEL_ID = name
-        tsl.TSL_MODEL_OBJ = m.TSLModel.objects.get(name=name)
+        monkeypatch.setattr(tsl, 'TSL_MODEL_ID', name)
+        monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', m.TSLModel.objects.get(name=name))
 
     dct = {
         'load_lang_src': mock_load_lang_src,

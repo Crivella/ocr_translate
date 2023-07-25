@@ -126,38 +126,3 @@ def test_auto_create_models_lang():
     assert m2m.dst_languages.count() > 10
     assert eocr.languages.count() > 1
     assert tess.languages.count() > 1
-
-# Not sure if this is testable as the ENV + function call is done at import time
-# Even if i mock the function, reimporting the module is going to overwrite the mock
-# def test_init_most_used_env_off(monkeypatch):
-#     """Test init_most_used with LOAD_ON_START=False."""
-#     called = False
-#     def mock_register_called():
-#         nonlocal called
-#         called = True
-
-#     monkeypatch.setenv('LOAD_ON_START', 'false')
-#     monkeypatch.setattr(ocr_tsl, 'init_most_used', mock_register_called)
-
-#     import ocr_translate.ocr_tsl  # pylint: disable=import-outside-toplevel
-
-#     assert not called
-
-# def test_init_most_used_env_on(monkeypatch):
-#     """Test init_most_used with LOAD_ON_START=True."""
-#     called = False
-#     def mock_register_called():
-#         print('--------------------------------called')
-#         nonlocal called
-#         called = True
-
-#     monkeypatch.setenv('LOAD_ON_START', 'true')
-#     monkeypatch.setattr(ocr_tsl, 'init_most_used', mock_register_called)
-
-#     print('--------------------------------reloading')
-#     # print('--------------------------------', sys.modules['ocr_translate.ocr_tsl'])
-#     setattr(sys.modules['ocr_translate.ocr_tsl'], 'init_most_used', mock_register_called)
-#     # importlib.reload(ocr_tsl)
-#     import ocr_translate.ocr_tsl  # pylint: disable=import-outside-toplevel
-
-#     assert called
