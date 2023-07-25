@@ -16,16 +16,17 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Django routing for the ocr_translate app."""
 from django.urls import path
 
 from ocr_translate import views
 
 app_name = 'ocr_translate'
 urlpatterns = [
-    path('', views.handshake),
-    path('set_models/', views.load_models),
-    path('set_lang/', views.set_lang),
-    path('get_trans/', views.get_translations),
-    path('run_tsl/', views.run_tsl),
-    path('run_ocrtsl/', views.run_ocrtsl),
+    path('', views.handshake, name='handshake'),
+    path('set_models/', views.set_models, name='set_models'),
+    path('set_lang/', views.set_lang, name='set_lang'),
+    path('get_trans/', views.get_translations, name='get_trans'),
+    path('run_tsl/', views.run_tsl, name='run_tsl'),
+    path('run_ocrtsl/', views.run_ocrtsl, name='run_ocrtsl'),
 ]

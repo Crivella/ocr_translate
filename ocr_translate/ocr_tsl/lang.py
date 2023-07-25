@@ -16,23 +16,26 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Manages the globaly selected source and destination language."""
 from .. import models as m
 
-lang_src = None
-lang_dst = None
-# lang_src = m.Language.objects.get(name='ja')
-# lang_dst = m.Language.objects.get(name='en')
+LANG_SRC = None
+LANG_DST = None
 
 def get_lang_src():
-    return lang_src
+    """Return the source language."""
+    return LANG_SRC
 
 def get_lang_dst():
-    return lang_dst
+    """Return the destination language."""
+    return LANG_DST
 
 def load_lang_src(iso1):
-    global lang_src
-    lang_src = m.Language.objects.get(iso1=iso1)
+    """Load the source language."""
+    global LANG_SRC
+    LANG_SRC = m.Language.objects.get(iso1=iso1)
 
 def load_lang_dst(iso1):
-    global lang_dst
-    lang_dst = m.Language.objects.get(iso1=iso1)
+    """Load the destination language."""
+    global LANG_DST
+    LANG_DST = m.Language.objects.get(iso1=iso1)

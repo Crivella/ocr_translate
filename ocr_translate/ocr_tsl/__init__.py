@@ -16,62 +16,45 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Initialize the server based on environment variables."""
 import json
 import logging
 import os
 from pathlib import Path
 
-from transformers import (AutoImageProcessor, AutoModel, AutoModelForSeq2SeqLM,
-                          AutoTokenizer, VisionEncoderDecoderModel)
+from django.db.models import Count
 
 from .. import models as m
+from .box import load_box_model
+from .lang import load_lang_dst, load_lang_src
+from .ocr import load_ocr_model
+from .tsl import load_tsl_model
 
 logger = logging.getLogger('ocr.general')
 
-root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
-logger.debug(f'Cache dir: {root}')
-dev = os.environ.get('DEVICE', 'cpu')
+def init_most_used():
+    """Initialize the server with the most used languages and models."""
+    src = m.Language.objects.annotate(count=Count('trans_src')).order_by('-count').first()
+    dst = m.Language.objects.annotate(count=Count('trans_dst')).order_by('-count').first()
 
-def load(loader, model_id: str):
-    res = None
-    try:
-        mid = root / model_id
-        logger.debug(f'Attempt loading from store: "{loader}" "{mid}"')
-        res = loader.from_pretrained(mid)
-    except Exception:
-        # Needed to catch some weird exception from transformers
-        # eg: huggingface_hub.utils._validators.HFValidationError: Repo id must use alphanumeric chars or '-', '_', '.', '--' and '..' are forbidden, '-' and '.' cannot start or end the name, max length is 96: ...
-        logger.debug(f'Attempt loading from cache: "{loader}" "{model_id}" "{root}"')
-        res = loader.from_pretrained(model_id, cache_dir=root)
-    return res
+    if src:
+        load_lang_src(src.iso1)
+    if dst:
+        load_lang_dst(dst.iso1)
 
-mapping = {
-    'tokenizer': AutoTokenizer,
-    'ved_model': VisionEncoderDecoderModel,
-    'model': AutoModel,
-    'image_processor': AutoImageProcessor,
-    'seq2seq': AutoModelForSeq2SeqLM
-}
+    box = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count').first()
+    ocr = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count').first()
+    tsl = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count').first()
 
-accept_device = ['ved_model', 'seq2seq', 'model']
+    if box:
+        load_box_model(box.name)
+    if ocr:
+        load_ocr_model(ocr.name)
+    if tsl:
+        load_tsl_model(tsl.name)
 
-def load_hugginface_model(model_id: str, request: list[str]):
-    res = {}
-    for r in request:
-        if r not in mapping:
-            raise ValueError(f'Unknown request: {r}')
-        v = load(mapping[r], model_id)
-        if v is None:
-            raise ValueError(f'Could not load model: {model_id}')
-        
-        if r in accept_device:
-            v = v.to(dev)
-
-        res[r] = v
-
-    return res
-
-if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
+def auto_create_languages():
+    """Create Language objects from json file."""
     cwd = Path(__file__).parent
     with open(cwd / 'languages.json', encoding='utf-8') as f:
         langs = json.load(f)
@@ -88,9 +71,10 @@ if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
             setattr(l, k, v)
         l.save()
 
-if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
+def auto_create_models():
+    """Create OCR and TSL models from json file. Also create default OptionDict"""
     cwd = Path(__file__).parent
-    with open(cwd / 'models.json') as f:
+    with open(cwd / 'models.json', encoding='utf-8') as f:
         models = json.load(f)
 
     for box in models['box']:
@@ -122,13 +106,22 @@ if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
         model.language_format = lcode
         for l in src:
             logger.debug(f'Adding src language: {l}')
-            kw = {lcode: l}
-            model.src_languages.add(*m.Language.objects.filter(**kw))
+            kwargs = {lcode: l}
+            model.src_languages.add(*m.Language.objects.filter(**kwargs))
 
         for l in dst:
             logger.debug(f'Adding dst language: {l}')
-            kw = {lcode: l}
-            model.dst_languages.add(*m.Language.objects.filter(**kw))
+            kwargs = {lcode: l}
+            model.dst_languages.add(*m.Language.objects.filter(**kwargs))
         model.save()
 
-    base_option, _ = m.OptionDict.objects.get_or_create(options={})
+    m.OptionDict.objects.get_or_create(options={})
+
+if os.environ.get('LOAD_ON_START', 'false').lower() == 'true':
+    init_most_used()
+
+if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
+    auto_create_languages()
+
+if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
+    auto_create_models()

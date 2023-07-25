@@ -1,0 +1,56 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+    pre-commit:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Cache Python dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cache/pip
+                  key: pip-pre-commit-${{ hashFiles('**/pyproject.toml') }}
+                  restore-keys: pip-pre-commit-
+
+            - name: Set up Python
+              uses: actions/setup-python@v3
+              with:
+                  python-version: "3.10"
+
+            - name: Install Python dependencies
+              run: pip install -e .[pre-commit,tests]
+
+            - name: Run pre-commit
+              run: pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )
+
+    tests:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                python-version: ["3.10", "3.11"]
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Cache Python dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cache/pip
+                  key: pip-${{ matrix.python-version }}-tests-${{ hashFiles('**/pyproject.toml') }}
+                  restore-keys: pip-${{ matrix.python-version }}-tests
+
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v3
+              with:
+                  python-version: ${{ matrix.python-version }}
+
+            - name: Install Python dependencies
+              run: pip install -e .[tests]
+
+            - name: Run pytest
+              run: pytest -sv tests

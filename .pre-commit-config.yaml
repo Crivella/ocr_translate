@@ -1,0 +1,43 @@
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.1.0
+      hooks:
+          - id: double-quote-string-fixer
+          - id: end-of-file-fixer
+            exclude: &exclude >-
+                (?x)^(
+                    tests/.*fixtures|
+                    .*/migrations/.*|
+                    .*\.json|
+                    .*\.txt
+                )$
+          - id: mixed-line-ending
+          - id: trailing-whitespace
+            exclude: *exclude
+
+    - repo: https://github.com/ikamensh/flynt/
+      rev: "0.76"
+      hooks:
+          - id: flynt
+
+    - repo: https://github.com/pycqa/isort
+      rev: "5.12.0"
+      hooks:
+          - id: isort
+            exclude: *exclude
+
+    - repo: local
+      hooks:
+          - id: pylint
+            name: pylint
+            entry: pylint
+            language: system
+            types: [python]
+            exclude: >
+                (?x)^(
+                    manage\.py|
+                    mysite/.*|
+                    .*/migrations/.*|
+                    docs/.*|
+                    tests/.*(?<!\.py)$
+                )$

@@ -16,6 +16,7 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Functions and piplines to perform OCR on images using tesseract."""
 import logging
 import os
 from pathlib import Path
@@ -28,42 +29,51 @@ from .base import root
 
 logger = logging.getLogger('ocr.general')
 
-model_url = 'https://github.com/tesseract-ocr/tessdata_best/raw/main/{}.traineddata'
+MODEL_URL = 'https://github.com/tesseract-ocr/tessdata_best/raw/main/{}.traineddata'
 
-data_dir = Path(os.getenv('TESSERACT_PREFIX', root / 'tesseract'))
+DATA_DIR = Path(os.getenv('TESSERACT_PREFIX', root / 'tesseract'))
 
-vertical_langs = ['jpn', 'chi_tra', 'chi_sim', 'kor']
+VERTICAL_LANGS = ['jpn', 'chi_tra', 'chi_sim', 'kor']
 
-download = os.getenv('TESSERACT_ALLOW_DOWNLOAD', 'false').lower() == 'true'
-config = False
+DOWNLOAD = os.getenv('TESSERACT_ALLOW_DOWNLOAD', 'false').lower() == 'true'
+CONFIG = False
 
 def download_model(lang: str):
-    if not download:
+    """Download a tesseract model for a given language.
+
+    Args:
+        lang (str): A language code for tesseract.
+
+    Raises:
+        ValueError: If the model could not be downloaded.
+    """
+    if not DOWNLOAD:
         raise ValueError('Downloading models is not allowed')
     create_config()
-    
+
     logger.info(f'Downloading tesseract model for language {lang}')
-    dst = data_dir / f'{lang}.traineddata'
+    dst = DATA_DIR / f'{lang}.traineddata'
     if dst.exists():
         return
-    res = requests.get(model_url.format(lang))
+    res = requests.get(MODEL_URL.format(lang), timeout=5)
     if res.status_code != 200:
         raise ValueError(f'Could not download model for language {lang}')
-    
-    with open(data_dir / f'{lang}.traineddata', 'wb') as f:
+
+    with open(DATA_DIR / f'{lang}.traineddata', 'wb') as f:
         f.write(res.content)
 
-    if lang in vertical_langs:
+    if lang in VERTICAL_LANGS:
         download_model(lang + '_vert')
 
 def create_config():
-    global config
-    if config:
+    """Create a tesseract config file. Run only once"""
+    global CONFIG
+    if CONFIG:
         return
-    config = True
-    
+    CONFIG = True
+
     logger.info('Creating tesseract tsv config')
-    cfg = data_dir / 'configs'
+    cfg = DATA_DIR / 'configs'
     cfg.mkdir(exist_ok=True, parents=True)
 
     dst = cfg / 'tsv'
@@ -88,24 +98,35 @@ def create_config():
 #  12    Sparse text with OSD.
 #  13    Raw line. Treat the image as a single text line,
 #        bypassing hacks that are Tesseract-specific.
-def tesseract_pipeline(img: Image.Image, lang: str, conf_thr: int = 15, favor_vertical: bool = True) -> str:
+def tesseract_pipeline(img: Image.Image, lang: str, favor_vertical: bool = True) -> str:
+    """Run tesseract on an image.
+
+    Args:
+        img (Image.Image): An image to run tesseract on.
+        lang (str): A language code for tesseract.
+        favor_vertical (bool, optional): Wether to favor vertical or horizontal configuration for languages that
+            can be written vertically. Defaults to True.
+
+    Returns:
+        str: The text extracted from the image.
+    """    """"""
     create_config()
-    if not (data_dir / f'{lang}.traineddata').exists():
+    if not (DATA_DIR / f'{lang}.traineddata').exists():
         download_model(lang)
     logger.info(f'Running tesseract for language {lang}')
 
     psm = 6
-    if lang in vertical_langs:
-        e = 1 if favor_vertical else -1
-        if img.height * 1.5**e > img.width:
+    if lang in VERTICAL_LANGS:
+        exp = 1 if favor_vertical else -1
+        if img.height * 1.5**exp > img.width:
             psm = 5
 
     # Using image_to_string will atleast preserve spaces
     res = image_to_string(
-        img, 
-        lang=lang, 
-        config=f'--tessdata-dir {data_dir.as_posix()} --psm {psm}', 
+        img,
+        lang=lang,
+        config=f'--tessdata-dir {DATA_DIR.as_posix()} --psm {psm}',
         output_type=Output.DICT
         )
-    
+
     return res['text']

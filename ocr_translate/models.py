@@ -16,9 +16,10 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
+"""Django models for the ocr_translate app."""
 from django.db import models
 
-lang_length = 32
+LANG_LENGTH = 32
 
 class OptionDict(models.Model):
     """Dictionary of options for OCR and translation"""
@@ -40,7 +41,7 @@ class Language(models.Model):
     facebookM2M = models.CharField(max_length=32, null=True)
 
     break_chars = models.CharField(max_length=512, null=True)
-    ignore_chars = models.CharField(max_length=512, null=True) 
+    ignore_chars = models.CharField(max_length=512, null=True)
 
     def __str__(self):
         return str(self.iso1)
@@ -72,7 +73,7 @@ class TSLModel(models.Model):
     dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
 
     language_format = models.CharField(max_length=32, null=True)
-    
+
     def __str__(self):
         return str(self.name)
 
@@ -92,11 +93,12 @@ class BBox(models.Model):
 
     @property
     def lbrt(self):
+        """Return the bounding box as a tuple of (left, bottom, right, top)"""
         return self.l, self.b, self.r, self.t
-    
+
     def __str__(self):
         return f'{self.lbrt}'
-    
+
 class Text(models.Model):
     """Text extracted from an image or translated from another text"""
     text = models.TextField()
@@ -122,16 +124,14 @@ class OCRRun(models.Model):
     bbox = models.ForeignKey(BBox, on_delete=models.CASCADE, related_name='to_ocr')
     model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='ocr_runs')
     result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr')
-    
+
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""
     options = models.ForeignKey(OptionDict, on_delete=models.CASCADE, related_name='trans_options')
 
     lang_src = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='trans_src')
     lang_dst = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='trans_dst')
-    
+
     text = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='to_trans')
     model = models.ForeignKey(TSLModel, on_delete=models.CASCADE, related_name='tsl_runs')
     result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_trans')
-    
-

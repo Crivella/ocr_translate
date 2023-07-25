@@ -16,62 +16,73 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
-from typing import Union
+"""Functions and piplines to perform Box OCR on an image."""
+import logging
+from typing import Hashable, Iterable
 
 import easyocr
 import numpy as np
+import torch
 from PIL import Image
-
-from .base import dev, load_hugginface_model
-
-reader = None
-
-import logging
 
 from .. import models as m
 from ..queues import box_queue as q
+from .base import dev
+
+READER = None
 
 logger = logging.getLogger('ocr.general')
 
-box_model_id = None
-bbox_model_obj = None
+BOX_MODEL_ID = None
+BBOX_MODEL_OBJ = None
 
 def unload_box_model():
-    global bbox_model_obj, reader, box_model_id
+    """Remove the current box model from memory."""
+    global BBOX_MODEL_OBJ, READER, BOX_MODEL_ID
 
-    logger.info(f'Unloading BOX model: {box_model_id}')
-    if box_model_id == 'easyocr':
+    logger.info(f'Unloading BOX model: {BOX_MODEL_ID}')
+    if BOX_MODEL_ID == 'easyocr':
         pass
-    reader = None
-    bbox_model_obj = None
-    box_model_id = None
+    READER = None
+    BBOX_MODEL_OBJ = None
+    BOX_MODEL_ID = None
 
     if dev == 'cuda':
-        import torch
         torch.cuda.empty_cache()
 
 
 def load_box_model(model_id: str):
-    global bbox_model_obj, reader, box_model_id
+    """Load a box model into memory."""
+    global BBOX_MODEL_OBJ, READER, BOX_MODEL_ID
 
-    if box_model_id == model_id:
+    if BOX_MODEL_ID == model_id:
         return
 
     logger.info(f'Loading BOX model: {model_id}')
     if model_id == 'easyocr':
-        reader = easyocr.Reader([], gpu=(dev == "cuda"), recognizer=False)
-        bbox_model_obj, _ = m.OCRBoxModel.objects.get_or_create(name=model_id)
-        box_model_id = model_id
+        READER = easyocr.Reader([], gpu=(dev == 'cuda'), recognizer=False)
+        BBOX_MODEL_OBJ, _ = m.OCRBoxModel.objects.get_or_create(name=model_id)
+        BOX_MODEL_ID = model_id
     else:
         raise NotImplementedError
-    
+
     logger.debug(f'OCR model loaded: {model_id}')
-    logger.debug(f'OCR model object: {bbox_model_obj}')
+    logger.debug(f'OCR model object: {BBOX_MODEL_OBJ}')
 
 def get_box_model() -> m.OCRBoxModel:
-    return bbox_model_obj
+    """Get the current box model."""
+    return BBOX_MODEL_OBJ
 
-def intersections(bboxes, margin=5):
+def intersections(bboxes: Iterable[tuple[int, int, int, int]], margin: int = 5) -> list[set[int]]:
+    """Determine the intersections between a list of bounding boxes.
+
+    Args:
+        bboxes (Iterable[tuple[int, int, int, int]]): List of bounding boxes in lrbt format.
+        margin (int, optional): Number of extra pixels outside of the boxes that define an intersection. Defaults to 5.
+
+    Returns:
+        list[set[int]]: List of sets of indexes of the boxes that intersect.
+    """
     res = []
 
     for i,(l1,r1,b1,t1) in enumerate(bboxes):
@@ -99,7 +110,15 @@ def intersections(bboxes, margin=5):
 
     return res
 
-def merge_bboxes(bboxes):
+def merge_bboxes(bboxes: Iterable[tuple[int, int, int, int]]) -> list[tuple[int, int, int, int]]:
+    """Merge a list of intersecting bounding boxes. All intersecting boxes are merged into a single box.
+
+    Args:
+        bboxes (Iterable[Iterable[int]]): Iterable of bounding boxes in lrbt format.
+
+    Returns:
+        list[tuple[int]]: List of merged bounding boxes in lrbt format.
+    """
     res = []
     bboxes = np.array(bboxes)
     inters = intersections(bboxes)
@@ -114,7 +133,7 @@ def merge_bboxes(bboxes):
         r = data[:,1].max()
         b = data[:,2].min()
         t = data[:,3].max()
-        
+
         res.append([l,b,r,t])
 
         torm = torm.union(app)
@@ -124,14 +143,30 @@ def merge_bboxes(bboxes):
             continue
         l,r,b,t = bboxes[i]
         res.append([l,b,r,t])
-    
+
     return res
 
-def _box_pipeline(image: Image.Image, options: dict = {}):
+def _box_pipeline(image: Image.Image, options: dict = None) -> list[tuple[int, int, int, int]]:
+    """Perform box OCR on an image.
+
+    Args:
+        image (Image.Image): A Pillow image on which to perform OCR.
+        options (dict, optional): A dictionary of options.
+
+    Raises:
+        NotImplementedError: The type of model specified is not implemented.
+
+    Returns:
+        list[tuple[int, int, int, int]]: A list of bounding boxes in lrbt format.
+    """
+
+    if options is None:
+        options = {}
+
     # reader.recognize(image)
-    if box_model_id == 'easyocr':
+    if BOX_MODEL_ID == 'easyocr':
         image = image.convert('RGB')
-        results = reader.detect(np.array(image))
+        results = READER.detect(np.array(image))
 
         # Axis rectangles
         bboxes = results[0][0]
@@ -145,20 +180,50 @@ def _box_pipeline(image: Image.Image, options: dict = {}):
 
     return bboxes
 
-def box_pipeline(*args, id, **kwargs):
+def box_pipeline(*args, id_: Hashable, block: bool = True, **kwargs):
+    """Queue a box OCR pipeline.
+
+    Args:
+        id_ (Hashable): A unique identifier for the OCR task.
+        block (bool, optional): Whether to block until the task is complete. Defaults to True.
+
+    Returns:
+        Union[str, Message]: The text extracted from the image (block=True) or a Message object (block=False).
+    """
     msg = q.put(
-        id = id,
+        id_ = id_,
         msg = {'args': args, 'kwargs': kwargs},
         handler = _box_pipeline,
     )
 
-    return msg.response()
+    if block:
+        return msg.response()
+    return msg
 
-def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] = None, force: bool = False, options: m.OptionDict = None) -> list[m.BBox]:
+def box_run(
+        img_obj: m.Image, lang: m.Language, image: Image.Image = None,
+        force: bool = False, options: m.OptionDict = None
+        ) -> list[m.BBox]:
+    """High level function to perform box OCR on an image. Will attempt to reuse a previous run if possible.
+
+    Args:
+        img_obj (m.Image): An Image object from the database.
+        lang (m.Language): A Language object from the database (not every model is gonna use this).
+        image (Image.Image, optional): The Pillow image to be used for OCR if a previous result is not found.
+            Defaults to None.
+        force (bool, optional): If true, re-run the OCR even if a previous result is found. Defaults to False.
+        options (m.OptionDict, optional): An OptionDict object from the database. Defaults to None.
+
+    Raises:
+        ValueError: ValueError is raised if at any step of the pipeline an image is required but not provided.
+
+    Returns:
+        list[m.BBox]: A list of BBox objects containing the resulting bounding boxes.
+    """
     options_obj = options or m.OptionDict.objects.get(options={})
     params = {
         'image': img_obj,
-        'model': bbox_model_obj,
+        'model': BBOX_MODEL_OBJ,
         'options': options_obj,
         'lang_src': lang,
     }
@@ -170,8 +235,8 @@ def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] 
         logger.info('Running BBox OCR')
         opt_dct = options_obj.options
         bboxes = box_pipeline(
-            image, 
-            id=img_obj.md5,
+            image,
+            id_=img_obj.md5,
             options=opt_dct,
             )
         # Create it here to avoid having a failed entry in DB
@@ -191,4 +256,3 @@ def box_run(img_obj: m.Image, lang: m.Language, image: Union[Image.Image, None] 
     logger.info(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
 
     return list(bbox_run.result.all())
-
