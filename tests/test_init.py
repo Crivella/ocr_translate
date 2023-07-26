@@ -18,6 +18,8 @@
 ###################################################################################
 """Test environment initialization."""
 
+import importlib
+
 import pytest
 
 from ocr_translate import models as m
@@ -144,3 +146,75 @@ def test_auto_create_models_lang():
     assert m2m.dst_languages.count() > 10
     assert eocr.languages.count() > 1
     assert tess.languages.count() > 1
+
+def test_env_init_most_used(monkeypatch):
+    """Test that init_most_used is called when LOAD_ON_START is 'true'."""
+    def mock_init_most_used():
+        """Mock init_most_used."""
+        mock_init_most_used.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'init_most_used', mock_init_most_used)
+    monkeypatch.setenv('LOAD_ON_START', 'true')
+
+    importlib.reload(ocr_tsl)
+    assert mock_init_most_used.called
+
+def test_env_init_most_used_false(monkeypatch):
+    """Test that init_most_used is not called when LOAD_ON_START is not 'true'."""
+    def mock_init_most_used():
+        """Mock init_most_used."""
+        mock_init_most_used.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'init_most_used', mock_init_most_used)
+    monkeypatch.setenv('LOAD_ON_START', 'false')
+
+    importlib.reload(ocr_tsl)
+    assert not hasattr(mock_init_most_used, 'called')
+
+def test_env_auto_create_languges(monkeypatch):
+    """Test that auto_create_languages is called when AUTOCREATE_LANGUAGES is 'true'."""
+    def mock_auto_create_languages():
+        """Mock auto_create_languages."""
+        mock_auto_create_languages.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_languages', mock_auto_create_languages)
+    monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'true')
+
+    importlib.reload(ocr_tsl)
+    assert mock_auto_create_languages.called
+
+def test_env_auto_create_languges_false(monkeypatch):
+    """Test that auto_create_languages is not called when AUTOCREATE_LANGUAGES is not 'true'."""
+    def mock_auto_create_languages():
+        """Mock auto_create_languages."""
+        mock_auto_create_languages.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_languages', mock_auto_create_languages)
+    monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'false')
+
+    importlib.reload(ocr_tsl)
+    assert not hasattr(mock_auto_create_languages, 'called')
+
+def test_env_auto_create_models(monkeypatch):
+    """Test that auto_create_models is called when AUTOCREATE_VALIDATED_MODELS is 'true'."""
+    def mock_auto_create_models():
+        """Mock auto_create_models."""
+        mock_auto_create_models.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_models', mock_auto_create_models)
+    monkeypatch.setenv('AUTOCREATE_VALIDATED_MODELS', 'true')
+
+    importlib.reload(ocr_tsl)
+    assert mock_auto_create_models.called
+
+def test_env_auto_create_models_false(monkeypatch):
+    """Test that auto_create_models is not called when AUTOCREATE_VALIDATED_MODELS is not 'true'."""
+    def mock_auto_create_models():
+        """Mock auto_create_models."""
+        mock_auto_create_models.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_models', mock_auto_create_models)
+    monkeypatch.setenv('AUTOCREATE_VALIDATED_MODELS', 'false')
+
+    importlib.reload(ocr_tsl)
+    assert not hasattr(mock_auto_create_models, 'called')

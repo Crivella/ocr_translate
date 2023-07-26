@@ -174,7 +174,7 @@ def mock_loaders(monkeypatch):
         'load_tsl_model': mock_load_tsl_model,
     }
 
-    for mod in [ocr_translate, ocr_tsl, box, lang, ocr, tsl, views]:
+    for mod in [ocr_translate, ocr_tsl, ocr_tsl.initializers, box, lang, ocr, tsl, views]:
         for fname, mock in dct.items():
             try:
                 monkeypatch.setattr(mod, fname, mock)
