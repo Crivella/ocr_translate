@@ -170,7 +170,7 @@ class MessageQueue(queue.SimpleQueue):
             self,
             *args,
             reuse_msg: bool = True,
-            max_len: int = 0,
+            # max_len: int = 0,
             allow_batching: bool = False,
             batch_timeout: float = 0.5,
             batch_args: tuple = (), batch_kwargs: Iterable = (),
@@ -180,7 +180,7 @@ class MessageQueue(queue.SimpleQueue):
 
         Args:
             reuse_msg (bool, optional): Whether to reuse messages with the same id. Defaults to True.
-            max_len (int, optional): Max number of messages in queue before starting to remove solved messages
+            max_len (int, optional): Max number of messages in cache before starting to remove solved messages
                 from cache. Defaults to 0 (no limit).
             allow_batching (bool, optional): Whether to allow batching of messages. Defaults to False.
             batch_timeout (float, optional): Timeout for batching. When get is called, wait `timeout` seconds for other
@@ -194,7 +194,7 @@ class MessageQueue(queue.SimpleQueue):
         self.msg_to_batch_pool = {}
         self.batch_resolve_flagged = []
         self.reuse_msg = reuse_msg
-        self.max_len = max_len
+        # self.max_len = max_len
         if allow_batching:
             if len(batch_args) == 0 and len(batch_kwargs) == 0:
                 raise ValueError('At least one batch arg or kwarg must be specified with batching enabled.')
@@ -224,10 +224,10 @@ class MessageQueue(queue.SimpleQueue):
         if self.reuse_msg and id_ in self.registered:
             logger.debug(f'Reusing message {id_}')
             return self.registered[id_]
-        if self.max_len > 0 and self.qsize() > self.max_len:
-            # Remove solved messages from cache
-            # Only 1by1 or all?
-            raise NotImplementedError('Max len reached')
+        # if self.max_len > 0 and self.qsize() > self.max_len:
+        #     # Remove solved messages from cache
+        #     # Only 1by1 or all?
+        #     raise NotImplementedError('Max len reached')
 
         res = Message(id_, msg, handler, batch_args=self.batch_args, batch_kwargs=self.batch_kwargs)
         if self.allow_batching and batch_id is not None:
@@ -305,8 +305,6 @@ class Worker():
             if isinstance(msg, Message):
                 msg.resolve()
             elif isinstance(msg, list):
-                if len(msg) == 0:
-                    continue
                 if len(msg) == 1:
                     msg[0].resolve()
                 else:
