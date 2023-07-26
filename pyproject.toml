@@ -86,7 +86,6 @@ exclude = [
 testpaths = ["tests"]
 DJANGO_SETTINGS_MODULE = "mysite.settings"
 log_cli = 1
-addopts = "--cov=ocr_translate --cov-report=html"
 
 [tool.pylint.main]
 load-plugins = [
