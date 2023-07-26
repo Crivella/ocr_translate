@@ -93,9 +93,39 @@ def test_box_run_reuse(image, language, ocr_box_model, option_dict, monkeypatch)
     box.box_run(image, language, image=1, options=option_dict)
     assert m.OCRBoxRun.objects.count() == 1
 
-def test_ocr_run(bbox, language, ocr_model, option_dict, monkeypatch):
+def test_ocr_run_nooption(bbox, language, ocr_model, option_dict, monkeypatch):
     """Test performin an ocr_run blocking"""
+    text = 'test_text'
+    def mock_ocr(*args, **kwargs):
+        return text
 
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(ocr, 'ocr', mock_ocr)
+
+    gen = ocr.ocr_run(bbox, language, image=1)
+
+    res = next(gen)
+
+    assert isinstance(res, m.Text)
+    assert res.text == text
+    assert res.from_ocr.first().options.options == {}
+
+def test_ocr_run_noimage(bbox, language, ocr_model, option_dict, monkeypatch):
+    """Test performin an ocr_run blocking"""
+    text = 'test_text'
+    def mock_ocr(*args, **kwargs):
+        return text
+
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(ocr, 'ocr', mock_ocr)
+
+    gen = ocr.ocr_run(bbox, language, options=option_dict)
+
+    with pytest.raises(ValueError, match=r'^Image is required for OCR$'):
+        next(gen)
+
+def test_ocr_run(bbox, language, ocr_model, option_dict, monkeypatch, mock_called):
+    """Test performin an ocr_run blocking + same pipeline (has to run lazily by refetching previous result)"""
     text = 'test_text'
     def mock_ocr(*args, **kwargs):
         return text
@@ -110,8 +140,14 @@ def test_ocr_run(bbox, language, ocr_model, option_dict, monkeypatch):
     assert isinstance(res, m.Text)
     assert res.text == text
 
-def test_ocr_run_nonblock(bbox, language, ocr_model, option_dict, monkeypatch):
-    """Test performin an ocr_run non-blocking"""
+    monkeypatch.setattr(ocr, 'ocr', mock_called) # Should not be called as it should be lazy
+    gen_lazy = ocr.ocr_run(bbox, language, image=1, options=option_dict)
+
+    assert not hasattr(mock_called, 'called')
+    assert next(gen_lazy) == res
+
+def test_ocr_run_nonblock(bbox, language, ocr_model, option_dict, monkeypatch, mock_called):
+    """Test performin an ocr_run non-blocking + same pipeline (has to run lazily by refetching previous result)"""
     text = 'test_text'
     def mock_ocr(*args, **kwargs):
         def _handler(text):
@@ -130,6 +166,13 @@ def test_ocr_run_nonblock(bbox, language, ocr_model, option_dict, monkeypatch):
     assert isinstance(msg, Message)
     assert isinstance(res, m.Text)
     assert res.text == text
+
+    monkeypatch.setattr(ocr, 'ocr', mock_called) # Should not be called as it should be lazy
+    gen_lazy = ocr.ocr_run(bbox, language, image=1, options=option_dict, block=False)
+
+    assert not hasattr(mock_called, 'called')
+    assert next(gen_lazy) is None
+    assert next(gen_lazy) == res
 
 def test_tsl_run(text, language, tsl_model, option_dict, monkeypatch):
     """Test performin an tsl_run blocking"""

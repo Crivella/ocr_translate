@@ -132,7 +132,13 @@ def mock_ocr_preprocessor():
     class RES():
         """Mock result"""
         def __init__(self):
-            self.pixel_values = [1,2,3,4,5]
+            class PV(list):
+                """Mock pixel values"""
+                def cuda(self):
+                    """Mock cuda"""
+                    self.cuda_called = True # pylint: disable=attribute-defined-outside-init
+                    return self
+            self.pixel_values = PV([1,2,3,4,5])
 
     class _MockPreprocessor():
         def __init__(self, model_id):
