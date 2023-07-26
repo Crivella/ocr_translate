@@ -180,3 +180,19 @@ def mock_loaders(monkeypatch):
                 monkeypatch.setattr(mod, fname, mock)
             except AttributeError:
                 pass
+
+@pytest.fixture(scope='function')
+def mock_called(request):
+    """Generic mock function to check if it was called."""
+    def mock_call(*args, **kwargs): # pylint: disable=inconsistent-return-statements
+        mock_call.called = True
+        mock_call.args = args
+        mock_call.kwargs = kwargs
+
+        if hasattr(request, 'param'):
+            return request.param
+
+    if hasattr(request, 'param'):
+        mock_call.expected = request.param
+
+    return mock_call

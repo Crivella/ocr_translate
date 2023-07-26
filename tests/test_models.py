@@ -78,6 +78,21 @@ def test_box_run(image, language, ocr_box_model, option_dict, monkeypatch):
     assert isinstance(res[0], m.BBox)
     assert res[0].lbrt == lbrt
 
+def test_box_run_reuse(image, language, ocr_box_model, option_dict, monkeypatch):
+    """Test adding a new BoxRun"""
+    lbrt = (1,2,3,4)
+    def mock_pipeline(*args, **kwargs):
+        return [lbrt]
+
+    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', ocr_box_model)
+    monkeypatch.setattr(box, 'box_pipeline', mock_pipeline)
+
+    assert m.OCRBoxRun.objects.count() == 0
+    box.box_run(image, language, image=1, options=option_dict)
+    assert m.OCRBoxRun.objects.count() == 1
+    box.box_run(image, language, image=1, options=option_dict)
+    assert m.OCRBoxRun.objects.count() == 1
+
 def test_ocr_run(bbox, language, ocr_model, option_dict, monkeypatch):
     """Test performin an ocr_run blocking"""
 
