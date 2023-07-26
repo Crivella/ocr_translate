@@ -31,7 +31,7 @@ def test_add_language(language_dict, language):
     """Test adding a language."""
     query = m.Language.objects.filter(**language_dict)
     assert query.exists()
-    # assert query.first() is language
+    assert str(query.first()) == language_dict['iso1']
 
 def test_add_language_existing(language_dict, language):
     """Test adding a language."""
@@ -42,18 +42,25 @@ def test_add_ocr_box_model(ocr_box_model_dict, ocr_box_model):
     """Test adding a new OCRBoxModel"""
     query = m.OCRBoxModel.objects.filter(**ocr_box_model_dict)
     assert query.exists()
+    assert str(query.first()) == ocr_box_model_dict['name']
 
 def test_add_ocr_model(ocr_model_dict, ocr_model):
     """Test adding a new OCRModel"""
     query = m.OCRModel.objects.filter(**ocr_model_dict)
     assert query.exists()
-    # assert query.first() is ocr_model
+    assert str(query.first()) == ocr_model_dict['name']
 
 def test_add_tsl_model(tsl_model_dict, tsl_model):
     """Test adding a new TSLModel"""
     query = m.TSLModel.objects.filter(**tsl_model_dict)
     assert query.exists()
-    # assert query.first() is ocr_model
+    assert str(query.first()) == tsl_model_dict['name']
+
+def test_add_option_dict(option_dict):
+    """Test adding a new OptionDict"""
+    query = m.OptionDict.objects.filter(options={})
+    assert query.exists()
+    assert str(query.first()) == str({})
 
 def test_box_run(image, language, ocr_box_model, option_dict, monkeypatch):
     """Test adding a new BoxRun"""
