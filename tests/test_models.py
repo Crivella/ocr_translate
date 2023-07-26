@@ -177,16 +177,24 @@ def test_tsl_run_lazy(text, language, option_dict):
         gen = tsl.tsl_run(text, language, language, lazy=True)
         next(gen)
 
-def test_ocr_tsl_work(image, image_pillow, text, bbox, language, ocr_model, tsl_model, option_dict, monkeypatch):
+def test_ocr_tsl_work_plus_lazy(
+        image, image_pillow, text, bbox,
+        language, ocr_model, tsl_model, option_dict,
+        monkeypatch
+        ):
     """Test performin an ocr_tsl_run non-lazy"""
     def mock_box_run(*args, **kwargs):
         return [bbox]
-    def mock_ocr_run(*args, **kwargs):
-        yield
-        yield m.Text.objects.create(text = text.text + '_ocred')
-    def mock_tsl_run(obj, *args, **kwargs):
-        yield
-        yield m.Text.objects.create(text = obj.text + '_translated')
+    def mock_ocr_run(*args, block=True, **kwargs):
+        if not block:
+            yield
+        res, _ = m.Text.objects.get_or_create(text = text.text + '_ocred')
+        yield res
+    def mock_tsl_run(obj, *args, block=True, **kwargs):
+        if not block:
+            yield
+        res, _ = m.Text.objects.get_or_create(text = obj.text + '_translated')
+        yield res
 
     monkeypatch.setattr(full, 'box_run', mock_box_run)
     monkeypatch.setattr(full, 'ocr_run', mock_ocr_run)
@@ -201,9 +209,13 @@ def test_ocr_tsl_work(image, image_pillow, text, bbox, language, ocr_model, tsl_
     assert res[0]['tsl'] == text.text + '_ocred' + '_translated'
     assert res[0]['box'] == bbox.lbrt
 
+    res_lazy = full.ocr_tsl_pipeline_lazy(image.md5)
+
+    assert res == res_lazy
+
 def test_ocr_tsl_lazy():
     """Test performin an ocr_tsl_run lazy (no image)"""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r'^Image with md5 .* does not exist$'):
         full.ocr_tsl_pipeline_lazy('')
 
 def test_ocr_tsl_lazy_image(image, option_dict):
