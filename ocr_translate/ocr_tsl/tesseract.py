@@ -25,7 +25,7 @@ import requests
 from PIL import Image
 from pytesseract import Output, image_to_string
 
-from .base import root
+from .huggingface import root
 
 logger = logging.getLogger('ocr.general')
 

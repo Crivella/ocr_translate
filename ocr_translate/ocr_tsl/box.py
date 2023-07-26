@@ -27,7 +27,7 @@ from PIL import Image
 
 from .. import models as m
 from ..queues import box_queue as q
-from .base import dev
+from .huggingface import dev
 
 READER = None
 
