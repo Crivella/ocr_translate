@@ -302,15 +302,14 @@ class Worker():
             except queue.Empty:
                 continue
             logger.debug(f'Worker consuming {msg}')
-            if isinstance(msg, Message):
-                msg.resolve()
-            elif isinstance(msg, list):
+            if isinstance(msg, list):
                 if len(msg) == 1:
                     msg[0].resolve()
                 else:
                     msg[0].batch_resolve(msg[1:])
             else:
-                raise TypeError(f'Invalid message type: {type(msg)}')
+                msg.resolve()
+
         self.running = False
 
     def start(self):
