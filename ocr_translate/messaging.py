@@ -314,6 +314,7 @@ class Worker():
 
     def start(self):
         """Start the worker thread."""
+        self.kill = False # Allow restarting the worker
         self.thread = threading.Thread(target=self._worker, daemon=True)
         self.thread.start()
 
