@@ -174,7 +174,7 @@ def test_ocr_run_nonblock(bbox, language, ocr_model, option_dict, monkeypatch, m
     assert next(gen_lazy) is None
     assert next(gen_lazy) == res
 
-def test_tsl_run(text, language, tsl_model, option_dict, monkeypatch):
+def test_tsl_run(text, language, tsl_model, option_dict, monkeypatch, mock_called):
     """Test performin an tsl_run blocking"""
     def mock_tsl_pipeline(*args, **kwargs):
         return text.text
@@ -189,7 +189,13 @@ def test_tsl_run(text, language, tsl_model, option_dict, monkeypatch):
     assert isinstance(res, m.Text)
     assert res.text == text.text
 
-def test_tsl_run_nonblock(text, language, tsl_model, option_dict, monkeypatch):
+    monkeypatch.setattr(tsl, 'tsl_pipeline', mock_called) # Should not be called as it should be lazy
+    gen_lazy = tsl.tsl_run(text, src=language, dst=language, options=option_dict)
+
+    assert not hasattr(mock_called, 'called')
+    assert next(gen_lazy) == res
+
+def test_tsl_run_nonblock(text, language, tsl_model, option_dict, monkeypatch, mock_called):
     """Test performin an tsl_run non-blocking"""
     def mock_tsl_pipeline(*args, **kwargs):
         def _handler(text):
@@ -208,6 +214,13 @@ def test_tsl_run_nonblock(text, language, tsl_model, option_dict, monkeypatch):
     assert isinstance(msg, Message)
     assert isinstance(res, m.Text)
     assert res.text == text.text
+
+    monkeypatch.setattr(tsl, 'tsl_pipeline', mock_called) # Should not be called as it should be lazy
+    gen_lazy = tsl.tsl_run(text, src=language, dst=language, options=option_dict, block=False)
+
+    assert not hasattr(mock_called, 'called')
+    assert next(gen_lazy) is None
+    assert next(gen_lazy) == res
 
 def test_tsl_run_lazy(text, language, option_dict):
     """Test tsl pipeline with worker"""

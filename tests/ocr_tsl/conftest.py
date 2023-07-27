@@ -56,6 +56,7 @@ def mock_tsl_tokenizer():
             self.tok_to_word = {0: 0}
             self.word_to_tok = {0: 0}
             self.ntoks = 1
+            self.called_get_lang_id = False
 
         def __call__(self, text, **options):
             issplit = options.pop('is_split_into_words', False)
@@ -108,6 +109,11 @@ def mock_tsl_tokenizer():
             """Decode a batch of tokens."""
             res = [' '.join(filter(None, [self.tok_to_word[int(_)] for _ in lst])) for lst in tokens]
             return res
+
+        def get_lang_id(self, lang): # pylint: disable=unused-argument
+            """Get the language id."""
+            self.called_get_lang_id = True
+            return 0
 
     return _MockTokenizer
 

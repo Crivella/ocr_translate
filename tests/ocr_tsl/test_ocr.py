@@ -160,7 +160,7 @@ def test_pipeline_hugginface_cuda(image_pillow, mock_ocr_preprocessor, mock_ocr_
     assert res == 'abcde'
 
 def test_queue_placer_handler(monkeypatch, mock_called):
-    """Test queue_placer is setting _box_pipeline as handler, and that it is called."""
+    """Test queue_placer is setting _ocr as handler, and that it is called."""
     monkeypatch.setattr(ocr, '_ocr', mock_called)
     monkeypatch.setattr(ocr.q.msg_queue, 'reuse_msg', False)
     ocr.ocr(id_=1, block=True)
