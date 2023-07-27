@@ -16,18 +16,29 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
-"""Initialize the server based on environment variables."""
+"""Tests for messaging.py"""
+# pylint: disable=redefined-outer-name
 
-import os
+import queue
+import threading
 
-from .initializers import (auto_create_languages, auto_create_models,
-                           init_most_used)
+from ocr_translate.messaging import Worker
 
-if os.environ.get('LOAD_ON_START', 'false').lower() == 'true':
-    init_most_used()
 
-if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
-    auto_create_languages()
+def test_worker_instantiation(worker):
+    """Test that the worker class can be instantiated"""
+    assert isinstance(worker, Worker)
+    assert isinstance(worker.queue, queue.SimpleQueue)
 
-if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
-    auto_create_models()
+def test_worker_start(worker):
+    """Test that the worker class can be started"""
+    assert worker.thread is None
+    worker.start()
+    assert isinstance(worker.thread, threading.Thread)
+    assert worker.thread.is_alive()
+
+def test_worker_stop(worker):
+    """Test that the worker class can be stopped"""
+    worker.start()
+    worker.stop()
+    assert not worker.thread.is_alive()

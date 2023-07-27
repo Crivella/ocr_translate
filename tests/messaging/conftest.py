@@ -8,9 +8,11 @@ from ocr_translate.messaging import (Message, MessageQueue, Worker,
 
 
 @pytest.fixture
-def handler():
+def handler(request):
     """Return a simple handler function"""
     def _handler(*args, **kwargs):
+        if hasattr(request, 'param') and request.param == 'raise':
+            raise Exception('Test exception') # pylint: disable=broad-exception-raised
         return args, kwargs
 
     return _handler
@@ -19,7 +21,7 @@ def handler():
 def message(request, handler):
     """Return a simple message"""
     id_ = ()
-    msg = {'args:': (), 'kwargs': {}}
+    msg = {'args': (), 'kwargs': {}}
     if hasattr(request, 'param'):
         msg = request.param
         args = msg.get('args', ())
@@ -40,10 +42,14 @@ def batch_message(request):
 
     def _handler(*args, **kwargs):
         """Generic handler for batched messages."""
-        if batch_args:
-            bsize = len(args[batch_args[0]])
-        elif batch_kwargs:
-            bsize = len(kwargs[batch_kwargs[0]])
+        try:
+            if batch_args:
+                bsize = len(args[batch_args[0]])
+            elif batch_kwargs:
+                bsize = len(kwargs[batch_kwargs[0]])
+        except TypeError:
+            # Batch handler are supposed to work also with non-batched messages
+            return args, kwargs
         res = []
         for i in range(bsize):
             res_args = tuple(arg[i] if j in batch_args else arg for j,arg in enumerate(args))
@@ -85,6 +91,11 @@ def worker_message_queue():
     return WorkerMessageQueue()
 
 @pytest.fixture()
-def batched_worker_message_queue():
+def batched_worker_message_queue(batch_message):
     """Return a worker message queue"""
-    return WorkerMessageQueue(allow_batching=True, batch_args=(0,))
+    # Chanced for testing with differend batch args/kwargs
+    return WorkerMessageQueue(
+        allow_batching=True,
+        batch_args=batch_message.batch_args,
+        batch_kwargs=batch_message.batch_kwargs
+        )

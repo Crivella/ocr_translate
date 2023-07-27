@@ -32,7 +32,6 @@ dev = os.environ.get('DEVICE', 'cpu')
 
 def load(loader, model_id: str):
     """Use the specified loader to load a transformers specific Class."""
-    res = None
     try:
         mid = root / model_id
         logger.debug(f'Attempt loading from store: "{loader}" "{mid}"')

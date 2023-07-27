@@ -25,7 +25,7 @@ import requests
 from PIL import Image
 from pytesseract import Output, image_to_string
 
-from .base import root
+from .huggingface import root
 
 logger = logging.getLogger('ocr.general')
 
@@ -48,7 +48,7 @@ def download_model(lang: str):
         ValueError: If the model could not be downloaded.
     """
     if not DOWNLOAD:
-        raise ValueError('Downloading models is not allowed')
+        raise ValueError('TESSERACT_ALLOW_DOWNLOAD is false. Downloading models is not allowed')
     create_config()
 
     logger.info(f'Downloading tesseract model for language {lang}')

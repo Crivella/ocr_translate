@@ -1,4 +1,24 @@
+###################################################################################
+# ocr_translate - a django app to perform OCR and translation of images.          #
+# Copyright (C) 2023-present Davide Grassano                                      #
+#                                                                                 #
+# This program is free software: you can redistribute it and/or modify            #
+# it under the terms of the GNU General Public License as published by            #
+# the Free Software Foundation, either version 3 of the License.                  #
+#                                                                                 #
+# This program is distributed in the hope that it will be useful,                 #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                  #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                   #
+# GNU General Public License for more details.                                    #
+#                                                                                 #
+# You should have received a copy of the GNU General Public License               #
+# along with this program.  If not, see {http://www.gnu.org/licenses/}.           #
+#                                                                                 #
+# Home: https://github.com/Crivella/ocr_translate                                 #
+###################################################################################
 """Test environment initialization."""
+
+import importlib
 
 import pytest
 
@@ -17,10 +37,10 @@ def test_init_most_used_clean(mock_loaders):
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
-def test_init_most_used_content(mock_loaders, language, ocr_box_model, ocr_model, tsl_model):
+def test_init_most_used_content(mock_loaders, language, box_model, ocr_model, tsl_model):
     """Test init_most_used with content in the database."""
     ocr_tsl.init_most_used()
-    assert box.BBOX_MODEL_OBJ == ocr_box_model
+    assert box.BBOX_MODEL_OBJ == box_model
     assert ocr.OCR_MODEL_OBJ == ocr_model
     assert tsl.TSL_MODEL_OBJ == tsl_model
     assert lang.LANG_SRC == language
@@ -126,3 +146,75 @@ def test_auto_create_models_lang():
     assert m2m.dst_languages.count() > 10
     assert eocr.languages.count() > 1
     assert tess.languages.count() > 1
+
+def test_env_init_most_used(monkeypatch):
+    """Test that init_most_used is called when LOAD_ON_START is 'true'."""
+    def mock_init_most_used():
+        """Mock init_most_used."""
+        mock_init_most_used.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'init_most_used', mock_init_most_used)
+    monkeypatch.setenv('LOAD_ON_START', 'true')
+
+    importlib.reload(ocr_tsl)
+    assert mock_init_most_used.called
+
+def test_env_init_most_used_false(monkeypatch):
+    """Test that init_most_used is not called when LOAD_ON_START is not 'true'."""
+    def mock_init_most_used():
+        """Mock init_most_used."""
+        mock_init_most_used.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'init_most_used', mock_init_most_used)
+    monkeypatch.setenv('LOAD_ON_START', 'false')
+
+    importlib.reload(ocr_tsl)
+    assert not hasattr(mock_init_most_used, 'called')
+
+def test_env_auto_create_languges(monkeypatch):
+    """Test that auto_create_languages is called when AUTOCREATE_LANGUAGES is 'true'."""
+    def mock_auto_create_languages():
+        """Mock auto_create_languages."""
+        mock_auto_create_languages.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_languages', mock_auto_create_languages)
+    monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'true')
+
+    importlib.reload(ocr_tsl)
+    assert mock_auto_create_languages.called
+
+def test_env_auto_create_languges_false(monkeypatch):
+    """Test that auto_create_languages is not called when AUTOCREATE_LANGUAGES is not 'true'."""
+    def mock_auto_create_languages():
+        """Mock auto_create_languages."""
+        mock_auto_create_languages.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_languages', mock_auto_create_languages)
+    monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'false')
+
+    importlib.reload(ocr_tsl)
+    assert not hasattr(mock_auto_create_languages, 'called')
+
+def test_env_auto_create_models(monkeypatch):
+    """Test that auto_create_models is called when AUTOCREATE_VALIDATED_MODELS is 'true'."""
+    def mock_auto_create_models():
+        """Mock auto_create_models."""
+        mock_auto_create_models.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_models', mock_auto_create_models)
+    monkeypatch.setenv('AUTOCREATE_VALIDATED_MODELS', 'true')
+
+    importlib.reload(ocr_tsl)
+    assert mock_auto_create_models.called
+
+def test_env_auto_create_models_false(monkeypatch):
+    """Test that auto_create_models is not called when AUTOCREATE_VALIDATED_MODELS is not 'true'."""
+    def mock_auto_create_models():
+        """Mock auto_create_models."""
+        mock_auto_create_models.called = True
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_models', mock_auto_create_models)
+    monkeypatch.setenv('AUTOCREATE_VALIDATED_MODELS', 'false')
+
+    importlib.reload(ocr_tsl)
+    assert not hasattr(mock_auto_create_models, 'called')

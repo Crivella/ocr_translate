@@ -1,3 +1,21 @@
+###################################################################################
+# ocr_translate - a django app to perform OCR and translation of images.          #
+# Copyright (C) 2023-present Davide Grassano                                      #
+#                                                                                 #
+# This program is free software: you can redistribute it and/or modify            #
+# it under the terms of the GNU General Public License as published by            #
+# the Free Software Foundation, either version 3 of the License.                  #
+#                                                                                 #
+# This program is distributed in the hope that it will be useful,                 #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                  #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                   #
+# GNU General Public License for more details.                                    #
+#                                                                                 #
+# You should have received a copy of the GNU General Public License               #
+# along with this program.  If not, see {http://www.gnu.org/licenses/}.           #
+#                                                                                 #
+# Home: https://github.com/Crivella/ocr_translate                                 #
+###################################################################################
 """Fixtures for ocr_tsl tests"""
 
 import pytest
@@ -38,6 +56,7 @@ def mock_tsl_tokenizer():
             self.tok_to_word = {0: 0}
             self.word_to_tok = {0: 0}
             self.ntoks = 1
+            self.called_get_lang_id = False
 
         def __call__(self, text, **options):
             issplit = options.pop('is_split_into_words', False)
@@ -91,6 +110,11 @@ def mock_tsl_tokenizer():
             res = [' '.join(filter(None, [self.tok_to_word[int(_)] for _ in lst])) for lst in tokens]
             return res
 
+        def get_lang_id(self, lang): # pylint: disable=unused-argument
+            """Get the language id."""
+            self.called_get_lang_id = True
+            return 0
+
     return _MockTokenizer
 
 @pytest.fixture()
@@ -114,7 +138,13 @@ def mock_ocr_preprocessor():
     class RES():
         """Mock result"""
         def __init__(self):
-            self.pixel_values = [1,2,3,4,5]
+            class PV(list):
+                """Mock pixel values"""
+                def cuda(self):
+                    """Mock cuda"""
+                    self.cuda_called = True # pylint: disable=attribute-defined-outside-init
+                    return self
+            self.pixel_values = PV([1,2,3,4,5])
 
     class _MockPreprocessor():
         def __init__(self, model_id):

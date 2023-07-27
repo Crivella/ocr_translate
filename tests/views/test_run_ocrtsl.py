@@ -1,3 +1,21 @@
+###################################################################################
+# ocr_translate - a django app to perform OCR and translation of images.          #
+# Copyright (C) 2023-present Davide Grassano                                      #
+#                                                                                 #
+# This program is free software: you can redistribute it and/or modify            #
+# it under the terms of the GNU General Public License as published by            #
+# the Free Software Foundation, either version 3 of the License.                  #
+#                                                                                 #
+# This program is distributed in the hope that it will be useful,                 #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                  #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                   #
+# GNU General Public License for more details.                                    #
+#                                                                                 #
+# You should have received a copy of the GNU General Public License               #
+# along with this program.  If not, see {http://www.gnu.org/licenses/}.           #
+#                                                                                 #
+# Home: https://github.com/Crivella/ocr_translate                                 #
+###################################################################################
 """Test django serverside views.handshake."""
 # pylint: disable=redefined-outer-name
 
@@ -66,6 +84,25 @@ def test_run_ocrtsl_post_invalid_data(client, post_kwargs):
     response = client.post(url, **post_kwargs)
 
     assert response.status_code == 400
+
+def test_run_ocrtsl_post_nocontent_force(client, post_kwargs):
+    """Test run_ocrtsl with POST request with no content but force."""
+    post_kwargs['data']['force'] = True
+    post_kwargs['data'].pop('contents')
+    url = reverse('ocr_translate:run_ocrtsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 400
+    assert response.json()['error'] == 'Cannot force ocr without contents'
+
+def test_run_ocrtsl_post_wrong_md5(client, post_kwargs):
+    """Test run_ocrtsl with POST request with wrong md5."""
+    post_kwargs['data']['md5'] = 'wrong_md5'
+    url = reverse('ocr_translate:run_ocrtsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 400
+    assert response.json()['error'] == 'md5 mismatch'
 
 def test_run_ocrtsl_post_valid_lazy_success(client, monkeypatch, post_kwargs):
     """Test run_ocrtsl with POST request with valid data. No contents -> lazy + success"""

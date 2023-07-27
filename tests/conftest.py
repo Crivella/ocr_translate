@@ -1,3 +1,21 @@
+###################################################################################
+# ocr_translate - a django app to perform OCR and translation of images.          #
+# Copyright (C) 2023-present Davide Grassano                                      #
+#                                                                                 #
+# This program is free software: you can redistribute it and/or modify            #
+# it under the terms of the GNU General Public License as published by            #
+# the Free Software Foundation, either version 3 of the License.                  #
+#                                                                                 #
+# This program is distributed in the hope that it will be useful,                 #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                  #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                   #
+# GNU General Public License for more details.                                    #
+#                                                                                 #
+# You should have received a copy of the GNU General Public License               #
+# along with this program.  If not, see {http://www.gnu.org/licenses/}.           #
+#                                                                                 #
+# Home: https://github.com/Crivella/ocr_translate                                 #
+###################################################################################
 """Fixtures for the tests."""
 
 import numpy as np
@@ -22,7 +40,7 @@ def language_dict():
     }
 
 @pytest.fixture()
-def ocr_box_model_dict():
+def box_model_dict():
     """Dict defiining an OCRBoxModel"""
     return {
         'name': 'test_model/id',
@@ -55,6 +73,12 @@ def language(language_dict):
     """Language database object."""
     return m.Language.objects.create(**language_dict)
 
+@pytest.fixture()
+def language2(language_dict):
+    """Another Language database object."""
+    dct = {k: v+'2' for k, v in language_dict.items()}
+    return m.Language.objects.create(**dct)
+
 @pytest.fixture(scope='session')
 def image_pillow():
     """Random Pillow image."""
@@ -72,9 +96,9 @@ def text():
     return m.Text.objects.create(text='test_text')
 
 @pytest.fixture()
-def ocr_box_model(language, ocr_box_model_dict):
+def box_model(language, box_model_dict):
     """OCRBoxModel database object."""
-    res = m.OCRBoxModel.objects.create(**ocr_box_model_dict)
+    res = m.OCRBoxModel.objects.create(**box_model_dict)
     res.languages.add(language)
 
     return res
@@ -97,9 +121,9 @@ def tsl_model(language, tsl_model_dict):
     return res
 
 @pytest.fixture()
-def box_run(language, image, ocr_box_model, option_dict):
+def box_run(language, image, box_model, option_dict):
     """OCRBoxRun database object."""
-    return m.OCRBoxRun.objects.create(lang_src=language, image=image, model=ocr_box_model, options=option_dict)
+    return m.OCRBoxRun.objects.create(lang_src=language, image=image, model=box_model, options=option_dict)
 
 
 @pytest.fixture()
@@ -120,10 +144,10 @@ def tsl_run(language, text, tsl_model, option_dict):
         )
 
 @pytest.fixture()
-def mock_loaded(monkeypatch, language, ocr_box_model, ocr_model, tsl_model):
+def mock_loaded(monkeypatch, language, box_model, ocr_model, tsl_model):
     """Mock models being loaded"""
-    monkeypatch.setattr(box, 'BOX_MODEL_ID', ocr_box_model.name)
-    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', ocr_box_model)
+    monkeypatch.setattr(box, 'BOX_MODEL_ID', box_model.name)
+    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', ocr_model.name)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(tsl, 'TSL_MODEL_ID', tsl_model.name)
@@ -133,7 +157,7 @@ def mock_loaded(monkeypatch, language, ocr_box_model, ocr_model, tsl_model):
 
 @pytest.fixture()
 def mock_loaders(monkeypatch):
-    """Mock the load functions."""
+    """Mock the load functions. Act on global variables, but avoid downloading and actually loading models."""
     def mock_load_lang_src(name):
         monkeypatch.setattr(lang, 'LANG_SRC', m.Language.objects.get(iso1=name))
     def mock_load_lang_dst(name):
@@ -156,9 +180,25 @@ def mock_loaders(monkeypatch):
         'load_tsl_model': mock_load_tsl_model,
     }
 
-    for mod in [ocr_translate, ocr_tsl, box, lang, ocr, tsl, views]:
+    for mod in [ocr_translate, ocr_tsl, ocr_tsl.initializers, box, lang, ocr, tsl, views]:
         for fname, mock in dct.items():
             try:
                 monkeypatch.setattr(mod, fname, mock)
             except AttributeError:
                 pass
+
+@pytest.fixture(scope='function')
+def mock_called(request):
+    """Generic mock function to check if it was called."""
+    def mock_call(*args, **kwargs): # pylint: disable=inconsistent-return-statements
+        mock_call.called = True
+        mock_call.args = args
+        mock_call.kwargs = kwargs
+
+        if hasattr(request, 'param'):
+            return request.param
+
+    if hasattr(request, 'param'):
+        mock_call.expected = request.param
+
+    return mock_call

@@ -27,7 +27,7 @@ from transformers import M2M100Tokenizer
 from .. import models as m
 from ..messaging import Message
 from ..queues import tsl_queue as q
-from .base import dev, load_hugginface_model
+from .huggingface import dev, load_hugginface_model
 
 logger = logging.getLogger('ocr.general')
 

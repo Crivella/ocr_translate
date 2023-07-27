@@ -26,7 +26,7 @@ from PIL import Image
 from .. import models as m
 from ..messaging import Message
 from ..queues import ocr_queue as q
-from .base import dev, load_hugginface_model
+from .huggingface import dev, load_hugginface_model
 from .tesseract import tesseract_pipeline
 
 logger = logging.getLogger('ocr.general')
