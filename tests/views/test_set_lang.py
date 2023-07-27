@@ -22,7 +22,8 @@
 import pytest
 from django.urls import reverse
 
-from ocr_translate.ocr_tsl import lang
+from ocr_translate import views
+from ocr_translate.ocr_tsl import box, lang, ocr, tsl
 
 pytestmark = pytest.mark.django_db
 
@@ -47,6 +48,15 @@ def test_set_lang_post_noheader(client):
     """Test set_lang with POST request without content/type."""
     url = reverse('ocr_translate:set_lang')
     response = client.post(url)
+
+    assert response.status_code == 400
+
+def test_set_lang_post_fail_load(client, post_kwargs):
+    """Test set_lang with POST request with wrong lang data (cause exceptio in load_lang_XXX)."""
+    post_kwargs['data']['lang_src'] = 'invalid'
+
+    url = reverse('ocr_translate:set_lang')
+    response = client.post(url, **post_kwargs)
 
     assert response.status_code == 400
 
@@ -77,3 +87,117 @@ def test_set_lang_post_valid(client, mock_loaders, language, post_kwargs):
 
     assert lang.LANG_SRC == language
     assert lang.LANG_DST == language
+
+def test_set_lang_post_no_unload_tsl(
+        client, post_kwargs,
+        monkeypatch, mock_loaders, mock_called,
+        tsl_model,
+        language, language2,
+        ):
+    """Test set_lang with POST valid request. Switching either lang_src or dst has to cause unloading of tsl model
+    if the model does not support that language."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(views, 'unload_tsl_model', mock_called)
+
+    tsl_model.src_languages.add(language2)
+
+    post_kwargs['data']['lang_src'] = language2.iso1
+    url = reverse('ocr_translate:set_lang')
+    client.post(url, **post_kwargs)
+
+    assert not hasattr(mock_called, 'called')
+
+def test_set_lang_post_unload_tsl(
+        client, post_kwargs,
+        monkeypatch, mock_loaders, mock_called,
+        tsl_model,
+        language, language2,
+        ):
+    """Test set_lang with POST valid request. Switching either lang_src or dst has to cause unloading of tsl model
+    if the model does not support that language."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(views, 'unload_tsl_model', mock_called)
+
+    post_kwargs['data']['lang_src'] = language2.iso1
+    url = reverse('ocr_translate:set_lang')
+    client.post(url, **post_kwargs)
+
+    assert hasattr(mock_called, 'called')
+
+def test_set_lang_post_no_unload_ocr(
+        client, post_kwargs,
+        monkeypatch, mock_loaders, mock_called,
+        ocr_model,
+        language, language2,
+        ):
+    """Test set_lang with POST valid request. Switching lang_src has to cause unloading of ocr model
+    if the model does not support that language."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(views, 'unload_ocr_model', mock_called)
+
+    ocr_model.languages.add(language2)
+
+    post_kwargs['data']['lang_src'] = language2.iso1
+    url = reverse('ocr_translate:set_lang')
+    client.post(url, **post_kwargs)
+
+    assert not hasattr(mock_called, 'called')
+
+def test_set_lang_post_unload_ocr(
+        client, post_kwargs,
+        monkeypatch, mock_loaders, mock_called,
+        ocr_model,
+        language, language2,
+        ):
+    """Test set_lang with POST valid request. Switching lang_src has to cause unloading of ocr model
+    if the model does not support that language."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(views, 'unload_ocr_model', mock_called)
+
+    post_kwargs['data']['lang_src'] = language2.iso1
+    url = reverse('ocr_translate:set_lang')
+    client.post(url, **post_kwargs)
+
+    assert hasattr(mock_called, 'called')
+
+def test_set_lang_post_no_unload_box(
+        client, post_kwargs,
+        monkeypatch, mock_loaders, mock_called,
+        box_model,
+        language, language2,
+        ):
+    """Test set_lang with POST valid request. Switching lang_src has to cause unloading of box model
+    if the model does not support that language."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(views, 'unload_box_model', mock_called)
+
+    box_model.languages.add(language2)
+
+    post_kwargs['data']['lang_src'] = language2.iso1
+    url = reverse('ocr_translate:set_lang')
+    client.post(url, **post_kwargs)
+
+    assert not hasattr(mock_called, 'called')
+
+def test_set_lang_post_unload_box(
+        client, post_kwargs,
+        monkeypatch, mock_loaders, mock_called,
+        box_model,
+        language, language2,
+        ):
+    """Test set_lang with POST valid request. Switching lang_src has to cause unloading of box model
+    if the model does not support that language."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(views, 'unload_box_model', mock_called)
+
+    post_kwargs['data']['lang_src'] = language2.iso1
+    url = reverse('ocr_translate:set_lang')
+    client.post(url, **post_kwargs)
+
+    assert hasattr(mock_called, 'called')

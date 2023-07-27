@@ -85,6 +85,25 @@ def test_run_ocrtsl_post_invalid_data(client, post_kwargs):
 
     assert response.status_code == 400
 
+def test_run_ocrtsl_post_nocontent_force(client, post_kwargs):
+    """Test run_ocrtsl with POST request with no content but force."""
+    post_kwargs['data']['force'] = True
+    post_kwargs['data'].pop('contents')
+    url = reverse('ocr_translate:run_ocrtsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 400
+    assert response.json()['error'] == 'Cannot force ocr without contents'
+
+def test_run_ocrtsl_post_wrong_md5(client, post_kwargs):
+    """Test run_ocrtsl with POST request with wrong md5."""
+    post_kwargs['data']['md5'] = 'wrong_md5'
+    url = reverse('ocr_translate:run_ocrtsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 400
+    assert response.json()['error'] == 'md5 mismatch'
+
 def test_run_ocrtsl_post_valid_lazy_success(client, monkeypatch, post_kwargs):
     """Test run_ocrtsl with POST request with valid data. No contents -> lazy + success"""
     post_kwargs['data'].pop('contents')

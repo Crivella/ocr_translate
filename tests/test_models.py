@@ -38,11 +38,11 @@ def test_add_language_existing(language_dict, language):
     with pytest.raises(django.db.utils.IntegrityError):
         m.Language.objects.create(**language_dict)
 
-def test_add_ocr_box_model(ocr_box_model_dict, ocr_box_model):
+def test_add_ocr_box_model(box_model_dict, box_model):
     """Test adding a new OCRBoxModel"""
-    query = m.OCRBoxModel.objects.filter(**ocr_box_model_dict)
+    query = m.OCRBoxModel.objects.filter(**box_model_dict)
     assert query.exists()
-    assert str(query.first()) == ocr_box_model_dict['name']
+    assert str(query.first()) == box_model_dict['name']
 
 def test_add_ocr_model(ocr_model_dict, ocr_model):
     """Test adding a new OCRModel"""
@@ -62,14 +62,14 @@ def test_add_option_dict(option_dict):
     assert query.exists()
     assert str(query.first()) == str({})
 
-def test_box_run(image, language, ocr_box_model, option_dict, monkeypatch):
+def test_box_run(image, language, box_model, option_dict, monkeypatch):
     """Test adding a new BoxRun"""
 
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
         return [lbrt]
 
-    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', ocr_box_model)
+    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(box, 'box_pipeline', mock_pipeline)
 
     res = box.box_run(image, language, image=1, options=option_dict)
@@ -78,13 +78,13 @@ def test_box_run(image, language, ocr_box_model, option_dict, monkeypatch):
     assert isinstance(res[0], m.BBox)
     assert res[0].lbrt == lbrt
 
-def test_box_run_reuse(image, language, ocr_box_model, option_dict, monkeypatch):
+def test_box_run_reuse(image, language, box_model, option_dict, monkeypatch):
     """Test adding a new BoxRun"""
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
         return [lbrt]
 
-    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', ocr_box_model)
+    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(box, 'box_pipeline', mock_pipeline)
 
     assert m.OCRBoxRun.objects.count() == 0

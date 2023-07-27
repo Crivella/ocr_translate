@@ -45,14 +45,16 @@ def test_get_translations_get_missing_required(client, get_kwargs, remove_key):
     response = client.get(url, get_kwargs)
 
     assert response.status_code == 400
+    assert response.json() == {'error': 'no text'}
 
 def test_get_translations_get_invalid_data(client, get_kwargs):
     """Test get_translations with GET request with non recognized attribute."""
     get_kwargs['invalid_field'] = 'test'
     url = reverse('ocr_translate:get_trans')
-    response = client.get(url)
+    response = client.get(url, get_kwargs)
 
     assert response.status_code == 400
+    assert 'invalid data: ' in response.json()['error']
 
 def test_get_translations_get_notfound(client, get_kwargs):
     """Test get_translations with GET request with non recognized attribute."""

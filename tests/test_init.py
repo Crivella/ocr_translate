@@ -37,10 +37,10 @@ def test_init_most_used_clean(mock_loaders):
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
-def test_init_most_used_content(mock_loaders, language, ocr_box_model, ocr_model, tsl_model):
+def test_init_most_used_content(mock_loaders, language, box_model, ocr_model, tsl_model):
     """Test init_most_used with content in the database."""
     ocr_tsl.init_most_used()
-    assert box.BBOX_MODEL_OBJ == ocr_box_model
+    assert box.BBOX_MODEL_OBJ == box_model
     assert ocr.OCR_MODEL_OBJ == ocr_model
     assert tsl.TSL_MODEL_OBJ == tsl_model
     assert lang.LANG_SRC == language
