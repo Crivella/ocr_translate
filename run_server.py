@@ -23,6 +23,7 @@ import os
 from pathlib import Path
 
 import django
+import torch
 from django.core.management import call_command
 
 
@@ -36,6 +37,12 @@ def main():
     if not 'DATABASE_NAME' in os.environ:
         os.environ['DATABASE_NAME'] = str(home / '.ocr_translate' / 'db.sqlite3')
         home.mkdir(exist_ok=True, parents=True)
+
+    if not torch.cuda.is_available():
+        print('CUDA is not available, falling back to using CPU')
+        os.environ['DEVICE'] = 'cpu'
+    else:
+        os.environ.setdefault('DEVICE', 'cuda')
 
     django.setup()
 

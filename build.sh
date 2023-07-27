@@ -7,7 +7,6 @@ pyinstaller \
     --icon icon.ico \
     --add-data "ocr_translate/ocr_tsl/languages.json:ocr_translate/ocr_tsl" \
     --add-data "ocr_translate/ocr_tsl/models.json:ocr_translate/ocr_tsl" \
-    --add-data "ocr_translate/migrations:ocr_translate" \
     --collect-all torch \
     --collect-all torchvision \
     --collect-all transformers \
