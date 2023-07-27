@@ -51,6 +51,24 @@ See below for a [list of supported databases](#supported-databases)
 
 You will also have to modify the `ALLOWED_HOSTS` in case you plan to access the server from somewhere other than *localhost*.
 
+### From Release file
+
+(Tested on Windows 11)
+From the github releases you can download either:
+
+- The [CPU only version](/releases/latest/download/run_server-cpu.exe)
+- The GPU version split in [file 1](/releases/latest/download/run_server-gpu.zip.001) and [file 2](/releases/latest/download/run_server-gpu.zip.002) (The CUDA dependencies makes it take much more space)
+
+Not that every time you run the EXE, it will decompress itself into a temporary folder so:
+
+- The exe will appear as an empty console until all the file are extracted and the actual script start running.
+- By launching the server multiple times without restarting (especially the GPU one), you risk quickly filling up your drive
+
+You can either just start the server and it will run with sensible defaults. Most notably the models files and database will be downloaded/created under `%userprofile%/.ocr_translate`.
+Also the gpu version will attempt to run on GPU by default, and fall-back to CPU if the former is not available.
+
+For customization, you can set the [environment variable](#environment-variables) yourself, either via powershell or by searching for *environment variable* in the settings menu
+
 ### From Github installation
 
 The Github repo provides not only the Django app files, but also the already configured project files used to start the server.
