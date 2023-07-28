@@ -2,7 +2,13 @@ name: ci
 
 on:
     push:
-        branches: [ master ]
+        branches:
+            - master
+        paths:
+            - "ocr_translate/**"
+            - "pyproject.toml"
+            - ".github/workflows/**"
+            - ".pre-commit-config.yaml"
     pull_request:
 
 jobs:
