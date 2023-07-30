@@ -5,17 +5,15 @@ RUN virtualenv /venv/
 
 RUN mkdir -p /src
 
-COPY requirements-torch-cpu.txt /src/
+COPY requirements-torch-cuda.txt /src/
 COPY requirements.txt /src/
 # This might have to be removed when pushing the image?
-COPY .pip_cache-cpu /pip_cache
+COPY .pip_cache-gpu /pip_cache
 
 RUN mkdir -p /pip_cache
-RUN /venv/bin/pip install -r /src/requirements-torch-cpu.txt --cache-dir /pip_cache
+RUN /venv/bin/pip install -r /src/requirements-torch-cuda.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install -r /src/requirements.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install gunicorn --cache-dir /pip_cache
-RUN /venv/bin/pip install pytesseract --cache-dir /pip_cache
-
 
 FROM python:3.10.12-slim-bookworm
 
@@ -59,7 +57,7 @@ ENV \
     AUTOCREATE_VALIDATED_MODELS="true" \
     TRANSFORMERS_CACHE="/models" \
     TRANSFORMERS_OFFLINE="0" \
-    DEVICE="cpu" \
+    DEVICE="cuda" \
     NUM_WEB_WORKERS="1" \
     NUM_MAIN_WORKERS="4" \
     NUM_BOX_WORKERS="1" \

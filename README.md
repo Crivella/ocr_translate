@@ -6,44 +6,9 @@ The OCR and translation is performed using freely available machine learning mod
 
 The server is designed to be used together with [this browser extension](https://github.com/Crivella/ocr_extension), acting as a front-end providing the images and controlling the model languages and models being used.
 
-## Installation
-
-It is strongly suggested to install this project using a [virtual environment](https://docs.python.org/3/library/venv.html).
-
-### From Github
-
-- Clone or download the repository
-  - `git clone https://github.com/Crivella/ocr_translate.git`
-- Install the project dependencies (choose the appropriate files depending if you wanna run on GPU or CPU only):
-  - `pip install -r requirements-torch-[cpu/cuda].txt`
-  - `pip install -r requirements.txt`
-
-### From Docker
-Plan to add a CPU and a CUDA specific image to DockerHUB.
-For now you can create the image yourself by:
-
-- Create a .pip-cache-cpu directory inside your project.
-- Optional: re-install the project dependencies pointing this as the cache folder for pip (will make the build process much faster, by reusing the cached dependencies)
-- Run `docker build -t ocr_server .`
-
-
-### From PyPI
-
-Run the command
-
-- `pip install django-ocr_translate`
-
-By default torch 2.x will come in its CUDA enabled version. While this works also for CPU, it will also install ~1 GB of cuda dependencies.
-If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](requirements-torch-cpu.txt) first and run
-
-- `pip install -r requirements-torch-cpu.txt`
-
-before installing the python package.
-
 ## Running the server
 
-By default the server will use a sqlite database named *db.sqlite3* inside the project main directory.
-If you plan to use a different database, you can either:
+If you plan to use a different settings (eg. database, or model location), you can either:
 
 - manually edit the [settings.py](mysite/settings.py)
 - Use the provided [Environment variables](#environment-variables)
@@ -51,22 +16,27 @@ See below for a [list of supported databases](#supported-databases)
 
 You will also have to modify the `ALLOWED_HOSTS` in case you plan to access the server from somewhere other than *localhost*.
 
+All the different way to run the server may provide different set of default values (each of them is targeted for a different level of usage).
+
 ### From Release file
 
 (Tested on Windows 11)
-From the github releases you can download either:
+From the [github releases page](/releases/) you can download either:
 
 - The [CPU only version](/../../releases/latest/download/run_server-cpu.exe)
 - The GPU version split in [file 1](/../../releases/latest/download/run_server-gpu.zip.001) and [file 2](/../../releases/latest/download/run_server-gpu.zip.002) (The CUDA dependencies makes it take much more space), wich can be restored using tools like [7zip](https://www.7-zip.org/https://www.7-zip.org/) and [NanaZip](https://github.com/M2Team/NanaZip).
 
+Usage:
 Unzip the file and from inside the folder, run the `run_server-XXX.exe` file (XXX=cpu/gpu)
 
-The server and it will run with sensible defaults. Most notably the models files and database will be downloaded/created under `%userprofile%/.ocr_translate`.
+The server will run with sensible defaults. Most notably the models files and database will be downloaded/created under `%userprofile%/.ocr_translate`.
 Also the gpu version will attempt to run on GPU by default, and fall-back to CPU if the former is not available.
 
-For customization, you can set the [environment variable](#environment-variables) yourself, either via powershell or by searching for *environment variable* in the settings menu
+For customization, you can set the [environment variable](#environment-variables) yourself, either via powershell or by searching for *environment variable* in the settings menu.
 
 ### From Github installation
+
+See the section on how to [install from Github](#from-github) first.
 
 The Github repo provides not only the Django app files, but also the already configured project files used to start the server.
 
@@ -93,6 +63,8 @@ Notes:
 
 ### From PyPI installation
 
+See the section on how to [install from PyPI](#from-pypi) first.
+
 When installing the project from PyPI, only the app is available.
 This will need to be integrated in a Django project in order to be used.
 These are the minimal instruction for creating a project and start running the server:
@@ -106,15 +78,17 @@ These are the minimal instruction for creating a project and start running the s
   - urls.py: Include the `'ocr_translate.urls'` into your project urls.
 - From here follow the same instructions as when starting [from Github](#from-github)
 
-### From docker
+### From docker image
+
+See the section on how to [install from DockerHUB](#from-docker) first.
 
 This section assumes you have docker installed and the image of the project.
 
 Run the command:
 
-- `docker run --name CONTAINER_NAME -v PATH_TO_YOUR_MODEL_DIRECTORY:/models -v PATH_TO_DIR_WITH_SQLITE_FILE:/data --env-file=PATH_TO_AND_ENV_VARIABLE_FILE -p SERVER_PORT:4000 -d ocr_server`
+- `docker run --name CONTAINER_NAME -v PATH_TO_YOUR_MODEL_DIRECTORY:/models -v PATH_TO_DIR_WITH_SQLITE_FILE:/data --env-file=PATH_TO_AND_ENV_VARIABLE_FILE -p SERVER_PORT:4000 -d ocr_translate`
 
-See the [Environment variables](#environment-variables) section for configuring your environment variable file. Additionaly the docker image defines 2 other variable to automatically create an admin user for managing the database via the django-admin interface:
+See the [Environment variables](#environment-variables) section for configuring your environment variable file. Additionaly the docker image defines several other variables to automatically create an admin user for managing the database via the django-admin interface:
 
 - `UID`: UID of the user owning the files in /models and /data
 - `GID`: GID of the user owning the files in /models and /data
@@ -122,6 +96,44 @@ See the [Environment variables](#environment-variables) section for configuring 
 - `DJANGO_SUPERUSER_USERNAME`: The username of the admin user to be created.
 - `DJANGO_SUPERUSER_PASSWORD`: The password of the admin user to be created.
 
+
+## Installation
+
+For both the Githyb and PyPI installation it is strongly suggested to install this project using a [virtual environment](https://docs.python.org/3/library/venv.html).
+
+### From Github
+
+- Clone or download the repository
+  - `git clone https://github.com/Crivella/ocr_translate.git`
+- Install the project dependencies (choose the appropriate files depending if you wanna run on GPU or CPU only):
+  - `pip install -r requirements-torch-[cpu/cuda].txt`
+  - `pip install -r requirements.txt`
+
+### From Docker
+
+CPU and CUDA specific images are available on [DockerHUB](https://hub.docker.com/r/crivella1/ocr_translate):
+
+- CPU: `docker pull crivella1/ocr_translate:latest-cpu`
+- GPU: `docker pull crivella1/ocr_translate:latest-gpu`
+
+Manually create your image:
+
+- Create a .pip-cache-[cpu/gpu] directory inside your project.
+- Optional: re-install the project dependencies pointing this as the cache folder for pip (will make the build process much faster, by reusing the cached dependencies)
+- Run `docker build -t IMAGE_TAG -f Dockerfile-[cpu/gpu] .`
+
+### From PyPI
+
+Run the command
+
+- `pip install django-ocr_translate`
+
+By default torch 2.x will come in its CUDA enabled version. While this works also for CPU, it will also install ~1 GB of cuda dependencies.
+If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](requirements-torch-cpu.txt) first and run
+
+- `pip install -r requirements-torch-cpu.txt`
+
+before installing the python package.
 ## Supported Box OCR models
 
 - [EasyOCR](https://github.com/JaidedAI/EasyOCR)
