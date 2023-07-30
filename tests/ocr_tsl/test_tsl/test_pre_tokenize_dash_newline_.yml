@@ -1,0 +1,59 @@
+res:
+- options: {}
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word.
+- options:
+    break_newlines: true
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok-
+  - en word.
+- options:
+    break_newlines: false
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word.
+- options:
+    break_chars: ?.!
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word
+- options:
+    ignore_chars: ?.!
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word
+- options:
+    break_chars: ?.!
+    break_newlines: false
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word
+- options:
+    break_newlines: false
+    ignore_chars: ?.!
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word
+- options:
+    restore_dash_newlines: true
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline broken word.

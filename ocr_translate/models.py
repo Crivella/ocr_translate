@@ -40,8 +40,9 @@ class Language(models.Model):
     tesseract = models.CharField(max_length=32, null=True)
     facebookM2M = models.CharField(max_length=32, null=True)
 
-    break_chars = models.CharField(max_length=512, null=True)
-    ignore_chars = models.CharField(max_length=512, null=True)
+    default_options = models.ForeignKey(
+        OptionDict, on_delete=models.CASCADE, related_name='lang_default_options', null=True
+        )
 
     def __str__(self):
         return str(self.iso1)
@@ -50,6 +51,10 @@ class OCRModel(models.Model):
     """OCR model using hugging space naming convention"""
     name = models.CharField(max_length=128)
     languages = models.ManyToManyField(Language, related_name='ocr_models')
+
+    default_options = models.ForeignKey(
+        OptionDict, on_delete=models.SET_NULL, related_name='ocr_default_options', null=True
+        )
 
     language_format = models.CharField(max_length=32, null=True)
 
@@ -61,6 +66,10 @@ class OCRBoxModel(models.Model):
     name = models.CharField(max_length=128)
     languages = models.ManyToManyField(Language, related_name='box_models')
 
+    default_options = models.ForeignKey(
+        OptionDict, on_delete=models.SET_NULL, related_name='box_default_options', null=True
+        )
+
     language_format = models.CharField(max_length=32, null=True)
 
     def __str__(self):
@@ -71,6 +80,10 @@ class TSLModel(models.Model):
     name = models.CharField(max_length=128)
     src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')
     dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
+
+    default_options = models.ForeignKey(
+        OptionDict, on_delete=models.SET_NULL, related_name='tsl_default_options', null=True
+        )
 
     language_format = models.CharField(max_length=32, null=True)
 

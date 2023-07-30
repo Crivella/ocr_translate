@@ -72,6 +72,7 @@ pre-commit = [
     "pylint-django~=2.5.3",
 ]
 release = [
+    "flit",
     "pyinstaller"
 ]
 
@@ -80,7 +81,8 @@ name = "ocr_translate"
 
 [tool.flit.sdist]
 exclude = [
-    ".gitignore",
+    ".gitignore", ".github",
+    "icon.ico", "run_server.py",
     "Dockerfile", "nginx.default", "start-server.sh",
     "mysite/", "mysite/*", "manage.py", "tests/", "tests/*",
     ]

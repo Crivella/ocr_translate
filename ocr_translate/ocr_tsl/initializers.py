@@ -65,7 +65,10 @@ def auto_create_languages():
         iso2t = lang.pop('iso2t')
         iso2b = lang.pop('iso2b')
         iso3 = lang.pop('iso3')
+        def_opt = lang.pop('default_options', {})
+        opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
         l, _ = m.Language.objects.get_or_create(name=name, iso1=iso1, iso2t=iso2t, iso2b=iso2b, iso3=iso3)
+        l.default_options = opt_obj
         for k,v in lang.items():
             setattr(l, k, v)
         l.save()
@@ -80,7 +83,10 @@ def auto_create_models():
         logger.debug(f'Creating box model: {box}')
         lang = box.pop('lang')
         lcode = box.pop('lang_code')
+        def_opt = box.pop('default_options', {})
+        opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
         model, _ = m.OCRBoxModel.objects.get_or_create(**box)
+        model.default_options = opt_obj
         model.language_format = lcode
         for l in lang:
             model.languages.add(m.Language.objects.get(iso1=l))
@@ -90,7 +96,10 @@ def auto_create_models():
         logger.debug(f'Creating ocr model: {ocr}')
         lang = ocr.pop('lang')
         lcode = ocr.pop('lang_code')
+        def_opt = ocr.pop('default_options', {})
+        opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
         model, _ = m.OCRModel.objects.get_or_create(**ocr)
+        model.default_options = opt_obj
         model.language_format = lcode
         for l in lang:
             model.languages.add(m.Language.objects.get(iso1=l))
@@ -101,7 +110,10 @@ def auto_create_models():
         src = tsl.pop('lang_src')
         dst = tsl.pop('lang_dst')
         lcode = tsl.pop('lang_code', None)
+        def_opt = tsl.pop('default_options', {})
+        opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
         model, _ = m.TSLModel.objects.get_or_create(**tsl)
+        model.default_options = opt_obj
         model.language_format = lcode
         for l in src:
             logger.debug(f'Adding src language: {l}')

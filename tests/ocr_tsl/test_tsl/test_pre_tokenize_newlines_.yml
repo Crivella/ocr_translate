@@ -6,6 +6,15 @@ res:
 
     And another.'
   tokens:
+  - This is a test string. With a newline. And another.
+- options:
+    break_newlines: true
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
   - This is a test string.
   - With a newline.
   - And another.
@@ -17,11 +26,7 @@ res:
 
     And another.'
   tokens:
-  - 'This is a test string.
-
-    With a newline.
-
-    And another.'
+  - This is a test string. With a newline. And another.
 - options:
     break_chars: ?.!
   string: 'This is a test string.
@@ -31,8 +36,8 @@ res:
     And another.'
   tokens:
   - This is a test string
-  - With a newline
-  - And another
+  - ' With a newline'
+  - ' And another'
 - options:
     ignore_chars: ?.!
   string: 'This is a test string.
@@ -41,9 +46,7 @@ res:
 
     And another.'
   tokens:
-  - This is a test string
-  - With a newline
-  - And another
+  - This is a test string With a newline And another
 - options:
     break_chars: ?.!
     break_newlines: false
@@ -54,12 +57,8 @@ res:
     And another.'
   tokens:
   - This is a test string
-  - '
-
-    With a newline'
-  - '
-
-    And another'
+  - ' With a newline'
+  - ' And another'
 - options:
     break_newlines: false
     ignore_chars: ?.!
@@ -69,8 +68,13 @@ res:
 
     And another.'
   tokens:
-  - 'This is a test string
+  - This is a test string With a newline And another
+- options:
+    restore_dash_newlines: true
+  string: 'This is a test string.
 
-    With a newline
+    With a newline.
 
-    And another'
+    And another.'
+  tokens:
+  - This is a test string. With a newline. And another.

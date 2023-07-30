@@ -26,13 +26,15 @@ strings = [
     'This is a test string.\nWith a newline.\nAnd another.',
     'This is a test string.? With a special break character.',
     'This is a test string.? With a special break character.\nAnd a newline.',
+    'String with a dash-newline brok-\nen word.'
 ]
 ids = [
     'simple',
     'newline',
     'newlines',
     'breakchar',
-    'breakchar_newline'
+    'breakchar_newline',
+    'dash_newline'
 ]
 
 @pytest.fixture(params=strings, ids=ids)

@@ -4,6 +4,11 @@ res:
   tokens:
   - This is a test string.
 - options:
+    break_newlines: true
+  string: This is a test string.
+  tokens:
+  - This is a test string.
+- options:
     break_newlines: false
   string: This is a test string.
   tokens:
@@ -30,3 +35,8 @@ res:
   string: This is a test string.
   tokens:
   - This is a test string
+- options:
+    restore_dash_newlines: true
+  string: This is a test string.
+  tokens:
+  - This is a test string.

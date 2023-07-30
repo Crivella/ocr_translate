@@ -348,7 +348,11 @@
         "iso3": "eng",
         "easyocr": "en",
         "tesseract": "eng",
-        "facebookM2M": "en"
+        "facebookM2M": "en",
+        "default_options": {
+            "break_chars": "!?.",
+            "restore_dash_newlines": true
+        }
     },
     {
         "name": "Esperanto",
@@ -650,8 +654,10 @@
         "easyocr": "ja",
         "tesseract": "jpn",
         "facebookM2M": "ja",
-        "break_chars": "!。?！？",
-        "ignore_chars": "♥♡♪〜・.、"
+        "default_options": {
+            "break_chars": "!。?！？",
+            "ignore_chars": "♥♡♪〜・.、"
+        }
     },
     {
         "name": "Javanese",
