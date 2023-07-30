@@ -115,8 +115,8 @@ def test_auto_create_languages():
     # Test settings of **kwargs
     jap = m.Language.objects.get(iso1='ja')
     assert jap.facebookM2M == 'ja'
-    assert jap.break_chars is not None
-    assert jap.ignore_chars is not None
+    assert jap.default_options.options['break_chars'] is not None
+    assert jap.default_options.options['break_chars'] is not None
 
 def test_auto_create_models_nolang():
     """Test auto_create_models without creating languages before"""

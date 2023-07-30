@@ -70,7 +70,8 @@ def get_tsl_model() -> m.TSLModel:
 
 def pre_tokenize(
         text: str,
-        ignore_chars: str = None, break_chars: str = None, break_newlines: bool = True
+        ignore_chars: str = None, break_chars: str = None, break_newlines: bool = False,
+        restore_dash_newlines: bool = False
         ) -> list[str]:
     """Pre-tokenize a text string.
 
@@ -79,16 +80,22 @@ def pre_tokenize(
         ignore_chars (str, optional): String of characters to ignore. Defaults to None.
         break_chars (str, optional): String of characters to break on. Defaults to None.
         break_newlines (bool, optional): Whether to break on newlines. Defaults to True.
+        restore_dash_newlines (bool, optional): Whether to restore dash-newlines (word broken with a -newline).
+            Defaults to False.
 
     Returns:
         list[str]: List of string tokens.
     """
+    if restore_dash_newlines:
+        text = re.sub(r'(?<!\n)- *\n', '', text)
     if ignore_chars is not None:
         text = re.sub(f'[{ignore_chars}]+', '', text)
     if break_chars is None:
         break_chars = ''
     if break_newlines:
         break_chars += '\n'
+    else:
+        text = text.replace('\n', ' ')
 
     break_chars = re.escape(break_chars)
     tokens = text
@@ -144,15 +151,13 @@ def _tsl_pipeline(
         options = {}
     TSL_TOKENIZER.src_lang = lang_src
 
-    break_newlines = options.get('break_newlines', True)
-    break_chars = options.get('break_chars', None)
-    ignore_chars = options.get('ignore_chars', None)
+    pre_keys = ['ignore_chars', 'break_chars', 'break_newlines', 'restore_dash_newlines']
+    pre_dct = {k: options[k] for k in pre_keys if k in options}
 
-    args = (ignore_chars, break_chars, break_newlines)
     if isinstance(text, list):
-        tokens = [pre_tokenize(t, *args) for t in text]
+        tokens = [pre_tokenize(t, **pre_dct) for t in text]
     elif isinstance(text, str):
-        tokens = pre_tokenize(text, *args)
+        tokens = pre_tokenize(text, **pre_dct)
     else:
         raise TypeError(f'Unsupported type for text: {type(text)}')
 
@@ -189,6 +194,10 @@ def _tsl_pipeline(
 
     if isinstance(text, str):
         tsl = tsl[0]
+
+    if dev == 'cuda':
+        torch.cuda.empty_cache()
+
     return tsl
 
 def tsl_pipeline(*args, id_: Hashable, batch_id: Hashable = None, block: bool = True, **kwargs):
@@ -255,9 +264,9 @@ def tsl_run(
         logger.info('Running TSL')
         id_ = (text_obj.id, model_obj.id, options_obj.id, src.id, dst.id)
         batch_id = (model_obj.id, options_obj.id, src.id, dst.id)
-        opt_dct = options_obj.options
-        opt_dct.setdefault('break_chars', src.break_chars)
-        opt_dct.setdefault('ignore_chars', src.ignore_chars)
+        lang_dct = getattr(src.default_options, 'options', {})
+        model_dct =  getattr(model_obj.default_options, 'options', {})
+        opt_dct = {**lang_dct, **model_dct, **options_obj.options}
         new = tsl_pipeline(
             text_obj.text,
             getattr(src, model_obj.language_format),

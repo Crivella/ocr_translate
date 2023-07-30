@@ -36,11 +36,13 @@ def test_pre_tokenize(string, data_regression):
     """Test tsl module."""
     options = [
         {},
+        {'break_newlines': True},
         {'break_newlines': False},
         {'break_chars': '?.!'},
         {'ignore_chars': '?.!'},
         {'break_newlines': False, 'break_chars': '?.!'},
         {'break_newlines': False, 'ignore_chars': '?.!'},
+        {'restore_dash_newlines': True},
     ]
 
     res = []
@@ -144,20 +146,41 @@ def test_pipeline_m2m(monkeypatch, mock_tsl_tokenizer, mock_tsl_model):
     assert tsl.TSL_TOKENIZER.called_get_lang_id is True
 
 
-def test_pipeline(string, monkeypatch, mock_tsl_tokenizer, mock_tsl_model):
-    """Test tsl pipeline."""
+def test_pipeline(string, monkeypatch, mock_tsl_tokenizer, mock_tsl_model, mock_called):
+    """Test tsl pipeline (also check that cache is not cleared in CPU mode)."""
     model_id = 'test_model'
     lang_src = 'ja'
     lang_dst = 'en'
 
     monkeypatch.setattr(tsl, 'TSL_MODEL', mock_tsl_model(model_id))
     monkeypatch.setattr(tsl, 'TSL_TOKENIZER', mock_tsl_tokenizer(model_id))
+    monkeypatch.setattr(tsl.torch.cuda, 'empty_cache', mock_called)
+    monkeypatch.setattr(tsl, 'dev', 'cpu')
 
     res = tsl._tsl_pipeline(string, lang_src, lang_dst) # pylint: disable=protected-access
 
     assert res == string.replace('\n', ' ')
     assert tsl.TSL_TOKENIZER.model_id == model_id
     assert tsl.TSL_TOKENIZER.src_lang == lang_src
+
+    assert not hasattr(mock_called, 'called')
+
+def test_pipeline_clear_cache(monkeypatch, mock_tsl_tokenizer, mock_tsl_model, mock_called):
+    """Test tsl pipeline with cuda should clear_cache."""
+    model_id = 'test_model'
+    lang_src = 'ja'
+    lang_dst = 'en'
+
+    monkeypatch.setattr(tsl, 'TSL_MODEL', mock_tsl_model(model_id))
+    monkeypatch.setattr(tsl, 'TSL_TOKENIZER', mock_tsl_tokenizer(model_id))
+    monkeypatch.setattr(tsl.torch.cuda, 'empty_cache', mock_called)
+    monkeypatch.setattr(tsl, 'dev', 'cuda')
+
+    tsl._tsl_pipeline('test', lang_src, lang_dst) # pylint: disable=protected-access
+
+    assert hasattr(mock_called, 'called')
+
+
 
 def test_pipeline_batch(batch_string, monkeypatch, mock_tsl_tokenizer, mock_tsl_model):
     """Test tsl pipeline with batched string."""

@@ -116,6 +116,9 @@ def _ocr(img: Image.Image, lang: str = None, bbox: tuple[int, int, int, int] = N
         generated_ids = OCR_MODEL.generate(pixel_values)
         generated_text = OCR_TOKENIZER.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
+    if dev == 'cuda':
+        torch.cuda.empty_cache()
+
     return generated_text
 
 def ocr(*args, id_: Hashable, block: bool = True, **kwargs) -> Union[str, Message]:

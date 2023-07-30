@@ -4,6 +4,13 @@ res:
 
     And a newline.'
   tokens:
+  - This is a test string.? With a special break character. And a newline.
+- options:
+    break_newlines: true
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
   - This is a test string.? With a special break character.
   - And a newline.
 - options:
@@ -12,9 +19,7 @@ res:
 
     And a newline.'
   tokens:
-  - 'This is a test string.? With a special break character.
-
-    And a newline.'
+  - This is a test string.? With a special break character. And a newline.
 - options:
     break_chars: ?.!
   string: 'This is a test string.? With a special break character.
@@ -23,15 +28,14 @@ res:
   tokens:
   - This is a test string
   - ' With a special break character'
-  - And a newline
+  - ' And a newline'
 - options:
     ignore_chars: ?.!
   string: 'This is a test string.? With a special break character.
 
     And a newline.'
   tokens:
-  - This is a test string With a special break character
-  - And a newline
+  - This is a test string With a special break character And a newline
 - options:
     break_chars: ?.!
     break_newlines: false
@@ -41,9 +45,7 @@ res:
   tokens:
   - This is a test string
   - ' With a special break character'
-  - '
-
-    And a newline'
+  - ' And a newline'
 - options:
     break_newlines: false
     ignore_chars: ?.!
@@ -51,6 +53,11 @@ res:
 
     And a newline.'
   tokens:
-  - 'This is a test string With a special break character
+  - This is a test string With a special break character And a newline
+- options:
+    restore_dash_newlines: true
+  string: 'This is a test string.? With a special break character.
 
-    And a newline'
+    And a newline.'
+  tokens:
+  - This is a test string.? With a special break character. And a newline.
