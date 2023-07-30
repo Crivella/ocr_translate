@@ -56,15 +56,12 @@ You will also have to modify the `ALLOWED_HOSTS` in case you plan to access the 
 (Tested on Windows 11)
 From the github releases you can download either:
 
-- The [CPU only version](/releases/latest/download/run_server-cpu.exe)
-- The GPU version split in [file 1](/releases/latest/download/run_server-gpu.zip.001) and [file 2](/releases/latest/download/run_server-gpu.zip.002) (The CUDA dependencies makes it take much more space), wich can be restored using tools like [7zip](https://www.7-zip.org/https://www.7-zip.org/) and [NanaZip](https://github.com/M2Team/NanaZip).
+- The [CPU only version](/../../releases/latest/download/run_server-cpu.exe)
+- The GPU version split in [file 1](/../../releases/latest/download/run_server-gpu.zip.001) and [file 2](/../../releases/latest/download/run_server-gpu.zip.002) (The CUDA dependencies makes it take much more space), wich can be restored using tools like [7zip](https://www.7-zip.org/https://www.7-zip.org/) and [NanaZip](https://github.com/M2Team/NanaZip).
 
-Not that every time you run the EXE, it will decompress itself into a temporary folder so:
+Unzip the file and from inside the folder, run the `run_server-XXX.exe` file (XXX=cpu/gpu)
 
-- The exe will appear as an empty console until all the file are extracted and the actual script start running.
-- By launching the server multiple times without restarting (especially the GPU one), you risk quickly filling up your drive
-
-You can either just start the server and it will run with sensible defaults. Most notably the models files and database will be downloaded/created under `%userprofile%/.ocr_translate`.
+The server and it will run with sensible defaults. Most notably the models files and database will be downloaded/created under `%userprofile%/.ocr_translate`.
 Also the gpu version will attempt to run on GPU by default, and fall-back to CPU if the former is not available.
 
 For customization, you can set the [environment variable](#environment-variables) yourself, either via powershell or by searching for *environment variable* in the settings menu

@@ -3,7 +3,8 @@
 export DJANGO_SETTINGS_MODULE=mysite.settings
 
 pyinstaller \
-    --onefile \
+    --onedir \
+    --name run_server \
     --icon icon.ico \
     --add-data "ocr_translate/ocr_tsl/languages.json:ocr_translate/ocr_tsl" \
     --add-data "ocr_translate/ocr_tsl/models.json:ocr_translate/ocr_tsl" \
