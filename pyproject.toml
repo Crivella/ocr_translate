@@ -81,9 +81,9 @@ name = "ocr_translate"
 
 [tool.flit.sdist]
 exclude = [
-    ".gitignore", ".github",
-    "icon.ico", "run_server.py",
-    "Dockerfile", "nginx.default", "start-server.sh",
+    ".gitignore", ".github", ".pre-commit-config.yaml",
+    "icon.ico", "run_server.py", "build.sh",
+    "Dockerfile-cpu", "Dockerfile-gpu", "nginx.default", "start-server.sh",
     "mysite/", "mysite/*", "manage.py", "tests/", "tests/*",
     ]
 
