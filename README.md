@@ -21,7 +21,7 @@ All the different way to run the server may provide different set of default val
 ### From Release file
 
 (Tested on Windows 11)
-From the [github releases page](/releases/) you can download either:
+From the [github releases page](/../../releases/) you can download either:
 
 - The [CPU only version](/../../releases/latest/download/run_server-cpu.exe)
 - The GPU version split in [file 1](/../../releases/latest/download/run_server-gpu.zip.001) and [file 2](/../../releases/latest/download/run_server-gpu.zip.002) (The CUDA dependencies makes it take much more space), wich can be restored using tools like [7zip](https://www.7-zip.org/https://www.7-zip.org/) and [NanaZip](https://github.com/M2Team/NanaZip).
