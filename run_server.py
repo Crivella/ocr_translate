@@ -30,6 +30,9 @@ from django.core.management import call_command
 def main():
     """Run the django migrations and start the server."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
+    os.environ.setdefault('DJANGO_DEBUG', 'True')
+    os.environ.setdefault('DJANGO_LOG_LEVEL', 'INFO')
+
     home = Path.home()
     if not 'TRANSFORMERS_CACHE' in os.environ:
         os.environ['TRANSFORMERS_CACHE'] = str(home / '.ocr_translate')
