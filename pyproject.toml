@@ -76,6 +76,13 @@ release = [
     "pyinstaller"
 ]
 
+[project.entry-points."ocr_translate.ocr_models"]
+"tesseract.ocr" = "ocr_translate.plugins.tesseract:TesseractOCRModel"
+"hugginface.ved" = "ocr_translate.plugins.hugginface:HugginfaceVEDModel"
+
+[project.entry-points."ocr_translate.tsl_models"]
+"hugginface.seq2seq" = "ocr_translate.plugins.hugginface:HugginfaceSeq2SeqModel"
+
 [tool.flit.module]
 name = "ocr_translate"
 

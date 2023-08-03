@@ -17,9 +17,20 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Django models for the ocr_translate app."""
+import logging
+import re
+from typing import Generator, Type, Union
+
+import pkg_resources
 from django.db import models
+from PIL.Image import Image as PILImage
+
+from . import queues
+from .messaging import Message
 
 LANG_LENGTH = 32
+
+logger = logging.getLogger('ocr.general')
 
 class OptionDict(models.Model):
     """Dictionary of options for OCR and translation"""
@@ -47,48 +58,305 @@ class Language(models.Model):
     def __str__(self):
         return str(self.iso1)
 
-class OCRModel(models.Model):
-    """OCR model using hugging space naming convention"""
+class BaseModel(models.Model):
+    """Mixin class for loading entrypoint models"""
+    class Meta:
+        abstract = True
+
+    entrypoint_namespace = None
+
     name = models.CharField(max_length=128)
+
+    entrypoint = models.CharField(max_length=128, null=True)
+
+    default_options = models.ForeignKey(
+        OptionDict, on_delete=models.SET_NULL, related_name='used_by_%(class)s', null=True
+        )
+
+    def __str__(self):
+        return str(self.name)
+
+    def __del__(self):
+        try:
+            self.unload()
+        except NotImplementedError:
+            pass
+
+    @classmethod
+    def from_entrypoint(cls, name: str) -> Type['models.Model']:
+        """Get the entrypoint specific TSL model class from the entrypoint name"""
+        if cls.entrypoint_namespace is None:
+            raise ValueError('Cannot load base model class from entrypoint.')
+
+        obj = cls.objects.get(name=name)
+        ept = obj.entrypoint
+
+        logger.debug(f'Loading model {name} from entrypoint {cls.entrypoint_namespace}:{ept}')
+        for entrypoint in pkg_resources.iter_entry_points(cls.entrypoint_namespace):
+            if entrypoint.name == ept:
+                new_cls = entrypoint.load()
+                break
+        else:
+            raise ValueError(f'Missing plugin: Entrypoint {ept} not found.')
+
+        return new_cls.objects.get(name=name)
+
+    def load(self) -> None:
+        """Placeholder method for loading the model. To be implemented via entrypoint"""
+        raise NotImplementedError('The base model class does not implement this method.')
+
+    def unload(self) -> None:
+        """Placeholder method for unloading the model. To be implemented via entrypoint"""
+        raise NotImplementedError('The base model class does not implement this method.')
+
+class OCRModel(BaseModel):
+    """OCR model."""
+
+    entrypoint_namespace = 'ocr_translate.ocr_models'
+    # iso1 code for languages that do not use spaces to separate words
+    NO_SPACE_LANGUAGES = ['ja', 'zh', 'lo', 'my']
+
     languages = models.ManyToManyField(Language, related_name='ocr_models')
 
-    default_options = models.ForeignKey(
-        OptionDict, on_delete=models.SET_NULL, related_name='ocr_default_options', null=True
-        )
-
     language_format = models.CharField(max_length=32, null=True)
 
-    def __str__(self):
-        return str(self.name)
+    def prepare_image(
+            self,
+            img: PILImage, bbox: tuple[int, int, int, int] = None
+            ) -> PILImage:
+        """Standard operation to be performed on image before OCR. E.G color scale and crop to bbox"""
+        if not isinstance(img, PILImage):
+            raise TypeError(f'img should be PIL Image, but got {type(img)}')
+        img = img.convert('RGB')
 
-class OCRBoxModel(models.Model):
+        if bbox:
+            img = img.crop(bbox)
+
+        return img
+
+    def _ocr(
+            self,
+            img: PILImage, lang: str = None, options: dict = None
+            ) -> str:
+        """Placeholder method for performing OCR. To be implemented via entrypoint"""
+        raise NotImplementedError('The base model class does not implement this method.')
+
+    def ocr(
+            self,
+            bbox_obj: 'BBox', lang: 'Language',  image: PILImage = None, options: 'OptionDict' = None,
+            force: bool = False, block: bool = True,
+            ) -> Generator[Union[Message, 'Text'], None, None]:
+        """High level function to perform OCR on an image.
+
+        Args:
+            bbox_obj (m.BBox): The BBox object from the database.
+            lang (m.Language): The Language object from the database.
+            image (Image.Image, optional): The image on which to perform OCR. Needed if no previous OCR run exists, or
+                force is True.
+            options (m.OptionDict, optional): The OptionDict object from the database
+                containing the options for the OCR.
+            force (bool, optional): Whether to force the OCR to run again even if a previous run exists.
+                Defaults to False.
+            block (bool, optional): Whether to block until the task is complete. Defaults to True.
+
+        Raises:
+            ValueError: ValueError is raised if at any step of the pipeline an image is required but not provided.
+
+        Yields:
+            Generator[Union[Message, m.Text], None, None]:
+                If block is True, yields a Message object for the OCR run first and the resulting Text object second.
+                If block is False, yields the resulting Text object.
+        """
+        options_obj = options
+        if options_obj is None:
+            options_obj = OptionDict.objects.get(options={})
+        params = {
+            'bbox': bbox_obj,
+            'model': self,
+            'lang_src': lang,
+            'options': options_obj,
+        }
+        ocr_run_obj = OCRRun.objects.filter(**params).first()
+        if ocr_run_obj is None or force:
+            if image is None:
+                raise ValueError('Image is required for OCR')
+            logger.info('Running OCR')
+
+            id_ = (bbox_obj.id, self.id, lang.id)
+            mlang = getattr(lang, self.language_format or 'iso1')
+            opt_dct = options_obj.options
+            text = queues.ocr_queue.put(
+                id_=id_,
+                handler=self._ocr,
+                msg={
+                    'args': (self.prepare_image(image, bbox_obj.lbrt),),
+                    'kwargs': {
+                        'lang': mlang,
+                        'options': opt_dct
+                        },
+                },
+            )
+            if not block:
+                yield text
+            text = text.response()
+            if lang.iso1 in self.NO_SPACE_LANGUAGES:
+                text = text.replace(' ', '')
+            text_obj, _ = Text.objects.get_or_create(
+                text=text,
+                )
+            params['result'] = text_obj
+            ocr_run_obj = OCRRun.objects.create(**params)
+        else:
+            if not block:
+                # Both branches should have the same number of yields
+                yield None
+            logger.info(f'Reusing OCR <{ocr_run_obj.id}>')
+            text_obj = ocr_run_obj.result
+            # text = ocr_run.result.text
+
+        yield text_obj
+
+
+class OCRBoxModel(BaseModel):
     """OCR model for bounding boxes"""
-    name = models.CharField(max_length=128)
+    #pylint: disable=abstract-method
     languages = models.ManyToManyField(Language, related_name='box_models')
 
-    default_options = models.ForeignKey(
-        OptionDict, on_delete=models.SET_NULL, related_name='box_default_options', null=True
-        )
-
     language_format = models.CharField(max_length=32, null=True)
 
-    def __str__(self):
-        return str(self.name)
 
-class TSLModel(models.Model):
+class TSLModel(BaseModel):
     """Translation models using hugging space naming convention"""
-    name = models.CharField(max_length=128)
+    entrypoint_namespace = 'ocr_translate.tsl_models'
+
     src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')
     dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
 
-    default_options = models.ForeignKey(
-        OptionDict, on_delete=models.SET_NULL, related_name='tsl_default_options', null=True
-        )
-
     language_format = models.CharField(max_length=32, null=True)
 
-    def __str__(self):
-        return str(self.name)
+    @staticmethod
+    def pre_tokenize(
+            text: str,
+            ignore_chars: str = None, break_chars: str = None, break_newlines: bool = False,
+            restore_dash_newlines: bool = False,
+            **kwargs
+            ) -> list[str]:
+        """Pre-tokenize a text string.
+
+        Args:
+            text (str): Text to tokenize.
+            ignore_chars (str, optional): String of characters to ignore. Defaults to None.
+            break_chars (str, optional): String of characters to break on. Defaults to None.
+            break_newlines (bool, optional): Whether to break on newlines. Defaults to True.
+            restore_dash_newlines (bool, optional): Whether to restore dash-newlines (word broken with a -newline).
+                Defaults to False.
+
+        Returns:
+            list[str]: List of string tokens.
+        """
+        if restore_dash_newlines:
+            text = re.sub(r'(?<!\n)- *\n', '', text)
+        if ignore_chars is not None:
+            text = re.sub(f'[{ignore_chars}]+', '', text)
+        if break_chars is None:
+            break_chars = ''
+        if break_newlines:
+            break_chars += '\n'
+        else:
+            text = text.replace('\n', ' ')
+
+        break_chars = re.escape(break_chars)
+        tokens = text
+        if len(break_chars) > 0:
+            tokens = re.split(f'[{break_chars}+]', text)
+
+        if isinstance(tokens, str):
+            tokens = [text]
+
+        res = list(filter(None, tokens))
+        return res if len(res) > 0 else [' ']
+
+
+    def _translate(self, tokens: list, src_lang: str, dst_lang: str, options: dict = None) -> str | list[str]:
+        """Placeholder method for translating a text. To be implemented via entrypoint"""
+        raise NotImplementedError('The base model class does not implement this method.')
+
+    def translate(
+            self,
+            text_obj: 'Text', src: 'Language', dst: 'Language', options: 'OptionDict' = None,
+            force: bool = False,
+            block: bool = True,
+            lazy: bool = False
+            ) -> Generator[Union[Message, 'Text'], None, None]:
+        """High level translate call generating a TranslationRun entry.
+        Args:
+            text_obj (m.Text): Text object from the database to translate.
+            src (m.Language): Source language object from the database.
+            dst (m.Language): Destination language object from the database.
+            options (m.OptionDict, optional): OptionDict object from the database. Defaults to None.
+            force (bool, optional): Whether to force a new TSL run. Defaults to False.
+            block (bool, optional): Whether to block until the task is complete. Defaults to True.
+            lazy (bool, optional): Whether to raise an error if the TSL run is not found. Defaults to False.
+
+        Raises:
+            ValueError: If lazy and force are both True or if lazy is True and the TSL run is not found.
+
+        Yields:
+            Generator[Union[Message, m.Text], None, None]:
+                If block is True, yields a Message object for the TSL run first and the resulting Text object second.
+                If block is False, yields the resulting Text object.
+        """
+        if lazy and force:
+            raise ValueError('Cannot force + lazy TSL run')
+        options_obj = options or OptionDict.objects.get(options={})
+        params = {
+            'options': options_obj,
+            'text': text_obj,
+            'model': self,
+            'lang_src': src,
+            'lang_dst': dst,
+        }
+        tsl_run_obj = TranslationRun.objects.filter(**params).first()
+        if tsl_run_obj is None or force:
+            if lazy:
+                raise ValueError('Value not found for lazy TSL run')
+            logger.info('Running TSL')
+            # Generate a unique id for a message
+            id_ = (text_obj.id, self.id, options_obj.id, src.id, dst.id)
+            batch_id = (self.id, options_obj.id, src.id, dst.id)
+            lang_dct = getattr(src.default_options, 'options', {})
+            model_dct =  getattr(self.default_options, 'options', {})
+            opt_dct = {**lang_dct, **model_dct, **options_obj.options}
+
+            tokens = self.pre_tokenize(text_obj.text, **opt_dct)
+            new = queues.tsl_queue.put(
+                id_=id_,
+                batch_id=batch_id,
+                handler=self._translate,
+                msg={
+                    'args': (
+                        tokens,
+                        getattr(src, self.language_format),
+                        getattr(dst, self.language_format)
+                        ),
+                    'kwargs': {'options': opt_dct},
+                },
+            )
+            if not block:
+                yield new
+            new = new.response()
+            text_obj, _ = Text.objects.get_or_create(
+                text = new,
+                )
+            params['result'] = text_obj
+            tsl_run_obj = TranslationRun.objects.create(**params)
+        else:
+            if not block:
+                # Both branches should have the same number of yields
+                yield None
+            logger.info(f'Reusing TSL <{tsl_run_obj.id}>')
+
+        yield tsl_run_obj.result
 
 class Image(models.Model):
     """Image registered as the md5 of the uploaded file"""

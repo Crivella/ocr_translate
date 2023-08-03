@@ -24,8 +24,8 @@ from PIL import Image
 from .. import models as m
 from .box import box_run
 from .lang import get_lang_dst, get_lang_src
-from .ocr import ocr_run
-from .tsl import tsl_run
+from .ocr import get_ocr_model
+from .tsl import get_tsl_model
 
 logger = logging.getLogger('ocr.general')
 
@@ -34,6 +34,9 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = None) -> list[dict]:
     Try to lazily generate reponse from md5.
     Should raise a ValueError if the operation is not possible (fails at any step).
     """
+    ocr_model = get_ocr_model()
+    tsl_model = get_tsl_model()
+
     if options is None:
         options = {}
     logger.debug(f'LAZY: START {md5}')
@@ -44,9 +47,10 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = None) -> list[dict]:
         raise ValueError(f'Image with md5 {md5} does not exist') from exc
     bbox_obj_list = box_run(img_obj, get_lang_src())
     for bbox_obj in bbox_obj_list:
-        text_obj = ocr_run(bbox_obj, get_lang_src())
+        text_obj = ocr_model.ocr(bbox_obj, get_lang_src())
         text_obj = next(text_obj)
-        tsl_obj = tsl_run(text_obj, get_lang_src(), get_lang_dst(), lazy=True)
+
+        tsl_obj = tsl_model.translate(text_obj, get_lang_src(), get_lang_dst(), lazy=True)
         tsl_obj = next(tsl_obj)
 
         text = text_obj.text
@@ -69,6 +73,9 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     Generate response from md5 and binary.
     Will attempt to behave lazily at every step unless force is True.
     """
+    ocr_model = get_ocr_model()
+    tsl_model = get_tsl_model()
+
     if options is None:
         options = {}
     logger.debug(f'WORK: START {md5}')
@@ -81,7 +88,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
 
-        text_obj = ocr_run(bbox_obj, get_lang_src(), image=img, force=force, block=False)
+        text_obj = ocr_model.ocr(bbox_obj, get_lang_src(), image=img, force=force, block=False)
         next(text_obj)
         texts.append(text_obj)
 
@@ -90,7 +97,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
 
     trans = []
     for text_obj in texts:
-        tsl_obj = tsl_run(text_obj, get_lang_src(), get_lang_dst(), force=force, block=False)
+        tsl_obj = tsl_model.translate(text_obj, get_lang_src(), get_lang_dst(), force=force, block=False)
         next(tsl_obj)
         trans.append(tsl_obj)
 

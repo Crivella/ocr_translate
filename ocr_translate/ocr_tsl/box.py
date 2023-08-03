@@ -27,7 +27,8 @@ from PIL import Image
 
 from .. import models as m
 from ..queues import box_queue as q
-from .huggingface import dev
+
+dev = 'cpu' #pylint: disable=invalid-name
 
 READER = None
 
