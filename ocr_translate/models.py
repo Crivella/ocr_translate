@@ -111,7 +111,6 @@ class BaseModel(models.Model):
 
 class OCRModel(BaseModel):
     """OCR model."""
-
     entrypoint_namespace = 'ocr_translate.ocr_models'
     # iso1 code for languages that do not use spaces to separate words
     NO_SPACE_LANGUAGES = ['ja', 'zh', 'lo', 'my']
@@ -220,9 +219,81 @@ class OCRModel(BaseModel):
 class OCRBoxModel(BaseModel):
     """OCR model for bounding boxes"""
     #pylint: disable=abstract-method
+    entrypoint_namespace = 'ocr_translate.box_models'
+
     languages = models.ManyToManyField(Language, related_name='box_models')
 
     language_format = models.CharField(max_length=32, null=True)
+
+    def _box_detection(
+            self,
+            image: PILImage, options: dict = None
+            ) -> list[tuple[int, int, int, int]]:
+        """Placeholder method for performing box detection. To be implemented via entrypoint"""
+        raise NotImplementedError('The base model class does not implement this method.')
+
+    def box_detection(
+            self,
+            img_obj: 'Image', lang: 'Language', image: PILImage = None,
+            force: bool = False, options: 'OptionDict' = None
+            ) -> list['BBox']:
+        """High level function to perform box OCR on an image. Will attempt to reuse a previous run if possible.
+
+        Args:
+            img_obj (m.Image): An Image object from the database.
+            lang (m.Language): A Language object from the database (not every model is gonna use this).
+            image (Image.Image, optional): The Pillow image to be used for OCR if a previous result is not found.
+                Defaults to None.
+            force (bool, optional): If true, re-run the OCR even if a previous result is found. Defaults to False.
+            options (m.OptionDict, optional): An OptionDict object from the database. Defaults to None.
+
+        Raises:
+            ValueError: ValueError is raised if at any step of the pipeline an image is required but not provided.
+
+        Returns:
+            list[m.BBox]: A list of BBox objects containing the resulting bounding boxes.
+        """
+        options_obj = options or OptionDict.objects.get(options={})
+        params = {
+            'image': img_obj,
+            'model': self,
+            'options': options_obj,
+            'lang_src': lang,
+        }
+
+        bbox_run = OCRBoxRun.objects.filter(**params).first()
+        if bbox_run is None or force:
+            if image is None:
+                raise ValueError('Image is required for BBox OCR')
+            logger.info('Running BBox OCR')
+            opt_dct = options_obj.options
+            id_ = (img_obj.id, self.id, lang.id)
+            bboxes = queues.box_queue.put(
+                id_=id_,
+                handler=self._box_detection,
+                msg={
+                    'args': (image,),
+                    'kwargs': {'options': opt_dct},
+                },
+            )
+            bboxes = bboxes.response()
+            # Create it here to avoid having a failed entry in DB
+            bbox_run = OCRBoxRun.objects.create(**params)
+            for bbox in bboxes:
+                l,b,r,t = bbox
+                BBox.objects.create(
+                    l=l,
+                    b=b,
+                    r=r,
+                    t=t,
+                    image=img_obj,
+                    from_ocr=bbox_run,
+                    )
+        else:
+            logger.info(f'Reusing BBox OCR <{bbox_run.id}>')
+        logger.info(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
+
+        return list(bbox_run.result.all())
 
 
 class TSLModel(BaseModel):

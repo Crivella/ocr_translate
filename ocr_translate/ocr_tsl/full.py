@@ -22,7 +22,7 @@ import logging
 from PIL import Image
 
 from .. import models as m
-from .box import box_run
+from .box import get_box_model
 from .lang import get_lang_dst, get_lang_src
 from .ocr import get_ocr_model
 from .tsl import get_tsl_model
@@ -34,6 +34,7 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = None) -> list[dict]:
     Try to lazily generate reponse from md5.
     Should raise a ValueError if the operation is not possible (fails at any step).
     """
+    box_model = get_box_model()
     ocr_model = get_ocr_model()
     tsl_model = get_tsl_model()
 
@@ -45,7 +46,7 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = None) -> list[dict]:
         img_obj= m.Image.objects.get(md5=md5)
     except m.Image.DoesNotExist as exc:
         raise ValueError(f'Image with md5 {md5} does not exist') from exc
-    bbox_obj_list = box_run(img_obj, get_lang_src())
+    bbox_obj_list = box_model.box_detection(img_obj, get_lang_src())
     for bbox_obj in bbox_obj_list:
         text_obj = ocr_model.ocr(bbox_obj, get_lang_src())
         text_obj = next(text_obj)
@@ -73,6 +74,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     Generate response from md5 and binary.
     Will attempt to behave lazily at every step unless force is True.
     """
+    box_model = get_box_model()
     ocr_model = get_ocr_model()
     tsl_model = get_tsl_model()
 
@@ -82,7 +84,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     res = []
 
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
-    bbox_obj_list = box_run(img_obj, get_lang_src() ,image=img)
+    bbox_obj_list = box_model.box_detection(img_obj, get_lang_src() ,image=img)
 
     texts = []
     for bbox_obj in bbox_obj_list:

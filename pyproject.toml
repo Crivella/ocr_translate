@@ -76,6 +76,9 @@ release = [
     "pyinstaller"
 ]
 
+[project.entry-points."ocr_translate.box_models"]
+"easyocr.box" = "ocr_translate.plugins.easyocr:EasyOCRBoxModel"
+
 [project.entry-points."ocr_translate.ocr_models"]
 "tesseract.ocr" = "ocr_translate.plugins.tesseract:TesseractOCRModel"
 "hugginface.ved" = "ocr_translate.plugins.hugginface:HugginfaceVEDModel"
