@@ -31,7 +31,7 @@ pytestmark = pytest.mark.django_db
 def test_init_most_used_clean(mock_loaders):
     """Test init_most_used with empty database."""
     ocr_tsl.init_most_used()
-    assert box.BBOX_MODEL_OBJ is None
+    assert box.BOX_MODEL_OBJ is None
     assert ocr.OCR_MODEL_OBJ is None
     assert tsl.TSL_MODEL_OBJ is None
     assert lang.LANG_SRC is None
@@ -40,7 +40,7 @@ def test_init_most_used_clean(mock_loaders):
 def test_init_most_used_content(mock_loaders, language, box_model, ocr_model, tsl_model):
     """Test init_most_used with content in the database."""
     ocr_tsl.init_most_used()
-    assert box.BBOX_MODEL_OBJ == box_model
+    assert box.BOX_MODEL_OBJ == box_model
     assert ocr.OCR_MODEL_OBJ == ocr_model
     assert tsl.TSL_MODEL_OBJ == tsl_model
     assert lang.LANG_SRC == language
@@ -102,7 +102,7 @@ def test_init_most_used_more_content(mock_loaders, language_dict, image, option_
     assert lang.LANG_SRC == lang2
     assert lang.LANG_DST == lang3
 
-    assert box.BBOX_MODEL_OBJ == ocr_box_model2
+    assert box.BOX_MODEL_OBJ == ocr_box_model2
     assert ocr.OCR_MODEL_OBJ == ocr_model2
     assert tsl.TSL_MODEL_OBJ == tsl_model1
 

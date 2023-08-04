@@ -27,6 +27,33 @@ from ocr_translate import models as m
 from ocr_translate import ocr_tsl, views
 from ocr_translate.ocr_tsl import box, lang, ocr, tsl
 
+strings = [
+    'This is a test string.',
+    'This is a test string.\nWith a newline.',
+    'This is a test string.\nWith a newline.\nAnd another.',
+    'This is a test string.? With a special break character.',
+    'This is a test string.? With a special break character.\nAnd a newline.',
+    'String with a dash-newline brok-\nen word.'
+]
+ids = [
+    'simple',
+    'newline',
+    'newlines',
+    'breakchar',
+    'breakchar_newline',
+    'dash_newline'
+]
+
+@pytest.fixture(params=strings, ids=ids)
+def string(request):
+    """String to perform TSL on."""
+    return request.param
+
+@pytest.fixture()
+def batch_string(string):
+    """Batched string to perform TSL on."""
+    return [string, string, string]
+
 
 @pytest.fixture()
 def language_dict():
@@ -147,7 +174,7 @@ def tsl_run(language, text, tsl_model, option_dict):
 def mock_loaded(monkeypatch, language, box_model, ocr_model, tsl_model):
     """Mock models being loaded"""
     monkeypatch.setattr(box, 'BOX_MODEL_ID', box_model.name)
-    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', ocr_model.name)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(tsl, 'TSL_MODEL_ID', tsl_model.name)
@@ -164,7 +191,7 @@ def mock_loaders(monkeypatch):
         monkeypatch.setattr(lang, 'LANG_DST', m.Language.objects.get(iso1=name))
     def mock_load_box_model(name):
         monkeypatch.setattr(box, 'BOX_MODEL_ID', name)
-        monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', m.OCRBoxModel.objects.get(name=name))
+        monkeypatch.setattr(box, 'BOX_MODEL_OBJ', m.OCRBoxModel.objects.get(name=name))
     def mock_load_ocr_model(name):
         monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', name)
         monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', m.OCRModel.objects.get(name=name))

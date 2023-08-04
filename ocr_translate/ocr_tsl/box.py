@@ -26,37 +26,37 @@ dev = 'cpu' #pylint: disable=invalid-name
 logger = logging.getLogger('ocr.general')
 
 BOX_MODEL_ID = None
-BBOX_MODEL_OBJ: m.OCRBoxModel = None
+BOX_MODEL_OBJ: m.OCRBoxModel = None
 
 def unload_box_model():
     """Remove the current box model from memory."""
-    global BBOX_MODEL_OBJ, BOX_MODEL_ID
+    global BOX_MODEL_OBJ, BOX_MODEL_ID
 
     logger.info(f'Unloading BOX model: {BOX_MODEL_ID}')
-    del BBOX_MODEL_OBJ
-    BBOX_MODEL_OBJ = None
+    del BOX_MODEL_OBJ
+    BOX_MODEL_OBJ = None
     BOX_MODEL_ID = None
 
 def load_box_model(model_id: str):
     """Load a box model into memory."""
-    global BBOX_MODEL_OBJ, BOX_MODEL_ID
+    global BOX_MODEL_OBJ, BOX_MODEL_ID
 
     if BOX_MODEL_ID == model_id:
         return
 
-    if BBOX_MODEL_OBJ is not None:
-        BBOX_MODEL_OBJ.unload()
+    if BOX_MODEL_OBJ is not None:
+        BOX_MODEL_OBJ.unload()
 
     logger.info(f'Loading BOX model: {model_id}')
     model = m.OCRBoxModel.from_entrypoint(model_id)
     model.load()
 
-    BBOX_MODEL_OBJ = model
+    BOX_MODEL_OBJ = model
     BOX_MODEL_ID = model_id
 
     logger.debug(f'OCR model loaded: {model_id}')
-    logger.debug(f'OCR model object: {BBOX_MODEL_OBJ}')
+    logger.debug(f'OCR model object: {BOX_MODEL_OBJ}')
 
 def get_box_model() -> m.OCRBoxModel:
     """Get the current box model."""
-    return BBOX_MODEL_OBJ
+    return BOX_MODEL_OBJ

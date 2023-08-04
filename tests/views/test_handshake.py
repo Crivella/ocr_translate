@@ -72,7 +72,7 @@ def test_handshake_clean_initialized(client, monkeypatch, language, box_model, t
     """Test handshake with content + init."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(lang, 'LANG_DST', language)
-    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 

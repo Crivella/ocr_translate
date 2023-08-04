@@ -23,7 +23,7 @@
 import pytest
 from django.urls import reverse
 
-from ocr_translate import views
+from ocr_translate.ocr_tsl import tsl
 
 pytestmark = pytest.mark.django_db
 
@@ -67,12 +67,13 @@ def test_run_tsl_post_invalid_data(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_run_tsl_post_valid(client, monkeypatch, post_kwargs):
+def test_run_tsl_post_valid(client, monkeypatch, post_kwargs, tsl_model):
     """Test run_tsl with POST request with valid data."""
     def mock_tsl_run(text, *args, **kwargs):
         """Mock translate."""
         yield text
-    monkeypatch.setattr(views, 'tsl_run', mock_tsl_run)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    tsl_model.translate = mock_tsl_run
     url = reverse('ocr_translate:run_tsl')
     response = client.post(url, **post_kwargs)
 

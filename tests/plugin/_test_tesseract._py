@@ -49,6 +49,42 @@ def mock_get(request, monkeypatch, mock_content):
 
     monkeypatch.setattr(tesseract.requests, 'get', mock_get)
 
+# @pytest.mark.django_db
+# def test_load_ocr_model_tesseract(monkeypatch, mock_called):
+#     """Test load box model. Success"""
+#     model_id = 'tesseract'
+
+#     monkeypatch.setattr(ocr, 'load_hugginface_model', mock_called)
+#     # Needed to make sure that changes doen by `load_ocr_model` are not persisted
+#     for key in ocr_globals:
+#         monkeypatch.setattr(ocr, key, None)
+
+#     ocr.load_ocr_model(model_id)
+#     assert not hasattr(mock_called, 'called')
+
+# def test_pipeline_with_bbox(monkeypatch, mock_called, image_pillow):
+#     """Test ocr pipeline with bbox. Has to call the crop method of image."""
+#     model_id = 'tesseract'
+#     bbox = (1,2,8,9)
+#     monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', model_id)
+#     monkeypatch.setattr(ocr, 'tesseract_pipeline', lambda *args, **kwargs: None)
+#     monkeypatch.setattr(ocr.Image.Image, 'crop', mock_called)
+
+#     ocr._ocr(image_pillow, '', bbox=bbox) # pylint: disable=protected-access
+
+#     assert hasattr(mock_called, 'called')
+#     assert mock_called.args[1] == bbox # 0 is self
+
+# def test_pipeline_tesseract(monkeypatch, mock_called, image_pillow):
+#     """Test ocr pipeline with tesseract model."""
+#     model_id = 'tesseract'
+#     monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', model_id)
+#     monkeypatch.setattr(ocr, 'tesseract_pipeline', mock_called)
+
+#     ocr._ocr(image_pillow, '') # pylint: disable=protected-access
+
+#     assert hasattr(mock_called, 'called')
+
 
 def test_download_model_env_disabled(monkeypatch):
     """Test the download of a model from the environment variable."""
