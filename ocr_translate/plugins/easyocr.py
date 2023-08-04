@@ -17,8 +17,8 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """OCRtranslate plugin to allow usage of easyocr."""
-
 import logging
+import os
 from typing import Iterable
 
 import easyocr
@@ -40,7 +40,7 @@ class EasyOCRBoxModel(m.OCRBoxModel):
         super().__init__(*args, **kwargs)
 
         self.reader = None
-        self.dev = 'cpu'
+        self.dev = os.environ.get('DEVICE', 'cpu')
 
     def load(self):
         """Load the model into memory."""

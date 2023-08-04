@@ -29,65 +29,65 @@ from transformers import (AutoImageProcessor, AutoModel, AutoModelForSeq2SeqLM,
 
 from ocr_translate import models as m
 
-# from ocr_translate.ocr_tsl.huggingface import load_hugginface_model
-
 logger = logging.getLogger('plugin')
 
-root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
-logger.debug(f'Cache dir: {root}')
-dev = os.environ.get('DEVICE', 'cpu')
+class Loaders():
+    """Generic functions to load HuggingFace's Classes."""
+    accept_device = ['ved_model', 'seq2seq', 'model']
 
-def load(loader, model_id: str):
-    """Use the specified loader to load a transformers specific Class."""
-    try:
-        mid = root / model_id
-        logger.debug(f'Attempt loading from store: "{loader}" "{mid}"')
-        res = loader.from_pretrained(mid)
-    except Exception:
-        # Needed to catch some weird exception from transformers
-        # eg: huggingface_hub.utils._validators.HFValidationError: Repo id must use alphanumeric chars or
-        # '-', '_', '.', '--' and '..' are forbidden, '-' and '.' cannot start or end the name, max length is 96: ...
-        logger.debug(f'Attempt loading from cache: "{loader}" "{model_id}" "{root}"')
-        res = loader.from_pretrained(model_id, cache_dir=root)
-    return res
+    mapping = {
+        'tokenizer': AutoTokenizer,
+        'ved_model': VisionEncoderDecoderModel,
+        'model': AutoModel,
+        'image_processor': AutoImageProcessor,
+        'seq2seq': AutoModelForSeq2SeqLM
+    }
 
-mapping = {
-    'tokenizer': AutoTokenizer,
-    'ved_model': VisionEncoderDecoderModel,
-    'model': AutoModel,
-    'image_processor': AutoImageProcessor,
-    'seq2seq': AutoModelForSeq2SeqLM
-}
+    @staticmethod
+    def _load(loader, model_id: str, root: Path):
+        """Use the specified loader to load a transformers specific Class."""
+        try:
+            mid = root / model_id
+            logger.debug(f'Attempt loading from store: "{loader}" "{mid}"')
+            res = loader.from_pretrained(mid)
+        except Exception:
+            # Needed to catch some weird exception from transformers
+            # eg: huggingface_hub.utils._validators.HFValidationError: Repo id must use alphanumeric chars or
+            # '-', '_', '.', '--' and '..' are forbidden, '-' and '.'
+            # cannot start or end the name, max length is 96: ...
+            logger.debug(f'Attempt loading from cache: "{loader}" "{model_id}" "{root}"')
+            res = loader.from_pretrained(model_id, cache_dir=root)
+        return res
 
-accept_device = ['ved_model', 'seq2seq', 'model']
+    @staticmethod
+    def load(model_id: str, request: list[str], root: Path, dev: str = 'cpu') -> list:
+        """Load the requested HuggingFace's Classes for the model into the memory of the globally specified device.
 
-def load_hugginface_model(model_id: str, request: list[str]) -> list:
-    """Load the requested HuggingFace's Classes for the model into the memory of the globally specified device.
+        Args:
+            model_id (str): The HuggingFace model id to load, or a path to a local model.
+            request (list[str]): A list of HuggingFace's Classes to load.
+            root (Path): The root path to use for the cache.
 
-    Args:
-        model_id (str): The HuggingFace model id to load, or a path to a local model.
-        request (list[str]): A list of HuggingFace's Classes to load.
+        Raises:
+            ValueError: If the model_id is not found or if the requested Class is not supported.
 
-    Raises:
-        ValueError: If the model_id is not found or if the requested Class is not supported.
+        Returns:
+            _type_: A list of the requested Classes.
+        """    """"""
+        res = {}
+        for r in request:
+            if r not in Loaders.mapping:
+                raise ValueError(f'Unknown request: {r}')
+            cls = Loaders._load(Loaders.mapping[r], model_id, root)
+            if cls is None:
+                raise ValueError(f'Could not load model: {model_id}')
 
-    Returns:
-        _type_: A list of the requested Classes.
-    """    """"""
-    res = {}
-    for r in request:
-        if r not in mapping:
-            raise ValueError(f'Unknown request: {r}')
-        cls = load(mapping[r], model_id)
-        if cls is None:
-            raise ValueError(f'Could not load model: {model_id}')
+            if r in Loaders.accept_device:
+                cls = cls.to(dev)
 
-        if r in accept_device:
-            cls = cls.to(dev)
+            res[r] = cls
 
-        res[r] = cls
-
-    return res
+        return res
 
 
 def get_mnt(ntok: int, options: dict) -> int:
@@ -110,7 +110,15 @@ def get_mnt(ntok: int, options: dict) -> int:
     )
     return mnt
 
-class HugginfaceSeq2SeqModel(m.TSLModel):
+class EnvMixin():
+    """Mixin to allow usage of environment variables."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dev = os.environ.get('DEVICE', 'cpu')
+        self.root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
+        logger.debug(f'Cache dir: {self.root}')
+
+class HugginfaceSeq2SeqModel(m.TSLModel, EnvMixin):
     """OCRtranslate plugin to allow loading of hugginface seq2seq model as translator."""
 
     class Meta:
@@ -119,15 +127,13 @@ class HugginfaceSeq2SeqModel(m.TSLModel):
     def __init__(self, *args, **kwargs):
         """Initialize the model."""
         super().__init__(*args, **kwargs)
-
         self.tokenizer = None
         self.model = None
-        self.dev = 'cpu'
 
     def load(self):
         """Load the model into memory."""
         logger.info(f'Loading TSL model: {self.name}')
-        res = load_hugginface_model(self.name, request=['seq2seq', 'tokenizer'])
+        res = Loaders.load(self.name, request=['seq2seq', 'tokenizer'], root=self.root, dev=self.dev)
         self.model = res['seq2seq']
         self.tokenizer = res['tokenizer']
 
@@ -209,7 +215,7 @@ class HugginfaceSeq2SeqModel(m.TSLModel):
     #     """Translate a batch of texts."""
     #     raise NotImplementedError
 
-class HugginfaceVEDModel(m.OCRModel):
+class HugginfaceVEDModel(m.OCRModel, EnvMixin):
     """OCRtranslate plugin to allow loading of hugginface VisionEncoderDecoder model as text OCR."""
     class Meta:
         proxy = True
@@ -217,16 +223,17 @@ class HugginfaceVEDModel(m.OCRModel):
     def __init__(self, *args, **kwargs):
         """Initialize the model."""
         super().__init__(*args, **kwargs)
-
         self.tokenizer = None
         self.model = None
         self.image_processor = None
-        self.dev = 'cpu'
 
     def load(self):
         """Load the model into memory."""
         logger.info(f'Loading TSL model: {self.name}')
-        res = load_hugginface_model(self.name, request=['ved_model', 'tokenizer', 'image_processor'])
+        res = Loaders.load(
+            self.name, request=['ved_model', 'tokenizer', 'image_processor'],
+            root=self.root, dev=self.dev
+            )
         self.model = res['ved_model']
         self.tokenizer = res['tokenizer']
         self.image_processor = res['image_processor']
