@@ -66,25 +66,16 @@ def test_get_ocr_model(monkeypatch):
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', 'test')
     assert ocr.get_ocr_model() == 'test'
 
-def test_unload_ocr_model_if_loaded(monkeypatch):
+def test_unload_ocr_model_if_loaded(monkeypatch, mock_base_model):
     """Test unload ocr model is called if load with an already loaded model."""
-    class A(): # pylint: disable=invalid-name
-        """Mocked OCRModel class."""
-        def __init__(self):
-            self.load_called = False
-            self.unload_called = False
-        def load(self): # pylint: disable=missing-function-docstring
-            self.load_called = True
-        def unload(self): # pylint: disable=missing-function-docstring
-            self.unload_called = True
-    a = A() # pylint: disable=invalid-name
-    b = A() # pylint: disable=invalid-name
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', a)
+    base1 = mock_base_model()
+    base2 = mock_base_model()
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', base1)
     monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', 'test')
-    monkeypatch.setattr(m.OCRModel, 'from_entrypoint', lambda *args, **kwargs: b)
+    monkeypatch.setattr(m.OCRModel, 'from_entrypoint', lambda *args, **kwargs: base2)
     ocr.load_ocr_model('test2')
 
-    assert not a.load_called
-    assert a.unload_called
-    assert b.load_called
-    assert not b.unload_called
+    assert not base1.load_called
+    assert base1.unload_called
+    assert base2.load_called
+    assert not base2.unload_called

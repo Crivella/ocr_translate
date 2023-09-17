@@ -20,32 +20,6 @@
 
 import pytest
 
-strings = [
-    'This is a test string.',
-    'This is a test string.\nWith a newline.',
-    'This is a test string.\nWith a newline.\nAnd another.',
-    'This is a test string.? With a special break character.',
-    'This is a test string.? With a special break character.\nAnd a newline.',
-    'String with a dash-newline brok-\nen word.'
-]
-ids = [
-    'simple',
-    'newline',
-    'newlines',
-    'breakchar',
-    'breakchar_newline',
-    'dash_newline'
-]
-
-@pytest.fixture(params=strings, ids=ids)
-def string(request):
-    """String to perform TSL on."""
-    return request.param
-
-@pytest.fixture()
-def batch_string(string):
-    """Batched string to perform TSL on."""
-    return [string, string, string]
 
 @pytest.fixture()
 def mock_tsl_tokenizer():
