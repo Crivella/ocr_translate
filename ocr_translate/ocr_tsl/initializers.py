@@ -83,10 +83,12 @@ def auto_create_models():
         logger.debug(f'Creating box model: {box}')
         lang = box.pop('lang')
         lcode = box.pop('lang_code')
+        entrypoint = box.pop('entrypoint')
         def_opt = box.pop('default_options', {})
         opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
         model, _ = m.OCRBoxModel.objects.get_or_create(**box)
         model.default_options = opt_obj
+        model.entrypoint = entrypoint
         model.language_format = lcode
         for l in lang:
             model.languages.add(m.Language.objects.get(iso1=l))
@@ -96,11 +98,13 @@ def auto_create_models():
         logger.debug(f'Creating ocr model: {ocr}')
         lang = ocr.pop('lang')
         lcode = ocr.pop('lang_code')
+        entrypoint = ocr.pop('entrypoint')
         def_opt = ocr.pop('default_options', {})
         opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
         model, _ = m.OCRModel.objects.get_or_create(**ocr)
         model.default_options = opt_obj
         model.language_format = lcode
+        model.entrypoint = entrypoint
         for l in lang:
             model.languages.add(m.Language.objects.get(iso1=l))
         model.save()
@@ -110,11 +114,13 @@ def auto_create_models():
         src = tsl.pop('lang_src')
         dst = tsl.pop('lang_dst')
         lcode = tsl.pop('lang_code', None)
+        entrypoint = tsl.pop('entrypoint')
         def_opt = tsl.pop('default_options', {})
         opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
         model, _ = m.TSLModel.objects.get_or_create(**tsl)
         model.default_options = opt_obj
         model.language_format = lcode
+        model.entrypoint = entrypoint
         for l in src:
             logger.debug(f'Adding src language: {l}')
             kwargs = {lcode: l}

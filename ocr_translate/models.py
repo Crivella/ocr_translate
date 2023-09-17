@@ -92,12 +92,11 @@ class BaseModel(models.Model):
         ept = obj.entrypoint
 
         logger.debug(f'Loading model {name} from entrypoint {cls.entrypoint_namespace}:{ept}')
-        for entrypoint in pkg_resources.iter_entry_points(cls.entrypoint_namespace):
-            if entrypoint.name == ept:
-                new_cls = entrypoint.load()
-                break
+        for entrypoint in pkg_resources.iter_entry_points(cls.entrypoint_namespace, name=ept):
+            new_cls = entrypoint.load()
+            break
         else:
-            raise ValueError(f'Missing plugin: Entrypoint {ept} not found.')
+            raise ValueError(f'Missing plugin: Entrypoint "{ept}" not found.')
 
         return new_cls.objects.get(name=name)
 

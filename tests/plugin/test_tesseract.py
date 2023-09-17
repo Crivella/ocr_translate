@@ -19,15 +19,33 @@
 """Tests for ocr module."""
 # pylint: disable=redefined-outer-name
 
-import importlib
 from pathlib import Path
 
 import pytest
 import requests
 from PIL import Image
 
-from ocr_translate.ocr_tsl import tesseract
+from ocr_translate import models as m
+from ocr_translate.plugins import tesseract
 
+pytestmark = pytest.mark.django_db
+
+@pytest.fixture()
+def tesseract_model(language):
+    """OCRModel database object."""
+    tesseract_model_dict = {
+        'name': 'tesseract',
+        'language_format': 'iso1',
+        'entrypoint': 'tesseract.ocr'
+    }
+
+    entrypoint = tesseract_model_dict.pop('entrypoint')
+    res = m.OCRModel.objects.create(**tesseract_model_dict)
+    res.entrypoint = entrypoint
+    res.languages.add(language)
+    res.save()
+
+    return tesseract.TesseractOCRModel.objects.get(name = res.name)
 
 @pytest.fixture()
 def mock_content():
@@ -49,187 +67,152 @@ def mock_get(request, monkeypatch, mock_content):
 
     monkeypatch.setattr(tesseract.requests, 'get', mock_get)
 
-# @pytest.mark.django_db
-# def test_load_ocr_model_tesseract(monkeypatch, mock_called):
-#     """Test load box model. Success"""
-#     model_id = 'tesseract'
-
-#     monkeypatch.setattr(ocr, 'load_hugginface_model', mock_called)
-#     # Needed to make sure that changes doen by `load_ocr_model` are not persisted
-#     for key in ocr_globals:
-#         monkeypatch.setattr(ocr, key, None)
-
-#     ocr.load_ocr_model(model_id)
-#     assert not hasattr(mock_called, 'called')
-
-# def test_pipeline_with_bbox(monkeypatch, mock_called, image_pillow):
-#     """Test ocr pipeline with bbox. Has to call the crop method of image."""
-#     model_id = 'tesseract'
-#     bbox = (1,2,8,9)
-#     monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', model_id)
-#     monkeypatch.setattr(ocr, 'tesseract_pipeline', lambda *args, **kwargs: None)
-#     monkeypatch.setattr(ocr.Image.Image, 'crop', mock_called)
-
-#     ocr._ocr(image_pillow, '', bbox=bbox) # pylint: disable=protected-access
-
-#     assert hasattr(mock_called, 'called')
-#     assert mock_called.args[1] == bbox # 0 is self
-
-# def test_pipeline_tesseract(monkeypatch, mock_called, image_pillow):
-#     """Test ocr pipeline with tesseract model."""
-#     model_id = 'tesseract'
-#     monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', model_id)
-#     monkeypatch.setattr(ocr, 'tesseract_pipeline', mock_called)
-
-#     ocr._ocr(image_pillow, '') # pylint: disable=protected-access
-
-#     assert hasattr(mock_called, 'called')
-
-
-def test_download_model_env_disabled(monkeypatch):
+def test_download_model_env_disabled(monkeypatch, tesseract_model):
     """Test the download of a model from the environment variable."""
     monkeypatch.setenv('TESSERACT_ALLOW_DOWNLOAD', 'false')
-    importlib.reload(tesseract)
+    # Reload to make ENV effective
+    tesseract_model = tesseract.TesseractOCRModel.objects.get(name = 'tesseract')
 
     with pytest.raises(ValueError, match=r'^TESSERACT_ALLOW_DOWNLOAD is false\. Downloading models is not allowed$'):
-        tesseract.download_model('eng')
+        tesseract_model.download_model('eng')
 
-def test_download_model_env_enabled(monkeypatch, tmpdir, mock_content):
+def test_download_model_env_enabled(monkeypatch, tmpdir, mock_content, tesseract_model):
     """Test the download of a model from the environment variable."""
     monkeypatch.setenv('TESSERACT_ALLOW_DOWNLOAD', 'true')
     monkeypatch.setenv('TESSERACT_PREFIX', str(tmpdir))
-    importlib.reload(tesseract)
+    # Reload to make ENV effective
+    tesseract_model = tesseract.TesseractOCRModel.objects.get(name = 'tesseract')
 
     model = 'test'
-    tesseract.download_model(model)
+    tesseract_model.download_model(model)
     tmpfile = tmpdir / f'{model}.traineddata'
     assert tmpfile.exists()
     with open(tmpfile, 'rb') as f:
         assert f.read() == mock_content
 
-def test_download_already_exists(monkeypatch, tmpdir, mock_called):
+def test_download_already_exists(monkeypatch, tmpdir, mock_called, tesseract_model):
     """Test the download of a model from the environment variable."""
-    monkeypatch.setattr(tesseract, 'DOWNLOAD', True)
-    monkeypatch.setattr(tesseract, 'DATA_DIR', Path(tmpdir))
+    monkeypatch.setattr(tesseract_model, 'download', True)
+    monkeypatch.setattr(tesseract_model, 'data_dir', Path(tmpdir))
     monkeypatch.setattr(tesseract.requests, 'get', mock_called)
 
     model = 'test'
     tmpfile = tmpdir / f'{model}.traineddata'
     with tmpfile.open('w') as f:
         f.write('test')
-    tesseract.download_model(model)
+    tesseract_model.download_model(model)
 
     assert not hasattr(mock_called, 'called')
 
 
 @pytest.mark.parametrize('mock_get', [{'status_code': 404}], indirect=True)
-def test_download_fail_request(monkeypatch, tmpdir):
+def test_download_fail_request(monkeypatch, tmpdir, tesseract_model):
     """Test the download of a language with a normal+vertical model."""
-    monkeypatch.setattr(tesseract, 'DOWNLOAD', True)
-    monkeypatch.setattr(tesseract, 'DATA_DIR', Path(tmpdir))
+    monkeypatch.setattr(tesseract_model, 'download', True)
+    monkeypatch.setattr(tesseract_model, 'data_dir', Path(tmpdir))
 
     model = 'test'
     with pytest.raises(ValueError, match=r'^Could not download model for language.*'):
-        tesseract.download_model(model)
+        tesseract_model.download_model(model)
 
-def test_download_vertical(monkeypatch, tmpdir):
+def test_download_vertical(monkeypatch, tmpdir, tesseract_model):
     """Test the download of a language with a normal+vertical model."""
-    monkeypatch.setattr(tesseract, 'DOWNLOAD', True)
-    monkeypatch.setattr(tesseract, 'DATA_DIR', Path(tmpdir))
+    monkeypatch.setattr(tesseract_model, 'download', True)
+    monkeypatch.setattr(tesseract_model, 'data_dir', Path(tmpdir))
 
-    model = tesseract.VERTICAL_LANGS[0]
-    tesseract.download_model(model)
+    model = tesseract_model.VERTICAL_LANGS[0]
+    tesseract_model.download_model(model)
 
     tmpfile_h = tmpdir / f'{model}.traineddata'
     tmpfile_v = tmpdir / f'{model}_vert.traineddata'
     assert tmpfile_h.exists()
     assert tmpfile_v.exists()
 
-def test_create_config(monkeypatch, tmpdir):
+def test_create_config(monkeypatch, tmpdir, tesseract_model):
     """Test the creation of the tesseract config file."""
-    monkeypatch.setattr(tesseract, 'CONFIG', False)
-    monkeypatch.setattr(tesseract, 'DATA_DIR', Path(tmpdir))
+    monkeypatch.setattr(tesseract_model, 'config', False)
+    monkeypatch.setattr(tesseract_model, 'data_dir', Path(tmpdir))
 
-    tesseract.create_config()
+    tesseract_model.create_config()
 
-    assert tesseract.CONFIG is True
+    assert tesseract_model.config is True
     pth = Path(tmpdir)
     assert (pth / 'configs').is_dir()
     assert (pth / 'configs' / 'tsv').is_file()
     with open(pth / 'configs' / 'tsv', encoding='utf-8') as f:
         assert f.read() == 'tessedit_create_tsv 1'
 
-def test_create_config_many(monkeypatch, mock_called):
+def test_create_config_many(monkeypatch, mock_called, tesseract_model):
     """Test that the creation of the tesseract config file happens only once."""
-    monkeypatch.setattr(tesseract, 'CONFIG', False)
+    monkeypatch.setattr(tesseract_model, 'config', False)
 
     monkeypatch.setattr(tesseract.Path, 'exists', lambda *args, **kwargs: True)
     monkeypatch.setattr(tesseract.Path, 'mkdir', lambda *args, **kwargs: None)
-    tesseract.create_config()
+    tesseract_model.create_config()
     monkeypatch.setattr(tesseract.Path, 'mkdir', mock_called)
-    tesseract.create_config()
+    tesseract_model.create_config()
 
     assert not hasattr(mock_called, 'called')
 
-def test_tesseract_pipeline_nomodel(monkeypatch, mock_called, tmpdir):
+def test_tesseract_pipeline_nomodel(monkeypatch, mock_called, tmpdir, tesseract_model):
     """Test the tesseract pipeline."""
     mock_result = 'mock_ocr_result'
     def mock_tesseract(*args, **kwargs):
         return {'text': mock_result}
-    monkeypatch.setattr(tesseract, 'CONFIG', True)
-    monkeypatch.setattr(tesseract, 'DOWNLOAD', True)
-    monkeypatch.setattr(tesseract, 'DATA_DIR', Path(tmpdir))
+    monkeypatch.setattr(tesseract_model, 'config', True)
+    monkeypatch.setattr(tesseract_model, 'download', True)
+    monkeypatch.setattr(tesseract_model, 'data_dir', Path(tmpdir))
 
-    monkeypatch.setattr(tesseract, 'download_model', mock_called)
+    monkeypatch.setattr(tesseract_model, 'download_model', mock_called)
     monkeypatch.setattr(tesseract, 'image_to_string', mock_tesseract)
 
-    res = tesseract.tesseract_pipeline('image', 'lang')
+    res = tesseract_model._ocr('image', 'lang') # pylint: disable=protected-access
 
     assert hasattr(mock_called, 'called')
     assert res == mock_result
     assert len(tmpdir.listdir()) == 0 # No config should be written and download is mocked
 
-def test_tesseract_pipeline_noconfig(monkeypatch, mock_called, tmpdir):
+def test_tesseract_pipeline_noconfig(monkeypatch, mock_called, tmpdir, tesseract_model):
     """Test the tesseract pipeline."""
     mock_result = 'mock_ocr_result'
     def mock_tesseract(*args, **kwargs):
         return {'text': mock_result}
-    monkeypatch.setattr(tesseract, 'CONFIG', False)
-    monkeypatch.setattr(tesseract, 'DOWNLOAD', True)
-    monkeypatch.setattr(tesseract, 'DATA_DIR', Path(tmpdir))
+    monkeypatch.setattr(tesseract_model, 'config', False)
+    monkeypatch.setattr(tesseract_model, 'download', True)
+    monkeypatch.setattr(tesseract_model, 'data_dir', Path(tmpdir))
 
-    monkeypatch.setattr(tesseract, 'create_config', mock_called)
-    monkeypatch.setattr(tesseract, 'download_model', lambda *args, **kwargs: None)
+    monkeypatch.setattr(tesseract_model, 'create_config', mock_called)
+    monkeypatch.setattr(tesseract_model, 'download_model', lambda *args, **kwargs: None)
     monkeypatch.setattr(tesseract, 'image_to_string', mock_tesseract)
 
-    res = tesseract.tesseract_pipeline('image', 'lang')
+    res = tesseract_model._ocr('image', 'lang') # pylint: disable=protected-access
 
     assert hasattr(mock_called, 'called')
     assert res == mock_result
     assert len(tmpdir.listdir()) == 0 # No file should be downloaded (lambda mocked) and config is mocked
 
 @pytest.mark.parametrize('mock_called', [{'text': 0}], indirect=True)
-def test_tesseract_pipeline_psm_horiz(monkeypatch, mock_called):
+def test_tesseract_pipeline_psm_horiz(monkeypatch, mock_called, tesseract_model):
     """Test the tesseract pipeline."""
-    monkeypatch.setattr(tesseract, 'create_config', lambda *args, **kwargs: None)
-    monkeypatch.setattr(tesseract, 'download_model', lambda *args, **kwargs: None)
+    monkeypatch.setattr(tesseract_model, 'create_config', lambda *args, **kwargs: None)
+    monkeypatch.setattr(tesseract_model, 'download_model', lambda *args, **kwargs: None)
     monkeypatch.setattr(tesseract, 'image_to_string', mock_called)
 
-    tesseract.tesseract_pipeline('image', 'lang')
+    tesseract_model._ocr('image', 'lang') # pylint: disable=protected-access
 
     assert hasattr(mock_called, 'called')
     assert '--psm 6' in mock_called.kwargs['config']
 
 @pytest.mark.parametrize('mock_called', [{'text': 0}], indirect=True)
-def test_tesseract_pipeline_psm_vert(monkeypatch, mock_called):
+def test_tesseract_pipeline_psm_vert(monkeypatch, mock_called, tesseract_model):
     """Test the tesseract pipeline."""
-    monkeypatch.setattr(tesseract, 'create_config', lambda *args, **kwargs: None)
-    monkeypatch.setattr(tesseract, 'download_model', lambda *args, **kwargs: None)
+    monkeypatch.setattr(tesseract_model, 'create_config', lambda *args, **kwargs: None)
+    monkeypatch.setattr(tesseract_model, 'download_model', lambda *args, **kwargs: None)
     monkeypatch.setattr(tesseract, 'image_to_string', mock_called)
 
     image = Image.new('RGB', (100, 100))
-    lang = tesseract.VERTICAL_LANGS[0]
-    tesseract.tesseract_pipeline(image, lang)
+    lang = tesseract_model.VERTICAL_LANGS[0]
+    tesseract_model._ocr(image, lang) # pylint: disable=protected-access
 
     assert hasattr(mock_called, 'called')
     assert '--psm 5' in mock_called.kwargs['config']

@@ -176,7 +176,7 @@ def test_ocr_run_nonblock(
     gen = ocr_model.ocr(bbox, language, image=image_pillow, options=option_dict, block=False)
 
     msg = next(gen)
-    msg.resolve()
+    # msg.resolve()
     res = next(gen)
 
     assert isinstance(msg, Message)
@@ -252,7 +252,7 @@ def test_tsl_run_nonblock(
     gen = tsl_model.translate(text, src=language, dst=language, options=option_dict, block=False)
 
     msg = next(gen)
-    msg.resolve()
+    # msg.resolve()
     res = next(gen)
 
     assert isinstance(msg, Message)

@@ -18,6 +18,10 @@
 ###################################################################################
 """Tests for easyocr plugin."""
 
+import easyocr
+import pytest
+
+from ocr_translate import models as m
 from ocr_translate.plugins import easyocr
 
 boxes = [
@@ -55,6 +59,24 @@ ids = [
         '2x_intersection_+_1',
 ]
 
+pytestmark = pytest.mark.django_db
+
+@pytest.fixture()
+def easyocr_model(language):
+    """OCRBoxModel database object."""
+    easyocr_model_dict = {
+        'name': 'easyocr',
+        'language_format': 'iso1',
+        'entrypoint': 'easyocr.box'
+    }
+    entrypoint = easyocr_model_dict.pop('entrypoint')
+    res = m.OCRBoxModel.objects.create(**easyocr_model_dict)
+    res.entrypoint = entrypoint
+    res.languages.add(language)
+    res.save()
+
+    return easyocr.EasyOCRBoxModel.objects.get(name = res.name)
+
 def test_intersection_merge(data_regression):
     """Test intersections function."""
 
@@ -74,69 +96,48 @@ def test_intersection_merge(data_regression):
 
     data_regression.check({'res': res})
 
-# @pytest.mark.django_db
-# def test_load_box_model_easyocr(monkeypatch):
-#     """Test load box model. Success"""
-#     model_id = 'easyocr'
-#     monkeypatch.setattr(box.easyocr, 'Reader', lambda *args, **kwargs: 'mocked')
+def test_load_box_model_easyocr(monkeypatch, easyocr_model: m.OCRBoxModel):
+    """Test load box model. Success"""
+    monkeypatch.setattr(easyocr.easyocr, 'Reader', lambda *args, **kwargs: 'mocked')
+    easyocr_model.load()
+    assert easyocr_model.reader == 'mocked'
 
-#     # Needed to make sure that changes doen by `load_box_model` are not persisted
-#     monkeypatch.setattr(box, 'BOX_MODEL_ID', None)
-#     monkeypatch.setattr(box, 'READER', None)
-#     monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', None)
+def test_unload_box_model_easyocr_cpu(monkeypatch, mock_called, easyocr_model: m.OCRBoxModel):
+    """Test unload box model with cpu."""
+    easyocr_model.dev = 'cpu'
+    monkeypatch.setattr(easyocr.torch.cuda, 'empty_cache', mock_called)
 
-#     assert m.OCRBoxModel.objects.count() == 0
-#     box.load_box_model(model_id)
-#     assert m.OCRBoxModel.objects.count() == 1
+    easyocr_model.unload()
+    assert not hasattr(mock_called, 'called')
 
-#     assert box.BOX_MODEL_ID == model_id
-#     assert box.READER == 'mocked' # Check that the mocked function was called and READER was set by loader
+def test_unload_box_model_easyocr_gpu(monkeypatch, mock_called, easyocr_model: m.OCRBoxModel):
+    """Test unload box model with cpu."""
+    easyocr_model.dev = 'cuda'
+    monkeypatch.setattr(easyocr.torch.cuda, 'empty_cache', mock_called)
 
-# def test_unload_box_model(monkeypatch):
-#     """Test unload box model."""
-#     model_id = 'easyocr'
-#     monkeypatch.setattr(box, 'BOX_MODEL_ID', model_id)
-#     monkeypatch.setattr(box, 'READER', 'mocked')
-#     monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', 'test')
+    easyocr_model.unload()
+    assert hasattr(mock_called, 'called')
 
-#     box.unload_box_model()
+@pytest.mark.django_db
+def test_easyocr_box_detextion(monkeypatch, mock_called, image_pillow, easyocr_model):
+    """Test easyocr box detection."""
+    class MockReader(): # pylint: disable=missing-class-docstring
+        def __init__(self):
+            self.called = False
+            self.res = None
+        def detect(self, *args, **kwargs): # pylint: disable=missing-function-docstring
+            self.called = True
+            self.res = (('TARGET', 'other1'), 'other2')
+            return self.res
 
-#     assert box.BBOX_MODEL_OBJ is None
-#     assert box.BOX_MODEL_ID is None
-#     assert box.READER is None
+    reader = MockReader()
+    easyocr_model.reader = reader
 
+    monkeypatch.setattr(easyocr_model, 'merge_bboxes', mock_called)
 
-# def test_unload_box_model_cpu(monkeypatch, mock_called):
-#     """Test unload box model with cpu."""
-#     monkeypatch.setattr(box.torch.cuda, 'empty_cache', mock_called)
-#     monkeypatch.setattr(box, 'dev', 'cpu')
+    easyocr_model._box_detection(image_pillow) # pylint: disable=protected-access
 
-#     box.unload_box_model()
-#     assert not hasattr(mock_called, 'called')
+    assert reader.called
 
-# def test_unload_box_model_cuda(monkeypatch, mock_called):
-#     """Test unload box model with cuda."""
-#     monkeypatch.setattr(box.torch.cuda, 'empty_cache', mock_called)
-#     monkeypatch.setattr(box, 'dev', 'cuda')
-
-#     box.unload_box_model()
-#     assert hasattr(mock_called, 'called')
-
-# def test_box_pipeline_notimplemented(monkeypatch):
-#     """Test box pipeline. With not implemented model."""
-#     model_id = 'notimplemented'
-#     monkeypatch.setattr(box, 'BOX_MODEL_ID', model_id)
-
-#     with pytest.raises(NotImplementedError):
-#         box._box_pipeline(None) # pylint: disable=protected-access
-
-# def test_box_pipeline_easyocr(image_pillow, monkeypatch, mock_box_reader):
-#     """Test box pipeline."""
-#     model_id = 'easyocr'
-
-#     monkeypatch.setattr(box, 'BOX_MODEL_ID', model_id)
-#     monkeypatch.setattr(box, 'READER', mock_box_reader(model_id))
-
-#     res = box._box_pipeline(image_pillow) # pylint: disable=protected-access
-
-#     assert res == [[10,30,10,30], [40,50,40,50]]
+    assert hasattr(mock_called, 'called')
+    assert mock_called.args[0] == 'TARGET'

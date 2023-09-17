@@ -37,6 +37,9 @@ def test_load_box_model(monkeypatch, mock_called, box_model: m.OCRBoxModel):
     def mock_fromentrypoint(*args, **kwargs):
         mock_fromentrypoint.called = True
         return box_model
+    # Required to avoid setting global variables for future `from clean` tests
+    monkeypatch.setattr(box, 'BOX_MODEL_ID', None)
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', None)
     monkeypatch.setattr(m.OCRBoxModel, 'from_entrypoint', mock_fromentrypoint)
     box_model.load = mock_called
     box.load_box_model(model_id)
@@ -58,6 +61,35 @@ def test_get_box_model(monkeypatch):
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', 'test')
     assert box.get_box_model() == 'test'
 
+def test_unload_box_model(monkeypatch):
+    """Test unload box model function."""
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', 'test')
+    monkeypatch.setattr(box, 'BOX_MODEL_ID', 'test')
+    box.unload_box_model()
+    assert box.BOX_MODEL_OBJ is None
+    assert box.BOX_MODEL_ID is None
+
+def test_unload_box_model_if_loaded(monkeypatch):
+    """Test unload box model is called if load with an already loaded model."""
+    class A(): # pylint: disable=missing-class-docstring,invalid-name
+        def __init__(self):
+            self.load_called = False
+            self.unload_called = False
+        def load(self): # pylint: disable=missing-function-docstring
+            self.load_called = True
+        def unload(self): # pylint: disable=missing-function-docstring
+            self.unload_called = True
+    a = A() # pylint: disable=invalid-name
+    b = A() # pylint: disable=invalid-name
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', a)
+    monkeypatch.setattr(box, 'BOX_MODEL_ID', 'test')
+    monkeypatch.setattr(m.OCRBoxModel, 'from_entrypoint', lambda *args, **kwargs: b)
+    box.load_box_model('test2')
+
+    assert not a.load_called
+    assert a.unload_called
+    assert b.load_called
+    assert not b.unload_called
 
 # def test_queue_placer_handler(monkeypatch, mock_called):
 #     """Test queue_placer is setting _box_pipeline as handler, and that it is called."""

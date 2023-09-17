@@ -70,24 +70,27 @@ def language_dict():
 def box_model_dict():
     """Dict defiining an OCRBoxModel"""
     return {
-        'name': 'test_model/id',
-        'language_format': 'iso1'
+        'name': 'test_box_model/id',
+        'language_format': 'iso1',
+        'entrypoint': 'test_entrypoint.box'
     }
 
 @pytest.fixture()
 def ocr_model_dict():
     """Dict defiining an OCRModel"""
     return {
-        'name': 'test_model/id',
-        'language_format': 'iso1'
+        'name': 'test_ocr_model/id',
+        'language_format': 'iso1',
+        'entrypoint': 'test_entrypoint.ocr'
     }
 
 @pytest.fixture()
 def tsl_model_dict():
     """Dict defiining a TSLModel"""
     return {
-        'name': 'test_model/id',
-        'language_format': 'iso1'
+        'name': 'test_tsl_model/id',
+        'language_format': 'iso1',
+        'entrypoint': 'test_entrypoint.tsl'
     }
 
 @pytest.fixture()

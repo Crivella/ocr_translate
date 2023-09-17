@@ -32,10 +32,10 @@ logger = logging.getLogger('plugin')
 
 MODEL_URL = 'https://github.com/tesseract-ocr/tessdata_best/raw/main/{}.traineddata'
 
-root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
-DATA_DIR = Path(os.getenv('TESSERACT_PREFIX', root / 'tesseract'))
+# root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
+# DATA_DIR = Path(os.getenv('TESSERACT_PREFIX', root / 'tesseract'))
 
-DOWNLOAD = os.getenv('TESSERACT_ALLOW_DOWNLOAD', 'false').lower() == 'true'
+# DOWNLOAD = os.getenv('TESSERACT_ALLOW_DOWNLOAD', 'false').lower() == 'true'
 
 class TesseractOCRModel(m.OCRModel):
     """OCRtranslate plugin to allow usage of Tesseract models."""
@@ -44,6 +44,14 @@ class TesseractOCRModel(m.OCRModel):
 
     class Meta:
         proxy = True
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the model."""
+        super().__init__(*args, **kwargs)
+
+        root = Path(os.environ.get('TRANSFORMERS_CACHE', '.'))
+        self.data_dir = Path(os.getenv('TESSERACT_PREFIX', root / 'tesseract'))
+        self.download = os.getenv('TESSERACT_ALLOW_DOWNLOAD', 'false').lower() == 'true'
 
     def download_model(self, lang: str):
         """Download a tesseract model for a given language.
@@ -54,19 +62,19 @@ class TesseractOCRModel(m.OCRModel):
         Raises:
             ValueError: If the model could not be downloaded.
         """
-        if not DOWNLOAD:
+        if not self.download:
             raise ValueError('TESSERACT_ALLOW_DOWNLOAD is false. Downloading models is not allowed')
         self.create_config()
 
         logger.info(f'Downloading tesseract model for language {lang}')
-        dst = DATA_DIR / f'{lang}.traineddata'
+        dst = self.data_dir / f'{lang}.traineddata'
         if dst.exists():
             return
         res = requests.get(MODEL_URL.format(lang), timeout=5)
         if res.status_code != 200:
             raise ValueError(f'Could not download model for language {lang}')
 
-        with open(DATA_DIR / f'{lang}.traineddata', 'wb') as f:
+        with open(self.data_dir / f'{lang}.traineddata', 'wb') as f:
             f.write(res.content)
 
         if lang in self.VERTICAL_LANGS:
@@ -85,7 +93,7 @@ class TesseractOCRModel(m.OCRModel):
         self.config = True
 
         logger.info('Creating tesseract tsv config')
-        cfg = DATA_DIR / 'configs'
+        cfg = self.data_dir / 'configs'
         cfg.mkdir(exist_ok=True, parents=True)
 
         dst = cfg / 'tsv'
@@ -129,7 +137,7 @@ class TesseractOCRModel(m.OCRModel):
             options = {}
 
         self.create_config()
-        if not (DATA_DIR / f'{lang}.traineddata').exists():
+        if not (self.data_dir / f'{lang}.traineddata').exists():
             self.download_model(lang)
         logger.info(f'Running tesseract for language {lang}')
 
@@ -145,7 +153,7 @@ class TesseractOCRModel(m.OCRModel):
         res = image_to_string(
             img,
             lang=lang,
-            config=f'--tessdata-dir {DATA_DIR.as_posix()} --psm {psm}',
+            config=f'--tessdata-dir {self.data_dir.as_posix()} --psm {psm}',
             output_type=Output.DICT
             )
 
