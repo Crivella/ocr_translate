@@ -3,19 +3,22 @@
         {
             "name": "easyocr",
             "lang": ["en", "ja", "zh", "ko"],
-            "lang_code": "easyocr"
+            "lang_code": "easyocr",
+            "entrypoint": "easyocr.box"
         }
     ],
     "ocr": [
         {
             "name": "kha-white/manga-ocr-base",
             "lang": ["ja"],
-            "lang_code": "iso1"
+            "lang_code": "iso1",
+            "entrypoint": "hugginface.ved"
         },
         {
             "name": "tesseract",
             "lang": ["en", "ja", "zh", "ko"],
-            "lang_code": "tesseract"
+            "lang_code": "tesseract",
+            "entrypoint": "tesseract.ocr"
         }
     ],
     "tsl": [
@@ -26,7 +29,8 @@
             "lang_code": "iso1",
             "default_options": {
                 "break_newlines": false
-            }
+            },
+            "entrypoint": "hugginface.seq2seq"
         },
         {
             "name": "Helsinki-NLP/opus-mt-ja-en",
@@ -35,7 +39,8 @@
             "lang_code": "iso1",
             "default_options": {
                 "break_newlines": true
-            }
+            },
+            "entrypoint": "hugginface.seq2seq"
         },
         {
             "name": "staka/fugumt-ja-en",
@@ -44,7 +49,8 @@
             "lang_code": "iso1",
             "default_options": {
                 "break_newlines": true
-            }
+            },
+            "entrypoint": "hugginface.seq2seq"
         },
         {
             "name": "Helsinki-NLP/opus-mt-ko-en",
@@ -53,7 +59,8 @@
             "lang_code": "iso1",
             "default_options": {
                 "break_newlines": false
-            }
+            },
+            "entrypoint": "hugginface.seq2seq"
         },
         {
             "name": "facebook/m2m100_418M",
@@ -62,7 +69,8 @@
             "lang_code": "facebookM2M",
             "default_options": {
                 "break_newlines": false
-            }
+            },
+            "entrypoint": "hugginface.seq2seq"
         },
         {
             "name": "facebook/m2m100_1.2B",
@@ -71,7 +79,8 @@
             "lang_code": "facebookM2M",
             "default_options": {
                 "break_newlines": false
-            }
+            },
+            "entrypoint": "hugginface.seq2seq"
         }
     ]
 }

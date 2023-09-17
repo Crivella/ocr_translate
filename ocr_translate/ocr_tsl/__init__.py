@@ -23,11 +23,11 @@ import os
 from .initializers import (auto_create_languages, auto_create_models,
                            init_most_used)
 
-if os.environ.get('LOAD_ON_START', 'false').lower() == 'true':
-    init_most_used()
-
 if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
     auto_create_languages()
 
 if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
     auto_create_models()
+
+if os.environ.get('LOAD_ON_START', 'false').lower() == 'true':
+    init_most_used()

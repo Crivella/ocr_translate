@@ -173,7 +173,7 @@ def test_set_lang_post_no_unload_box(
     """Test set_lang with POST valid request. Switching lang_src has to cause unloading of box model
     if the model does not support that language."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(views, 'unload_box_model', mock_called)
 
     box_model.languages.add(language2)
@@ -193,7 +193,7 @@ def test_set_lang_post_unload_box(
     """Test set_lang with POST valid request. Switching lang_src has to cause unloading of box model
     if the model does not support that language."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BBOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(views, 'unload_box_model', mock_called)
 
     post_kwargs['data']['lang_src'] = language2.iso1
