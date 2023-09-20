@@ -28,8 +28,6 @@ from PIL.Image import Image as PILImage
 from . import queues
 from .messaging import Message
 
-LANG_LENGTH = 32
-
 logger = logging.getLogger('ocr.general')
 
 class OptionDict(models.Model):
@@ -46,10 +44,6 @@ class Language(models.Model):
     iso2b = models.CharField(max_length=8, unique=True)
     iso2t = models.CharField(max_length=8, unique=True)
     iso3 = models.CharField(max_length=32, unique=True)
-
-    # easyocr = models.CharField(max_length=32, null=True)
-    # tesseract = models.CharField(max_length=32, null=True)
-    # facebookM2M = models.CharField(max_length=32, null=True)
 
     default_options = models.ForeignKey(
         OptionDict, on_delete=models.CASCADE, related_name='lang_default_options', null=True
