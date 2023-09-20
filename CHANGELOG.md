@@ -11,7 +11,7 @@ Plugins can now be used to also add models to the database via the following ent
 - `ocr_translate.tsl_data`
 
 The entrypoint should point to a `dict` with the info to create the model.
-See [init of plugins](/ocr_translate/plugins/__init__.py) for example (care that box/ocr/tsl may need to define different keys).
+See [init of plugins](ocr_translate/plugins/__init__.py) for example (care that box/ocr/tsl may need to define different keys).
 
 Information about model-specific language codes is now encoded into an `iso1_map` field of the model.
 
