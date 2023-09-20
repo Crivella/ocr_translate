@@ -152,6 +152,8 @@ before installing the python package.
 
 ## Writing plugins for the server
 
+Since version 0.2.1 plugins can now be used to also add models to the database via the following entrypoints. See [CHANGELOG](/CHANGELOG.md) for more details.
+
 Since version 0.2.0 the server has been made pluginable.
 You can write a plugin for a model/web-service that has not yet been implemented, by subclassing the following models
 

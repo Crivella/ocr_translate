@@ -19,16 +19,14 @@
 """Django models for the ocr_translate app."""
 import logging
 import re
+from importlib.metadata import entry_points
 from typing import Generator, Type, Union
 
-import pkg_resources
 from django.db import models
 from PIL.Image import Image as PILImage
 
 from . import queues
 from .messaging import Message
-
-LANG_LENGTH = 32
 
 logger = logging.getLogger('ocr.general')
 
@@ -46,10 +44,6 @@ class Language(models.Model):
     iso2b = models.CharField(max_length=8, unique=True)
     iso2t = models.CharField(max_length=8, unique=True)
     iso3 = models.CharField(max_length=32, unique=True)
-
-    easyocr = models.CharField(max_length=32, null=True)
-    tesseract = models.CharField(max_length=32, null=True)
-    facebookM2M = models.CharField(max_length=32, null=True)
 
     default_options = models.ForeignKey(
         OptionDict, on_delete=models.CASCADE, related_name='lang_default_options', null=True
@@ -69,6 +63,9 @@ class BaseModel(models.Model):
 
     entrypoint = models.CharField(max_length=128, null=True)
 
+    language_format = models.CharField(max_length=32, null=True)
+    iso1_map = models.JSONField(null=True)
+
     default_options = models.ForeignKey(
         OptionDict, on_delete=models.SET_NULL, related_name='used_by_%(class)s', null=True
         )
@@ -82,6 +79,12 @@ class BaseModel(models.Model):
         except NotImplementedError:
             pass
 
+    def get_lang_code(self, lang: 'Language') -> str:
+        """Get the language code for a specific model"""
+        if isinstance(self.iso1_map, dict) and lang.iso1 in self.iso1_map:
+            return self.iso1_map[lang.iso1]
+        return getattr(lang, self.language_format or 'iso1')
+
     @classmethod
     def from_entrypoint(cls, name: str) -> Type['models.Model']:
         """Get the entrypoint specific TSL model class from the entrypoint name"""
@@ -92,7 +95,7 @@ class BaseModel(models.Model):
         ept = obj.entrypoint
 
         logger.debug(f'Loading model {name} from entrypoint {cls.entrypoint_namespace}:{ept}')
-        for entrypoint in pkg_resources.iter_entry_points(cls.entrypoint_namespace, name=ept):
+        for entrypoint in entry_points(group=cls.entrypoint_namespace, name=ept):
             new_cls = entrypoint.load()
             break
         else:
@@ -115,8 +118,6 @@ class OCRModel(BaseModel):
     NO_SPACE_LANGUAGES = ['ja', 'zh', 'lo', 'my']
 
     languages = models.ManyToManyField(Language, related_name='ocr_models')
-
-    language_format = models.CharField(max_length=32, null=True)
 
     def prepare_image(
             self,
@@ -181,7 +182,7 @@ class OCRModel(BaseModel):
             logger.info('Running OCR')
 
             id_ = (bbox_obj.id, self.id, lang.id)
-            mlang = getattr(lang, self.language_format or 'iso1')
+            mlang = self.get_lang_code(lang)
             opt_dct = options_obj.options
             text = queues.ocr_queue.put(
                 id_=id_,
@@ -221,8 +222,6 @@ class OCRBoxModel(BaseModel):
     entrypoint_namespace = 'ocr_translate.box_models'
 
     languages = models.ManyToManyField(Language, related_name='box_models')
-
-    language_format = models.CharField(max_length=32, null=True)
 
     def _box_detection(
             self,
@@ -301,8 +300,6 @@ class TSLModel(BaseModel):
 
     src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')
     dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
-
-    language_format = models.CharField(max_length=32, null=True)
 
     @staticmethod
     def pre_tokenize(
@@ -406,8 +403,8 @@ class TSLModel(BaseModel):
                 msg={
                     'args': (
                         tokens,
-                        getattr(src, self.language_format),
-                        getattr(dst, self.language_format)
+                        self.get_lang_code(src),
+                        self.get_lang_code(dst),
                         ),
                     'kwargs': {'options': opt_dct},
                 },

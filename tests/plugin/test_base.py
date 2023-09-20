@@ -49,7 +49,11 @@ def test_tsl_model_from_entrypoint_unknown(tsl_model: m.TSLModel):
 @pytest.mark.django_db
 def test_valid_entrypoint(monkeypatch, box_model: m.OCRBoxModel):
     """Test that valid entrypoint works."""
-    import pkg_resources as pr  # pylint: disable=import-outside-toplevel
+    monkeypatch.setattr(
+        m, 'entry_points',
+        lambda *args, **kwargs: [o,],
+        )
+
     class Obj(): # pylint: disable=missing-class-docstring
         def __init__(self):
             self.called = False
@@ -72,11 +76,6 @@ def test_valid_entrypoint(monkeypatch, box_model: m.OCRBoxModel):
             return self
 
     o = Obj() # pylint: disable=invalid-name
-
-    monkeypatch.setattr(
-        pr, 'iter_entry_points',
-        lambda x,name='': [o,],
-        )
 
     m.OCRBoxModel.from_entrypoint(box_model.name)
 
