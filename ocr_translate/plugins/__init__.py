@@ -20,10 +20,17 @@
 
 
 easyocr_box_model_data = {
+    # Name of the model
     'name': 'easyocr',
+    # List of ISO-639-1 codes supported by the model
     'lang': ['en', 'ja', 'zh', 'ko'],
+    # How the model requires the codes to be passed (one of 'iso1', 'iso2b', 'iso2t', 'iso3')
+    # If the models codes only partially match or are totally different from one of the ISO standards, see iso1_map
     'lang_code': 'iso1',
+    # Name of the entrypoint for the model (should match what is used in pyproject.toml)
     'entrypoint': 'easyocr.box',
+    # Maps ISO-639-1 codes to the codes used by the model. Does not need to map every language, only those that are
+    # different from getattr(lang: m.Language, lang_code)
     'iso1_map': {
         'ce': 'che',
         'zh': 'ch_sim',

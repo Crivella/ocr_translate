@@ -4,7 +4,15 @@ List of changes between versions
 
 ## 0.2.1
 
-Plugins can now be used to also add models to the database.
+Plugins can now be used to also add models to the database via the following entrypoints:
+
+- `ocr_translate.box_data`
+- `ocr_translate.ocr_data`
+- `ocr_translate.tsl_data`
+
+The entrypoint should point to a `dict` with the info to create the model.
+See [init of plugins](/ocr_translate/plugins/__init__.py) for example (care that box/ocr/tsl may need to define different keys).
+
 Information about model-specific language codes is now encoded into an `iso1_map` field of the model.
 
 - Before new models with custom codes in a plugin would require to also edit the main repo and adding a new column to languages in the database.
