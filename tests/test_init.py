@@ -114,7 +114,6 @@ def test_auto_create_languages():
 
     # Test settings of **kwargs
     jap = m.Language.objects.get(iso1='ja')
-    assert jap.facebookM2M == 'ja'
     assert jap.default_options.options['break_chars'] is not None
     assert jap.default_options.options['break_chars'] is not None
 
@@ -138,9 +137,18 @@ def test_auto_create_models_lang():
     tess = m.OCRModel.objects.get(name='tesseract')
 
     # Test language code assignment
-    assert m2m.language_format == 'facebookM2M'
-    assert eocr.language_format == 'easyocr'
-    assert tess.language_format == 'tesseract'
+    assert m2m.language_format == 'iso1'
+    assert eocr.language_format == 'iso1'
+    assert tess.language_format == 'iso3'
+    # Test language code map
+    assert not m2m.iso1_map is None
+    assert not eocr.iso1_map is None
+    assert not tess.iso1_map is None
+    zht = m.Language.objects.get(iso1='zht')
+    et = m.Language.objects.get(iso1='et') # pylint: disable=invalid-name
+    assert m2m.get_lang_code(zht) == 'zh'
+    assert eocr.get_lang_code(zht) == 'ch_tra'
+    assert tess.get_lang_code(et) == 'est'
     # Test lang assignment for models (many-to-many)
     assert m2m.src_languages.count() > 10
     assert m2m.dst_languages.count() > 10
