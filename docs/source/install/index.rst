@@ -7,6 +7,14 @@ For both the Githyb and PyPI installation it is strongly suggested to install th
 .. toctree::
    :maxdepth: 3
 
+From Release file (Windows only)
+--------------------------------
+
+From the :github:`github releases page <releases/>` you can download either:
+
+- The :github:`CPU only version <releases/latest/download/run_server-cpu.zip>`
+- The GPU version split in :github:`file1 <releases/latest/download/run_server-gpu.zip.001>` and :github:`file2 <releases/latest/download/run_server-gpu.zip.002>` (The CUDA dependencies makes it take much more space), wich can be restored using tools like `7zip <https://www.7-zip.org/https://www.7-zip.org/>`_ and `NanaZip <https://github.com/M2Team/NanaZip>`_.
+
 From Github
 -----------
 
@@ -14,7 +22,7 @@ From Github
   - :code:`git clone https://github.com/Crivella/ocr_translate.git`
 - Install the project dependencies (choose the appropriate files depending if you wanna run on GPU or CPU only):
   - :code:`pip install -r requirements-torch-[cpu/cuda].txt`
-  - :code:`pip install -r requirements.txt`
+  - :code:`pip install -r requirementscs.txt`
 
 From Docker
 -----------
