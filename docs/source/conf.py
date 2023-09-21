@@ -17,6 +17,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx_design',
     'sphinx_rtd_dark_mode',
+    'sphinxcontrib.openapi',
 ]
 
 templates_path = ['_templates']
