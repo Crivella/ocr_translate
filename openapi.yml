@@ -1,0 +1,245 @@
+openapi: 3.0.0
+info:
+  title: ocr_translate server API
+  description: Description of the API for communicating with an [ocr_translate server](https://github.com/Crivella/ocr_translate/) via HTTP requests.
+  version: 0.2.1
+servers:
+  - url: http://127.0.0.1:4000
+    description: This will be the address to which you deploy the server (the specified one is the default/expected one)
+paths:
+  /:
+    get:
+      summary: Server handshake.
+      description: Return a JSON response containing information about the available languages/models and the currently in use src/dst language and box/ocr/tsl models.
+      responses:
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: A JSON dictionary with handshake info.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Languages:
+                    type: array
+                    items:
+                      type: string
+                  BOXModels:
+                    type: array
+                    items:
+                      type: string
+                  OCRModels:
+                    type: array
+                    items:
+                      type: string
+                  TSLModels:
+                    type: array
+                    items:
+                      type: string
+                  box_selected:
+                    type: string
+                  ocr_selected:
+                    type: string
+                  tsl_selected:
+                    type: string
+                  lang_src:
+                    type: string
+                  lang_dst:
+                    type: string
+  /get_trans/:
+    get:
+      summary: Get translation.
+      description: Return a JSON response containing all the available translation of the specified text.
+      parameters:
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: true
+          description: The text for which to search for translations.
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '404':  # status code
+          description: Text not found.
+        '200':    # status code
+          description: A JSON dictionary with the translation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  translation:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        text:
+                          type: string
+                        model:
+                          type: string
+  /set_lang/:
+    post:
+      summary: Set source and destination languages.
+      description: Set the source and destination languages for the translation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lang_src:
+                  type: string
+                lang_dst:
+                  type: string
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: Success.
+  /set_models/:
+    post:
+      summary: Set box, ocr and tsl models.
+      description: Set the box, ocr and tsl models for the translation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                box_model_id:
+                  type: string
+                ocr_model_id:
+                  type: string
+                tsl_model_id:
+                  type: string
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: Success.
+  /run_tsl/:
+    post:
+      summary: Run translation on text.
+      description: Run translation on text using active model.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: A JSON dictionary with the translated text.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+  /run_ocrtsl/:
+    post:
+      summary: Run OCR and translation on image.
+      description: Run OCR and translation on image () using active models.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contents:
+                  type: string
+                  description: Base64 encoded image.
+                md5:
+                  type: string
+                  description: MD5 hash of the image.
+                force:
+                  type: boolean
+                  description: Force OCR+translation even if the image is already in the cache/database.
+                  default: false
+                options:
+                  type: object
+                  description: Options dictionary for the OCR and translation.
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '406': # status code
+          description: Can't lazyload with only md5.
+        '200':    # status code
+          description: A JSON dictionary with the translated text.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ocr:
+                          type: string
+                        tsl:
+                          type: string
+                        box:
+                          type: array
+                          items:
+                            type: integer
+                            description: "l, b, r, t"
+                          minItems: 4
+                          maxItems: 4
