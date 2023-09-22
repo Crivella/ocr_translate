@@ -1,0 +1,55 @@
+name: docs-build
+
+on:
+  push:
+    branches:
+        - master
+  pull_request:
+    branches-ignore: [gh-pages]
+    paths: ['docs/**']
+
+jobs:
+  docs-build:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+
+    - name: Install python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -e .[docs]
+
+    - name: Build HTML docs
+      id: linkcheck
+      run: |
+        make -C docs html linkcheck 2>&1 | tee check.log
+        echo "broken=$(grep '(line\s*[0-9]*)\(\s\)broken\(\s\)' check.log)" >> $GITHUB_OUTPUT
+      env:
+        SPHINXOPTS: -nW --keep-going
+
+    - name: Show docs build check results
+      run: |
+        if [ -z "${{ steps.linkcheck.outputs.broken }}" ]; then
+            echo "No broken links found."
+            exit 0
+        else
+            echo "Broken links found:"
+            echo "${{ steps.linkcheck.outputs.broken }}"
+            exit 1
+        fi
+
+    - name: Deploy docs to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: docs/build/html
+        force_orphan: true

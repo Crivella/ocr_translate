@@ -6,6 +6,8 @@ The OCR and translation is performed using freely available machine learning mod
 
 The server is designed to be used together with [this browser extension](https://github.com/Crivella/ocr_extension), acting as a front-end providing the images and controlling the model languages and models being used.
 
+[Full Documentation](https://crivella.github.io/ocr_translate/)
+
 ## Running the server
 
 If you plan to use a different settings (eg. database, or model location), you can either:
@@ -203,7 +205,7 @@ The second section of variables is defined at the project level and is only avai
 | --- | --- | --- |
 | `LOAD_ON_START`| false[/true] | Will automatically load the most used source/destination languages and most used models for that language combination at server start|
 | `AUTOCREATE_LANGUAGES` | false[/true] | Will automatically create the Language entries in the database as defined in [languages.json](ocr_translate/OCR_TSL/languages.json) |
-| `AUTOCREATE_VALIDATED_MODELS` | false[/true] | Will automatically create the model entries that have been tested and defined in [models.json](ocr_translate/OCR_TSL/models.json). NOTE: Creation of the models requires the involved languages to already exist in the database |
+| `AUTOCREATE_VALIDATED_MODELS` | false[/true] | Will automatically create the model entries defined in code and plugins `entrypoints`. |
 | `DEVICE` | cpu[/cuda] | Which device to use with torch |
 | `EASYOCR_MODULE_PATH` | `$HOME/.EasyOCR` | Directory where EasyOCR store its downloaded models |
 | `TRANSFORMERS_CACHE` | `$HOME/.cache/huggingface/hub/` | Directory where [Hugging Face](https://huggingface.co/) models are being stored (either downloaded manually or downloaded by `transformers`) |

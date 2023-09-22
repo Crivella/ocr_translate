@@ -60,6 +60,13 @@ mysql = [
 postgres = [
     "psycopg[binary]==3.1.9",
 ]
+docs = [
+    "sphinx~=7.2.6",
+    "sphinx_design~=0.5.0",
+    "sphinx-rtd-theme~=1.3.0",
+    "sphinx-rtd-dark-mode~=1.3.0",
+    "sphinxcontrib-openapi"
+]
 tests = [
     "pytest",
     "pytest-cov",
@@ -111,6 +118,7 @@ exclude = [
     "icon.ico", "run_server.py", "build.sh",
     "Dockerfile-cpu", "Dockerfile-gpu", "nginx.default", "start-server.sh",
     "mysite/", "mysite/*", "manage.py", "tests/", "tests/*",
+    "docs/", "docs/*"
     ]
 
 [tool.pytest.ini_options]
