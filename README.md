@@ -6,6 +6,8 @@ The OCR and translation is performed using freely available machine learning mod
 
 The server is designed to be used together with [this browser extension](https://github.com/Crivella/ocr_extension), acting as a front-end providing the images and controlling the model languages and models being used.
 
+[Full Documentation](https://crivella.github.io/ocr_translate/)
+
 ## Running the server
 
 If you plan to use a different settings (eg. database, or model location), you can either:
