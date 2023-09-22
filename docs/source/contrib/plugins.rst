@@ -6,6 +6,8 @@ New models and proxy model classes can be added without modifying the core codeb
 When Creating a plugin, the following example show the minimal methods that need to be redefined.
 Beside this, the plugin can also redefine any of the methods to change eg how inputs are preprocessed, but be careful with this as it might break provenance (eg. `options` are used differently).
 
+A `cookiecutter <https://github.com/cookiecutter/cookiecutter>`_ recipe to create a new plugin is available `HERE <https://github.com/Crivella/ocr_translate-plugin_template>`_
+
 IMPORTANT: The model class are supposed to be proxy classes  and should ence contain
 
 .. code-block:: python
