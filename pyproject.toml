@@ -118,6 +118,7 @@ exclude = [
     "icon.ico", "run_server.py", "build.sh",
     "Dockerfile-cpu", "Dockerfile-gpu", "nginx.default", "start-server.sh",
     "mysite/", "mysite/*", "manage.py", "tests/", "tests/*",
+    "docs/", "docs/*"
     ]
 
 [tool.pytest.ini_options]

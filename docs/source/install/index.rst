@@ -13,7 +13,7 @@ From Release file (Windows only)
 From the :github:`github releases page <releases/>` you can download either:
 
 - The :github:`CPU only version <releases/latest/download/run_server-cpu.zip>`
-- The GPU version split in :github:`file1 <releases/latest/download/run_server-gpu.zip.001>` and :github:`file2 <releases/latest/download/run_server-gpu.zip.002>` (The CUDA dependencies makes it take much more space), wich can be restored using tools like `7zip <https://www.7-zip.org/https://www.7-zip.org/>`_ and `NanaZip <https://github.com/M2Team/NanaZip>`_.
+- The GPU version split in :github:`file1 <releases/latest/download/run_server-gpu.zip.001>` and :github:`file2 <releases/latest/download/run_server-gpu.zip.002>` (The CUDA dependencies makes it take much more space), wich can be restored using tools like `7zip <https://www.7-zip.org/>`_ and `NanaZip <https://github.com/M2Team/NanaZip>`_.
 
 From Github
 -----------

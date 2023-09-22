@@ -3,6 +3,9 @@ Writing plugins
 
 New models and proxy model classes can be added without modifying the core codebase by creating a python package and using the following entrypoints.
 
+When Creating a plugin, the following example show the minimal methods that need to be redefined.
+Beside this, the plugin can also redefine any of the methods to change eg how inputs are preprocessed, but be careful with this as it might break provenance (eg. `options` are used differently).
+
 IMPORTANT: The model class are supposed to be proxy classes  and should ence contain
 
 .. code-block:: python
@@ -64,18 +67,18 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
 
 .. code-block:: python
 
-    class NewProxyOCRBoxModel(m.OCRBoxModel):
+    class SomeNewClassName(m.OCRBoxModel):
         """OCRBoxtranslate plugin to allow usage of ... for box detection."""
         class Meta:
             proxy = True
 
         def load(self):
             """Load the model into memory."""
-            # DO something here to load the model or nothing if not needed (should still be defined)
+            # Do something here to load the model or nothing if not needed (should still be defined)
 
         def unload(self) -> None:
             """Unload the model from memory."""
-            # DO something here to unload the model or nothing if not needed (should still be defined)
+            # Do something here to unload the model or nothing if not needed (should still be defined)
 
 
         def _box_detection(
@@ -96,3 +99,84 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
             """
             # Redefine this method with the same signature as above
             # Should return a list of `lrbt` boxes after processing the input PILImage
+
+- :code:`ocr_translate.ocr_models`: Point this entrypoint to a class that subclasses :code:`OCRModel`. Should redefine atleast the following methods
+
+.. code-block:: python
+
+    class SomeNewClassName(m.OCRModel):
+        """OCRBoxtranslate plugin to allow usage of ... for box detection."""
+        class Meta:
+            proxy = True
+
+        def load(self):
+            """Load the model into memory."""
+            # Do something here to load the model or nothing if not needed (should still be defined)
+
+        def unload(self) -> None:
+            """Unload the model from memory."""
+            # Do something here to unload the model or nothing if not needed (should still be defined)
+
+
+        def _ocr(
+                self,
+                img: Image.Image, lang: str = None, options: dict = None
+                ) -> str:
+            """Perform OCR on an image.
+
+            Args:
+                img (Image.Image):  A Pillow image on which to perform OCR.
+                lang (str, optional): The language to use for OCR. (Not every model will use this)
+                bbox (tuple[int, int, int, int], optional): The bounding box of the text on the image in lbrt format.
+                options (dict, optional): A dictionary of options to pass to the OCR model.
+
+            Raises:
+                TypeError: If img is not a Pillow image.
+
+            Returns:
+                str: The text extracted from the image.
+            """
+            # Redefine this method with the same signature as above
+            # Should return a sring with the result of the OCR performed on the input PILImage.
+            # Unless the methods `prepare_image` or `ocr` are also being overwritten, the input image will be the result of the CROP on the original image using the bounding boxes given by the box detection model.
+
+- :code:`ocr_translate.tsl_models`: Point this entrypoint to a class that subclasses :code:`TSLModel`. Should redefine atleast the following methods
+
+.. code-block:: python
+
+    class SomeNewClassName(m.TSLModel):
+        """OCRBoxtranslate plugin to allow usage of ... for box detection."""
+        class Meta:
+            proxy = True
+
+        def load(self):
+            """Load the model into memory."""
+            # Do something here to load the model or nothing if not needed (should still be defined)
+
+        def unload(self) -> None:
+            """Unload the model from memory."""
+            # Do something here to unload the model or nothing if not needed (should still be defined)
+
+
+        def _translate(
+                self,
+                tokens: list, src_lang: str, dst_lang: str, options: dict = None) -> str | list[str]:
+            """Translate a text using a the loaded model.
+
+            Args:
+                tokens (list): list or list[list] of string tokens to be translated.
+                lang_src (str): Source language.
+                lang_dst (str): Destination language.
+                options (dict, optional): Options for the translation. Defaults to {}.
+
+            Raises:
+                TypeError: If text is not a string or a list of strings.
+
+            Returns:
+                Union[str,list[str]]: Translated text. If text is a list, returns a list of translated strings.
+            """
+            # Redefine this method with the same signature as above
+            # Should return a sring with the translated text.
+            # IMPORTANT: the main codebase treats this function as batchable:
+            # The input `tokens` can be a list of strings or a list of list of strings. The output should match the input being a string or list of strings.
+            # (This is used to leverage the capability of pytorch to batch inputs and outputs for faster performances, or it can also used to write a plugin for an online service by using a single request for multiple inputs using some separator that the service will leave unaltered.)
