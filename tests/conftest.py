@@ -235,3 +235,30 @@ def mock_called(request):
         mock_call.expected = request.param
 
     return mock_call
+
+@pytest.fixture()
+def mock_load_ept():
+    """Mock entrypoint loading for testing with dummy models."""
+    def function(namespace):
+        res = {
+            'lang': ['ja'],
+            'lang_code': 'iso1',
+        }
+        if namespace == 'ocr_translate.box_data':
+            res['name'] = 'test_box'
+            res['entrypoint'] = 'test.box'
+        elif namespace == 'ocr_translate.ocr_data':
+            res['name'] = 'test_ocr'
+            res['entrypoint'] = 'test.ocr'
+        elif namespace == 'ocr_translate.tsl_data':
+            l = res.pop('lang')
+            res['name'] = 'test_tsl'
+            res['entrypoint'] = 'test.tsl'
+            res['lang_src'] = l
+            res['lang_dst'] = l
+        else:
+            raise ValueError(f'Unknown namespace: {namespace}')
+
+        return [res]
+
+    return function
