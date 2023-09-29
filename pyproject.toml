@@ -31,23 +31,7 @@ classifiers = [
 keywords = ["django", "ocr", "translation"]
 requires-python = ">=3.10"
 dependencies = [
-    "regex~=2023.6.3",
-    # "requests~=2.31.0",
     "Django~=4.2.3",
-    "Pillow~=9.5.0",
-    # "opencv-python-headless~=4.8.0.74",
-
-    # "torch~=2.0.1",
-    # "torchvision~=0.15.2",
-
-    # "transformers~=4.30.2",
-    "easyocr~=1.7.0",
-    "pytesseract~=0.3.10",
-    # "fugashi~=1.2.1",
-    # "unidic-lite~=1.0.8",
-    # "sacremoses~=0.0.53",
-    # "safetensors~=0.3.1",
-    # "sentencepiece~=0.1.99",
 ]
 
 [project.urls]
@@ -70,7 +54,6 @@ docs = [
 tests = [
     "pytest",
     "pytest-cov",
-    "pytest-regressions~=2.4",
     "pytest-django~=4.5.2",
 ]
 pre-commit = [
@@ -83,31 +66,6 @@ release = [
     "flit",
     "pyinstaller"
 ]
-
-[project.entry-points."ocr_translate.box_data"]
-"box.easyocr" = "ocr_translate.plugins:easyocr_box_model_data"
-
-[project.entry-points."ocr_translate.ocr_data"]
-"ocr.tesseract" = "ocr_translate.plugins:tesseract_ocr_model_data"
-# "ocr.hugginface.ved.khawhite" = "ocr_translate.plugins:khawhite_ocr_model_data"
-
-[project.entry-points."ocr_translate.tsl_data"]
-# "tsl.hugginface.seq2seq.helsinki_zh_en" = "ocr_translate.plugins:helsinki_zh_en_tsl_model_data"
-# "tsl.hugginface.seq2seq.helsinki_ja_en" = "ocr_translate.plugins:helsinki_ja_en_tsl_model_data"
-# "tsl.hugginface.seq2seq.helsinki_ko_en" = "ocr_translate.plugins:helsinki_ko_en_tsl_model_data"
-# "tsl.hugginface.seq2seq.staka_ja_en" = "ocr_translate.plugins:staka_fugumt_ja_en_tsl_model_data"
-# "tsl.hugginface.seq2seq.fbm2m_418m" = "ocr_translate.plugins:facebook_m2m100_418m_tsl_model_data"
-# "tsl.hugginface.seq2seq.fbm2m_1_2b" = "ocr_translate.plugins:facebook_m2m100_1_2b_tsl_model_data"
-
-[project.entry-points."ocr_translate.box_models"]
-"easyocr.box" = "ocr_translate.plugins.easyocr:EasyOCRBoxModel"
-
-[project.entry-points."ocr_translate.ocr_models"]
-"tesseract.ocr" = "ocr_translate.plugins.tesseract:TesseractOCRModel"
-# "hugginface.ved" = "ocr_translate.plugins.hugginface:HugginfaceVEDModel"
-
-[project.entry-points."ocr_translate.tsl_models"]
-# "hugginface.seq2seq" = "ocr_translate.plugins.hugginface:HugginfaceSeq2SeqModel"
 
 [tool.flit.module]
 name = "ocr_translate"

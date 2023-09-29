@@ -22,31 +22,28 @@ import pytest
 
 from ocr_translate import models as m
 
+pytestmark = pytest.mark.django_db
 
 def test_base_from_entrypoint():
     """Test from_entrypoint method of BaseModel should `raise ValueError`."""
     with pytest.raises(ValueError):
         m.BaseModel.from_entrypoint('test_model_id')
 
-@pytest.mark.django_db
 def test_box_model_from_entrypoint_unknown(box_model: m.OCRBoxModel):
     """Test from_entrypoint method of OCRModel should `raise ValueError` if entrypoint is unknown."""
     with pytest.raises(ValueError, match=r'^Missing plugin: Entrypoint "test_entrypoint.box" not found.$'):
         m.OCRBoxModel.from_entrypoint(box_model.name)
 
-@pytest.mark.django_db
 def test_ocr_model_from_entrypoint_unknown(ocr_model: m.OCRModel):
     """Test from_entrypoint method of OCRModel should `raise ValueError` if entrypoint is unknown."""
     with pytest.raises(ValueError, match=r'^Missing plugin: Entrypoint "test_entrypoint.ocr" not found.$'):
         m.OCRModel.from_entrypoint(ocr_model.name)
 
-@pytest.mark.django_db
 def test_tsl_model_from_entrypoint_unknown(tsl_model: m.TSLModel):
     """Test from_entrypoint method of OCRModel should `raise ValueError` if entrypoint is unknown."""
     with pytest.raises(ValueError, match=r'^Missing plugin: Entrypoint "test_entrypoint.tsl" not found.$'):
         m.TSLModel.from_entrypoint(tsl_model.name)
 
-@pytest.mark.django_db
 def test_valid_entrypoint(monkeypatch, box_model: m.OCRBoxModel):
     """Test that valid entrypoint works."""
     monkeypatch.setattr(
@@ -82,38 +79,37 @@ def test_valid_entrypoint(monkeypatch, box_model: m.OCRBoxModel):
     assert o.called
     assert o.called_name == box_model.name
 
-@pytest.mark.django_db
 def test_box_load_not_implemented(box_model: m.OCRBoxModel):
     """Test that load method raises NotImplementedError."""
     with pytest.raises(NotImplementedError):
         box_model.load()
 
-@pytest.mark.django_db
 def test_box_unload_not_implemented(box_model: m.OCRBoxModel):
     """Test that unload method raises NotImplementedError."""
     with pytest.raises(NotImplementedError):
         box_model.unload()
 
-@pytest.mark.django_db
 def test_ocr_non_pil_image(ocr_model: m.OCRModel):
     """Test that ocr method raises TypeError if image is not PIL.Image."""
     with pytest.raises(TypeError, match=r'^img should be PIL Image, but got <class \'str\'>$'):
         ocr_model.prepare_image('test_image')
 
-@pytest.mark.django_db
 def test_box_main_method_notimplemented(box_model: m.OCRBoxModel):
     """Test that ocr method raises TypeError if image is not PIL.Image."""
     with pytest.raises(NotImplementedError):
         box_model._box_detection('test_image') # pylint: disable=protected-access
 
-@pytest.mark.django_db
 def test_ocr_main_method_notimplemented(ocr_model: m.OCRModel):
     """Test that ocr method raises TypeError if image is not PIL.Image."""
     with pytest.raises(NotImplementedError):
         ocr_model._ocr('test_image') # pylint: disable=protected-access
 
-@pytest.mark.django_db
 def test_tsl_main_method_notimplemented(tsl_model: m.TSLModel):
     """Test that ocr method raises TypeError if image is not PIL.Image."""
     with pytest.raises(NotImplementedError):
         tsl_model._translate('src_text', 'src_lang', 'dst_lang') # pylint: disable=protected-access
+
+def test_box_get_lang_code(language, box_model: m.OCRBoxModel):
+    """Test that get_lang_code uses iso1_map value if available."""
+    res = box_model.get_lang_code(language)
+    assert res == 'jap'

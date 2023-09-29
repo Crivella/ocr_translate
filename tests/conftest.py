@@ -72,7 +72,10 @@ def box_model_dict():
     return {
         'name': 'test_box_model/id',
         'language_format': 'iso1',
-        'entrypoint': 'test_entrypoint.box'
+        'entrypoint': 'test_entrypoint.box',
+        'iso1_map': {
+            'ja': 'jap',
+        }
     }
 
 @pytest.fixture()
