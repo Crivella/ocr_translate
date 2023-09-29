@@ -110,6 +110,11 @@ def test_tsl_main_method_notimplemented(tsl_model: m.TSLModel):
         tsl_model._translate('src_text', 'src_lang', 'dst_lang') # pylint: disable=protected-access
 
 def test_box_get_lang_code(language, box_model: m.OCRBoxModel):
-    """Test that get_lang_code uses iso1_map value if available."""
+    """Test that get_lang_code uses iso1_map value available."""
     res = box_model.get_lang_code(language)
     assert res == 'jap'
+
+def test_box_get_lang_code_noisomap(language2, box_model: m.OCRBoxModel):
+    """Test that get_lang_code uses iso1_map value not available."""
+    res = box_model.get_lang_code(language2)
+    assert res == 'ja2'
