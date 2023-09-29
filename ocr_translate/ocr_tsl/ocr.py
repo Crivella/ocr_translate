@@ -45,6 +45,7 @@ def load_ocr_model(model_id: str):
     if OCR_MODEL_OBJ is not None:
         OCR_MODEL_OBJ.unload()
 
+    logger.info(f'Loading OCR model: {model_id}')
     model = m.OCRModel.from_entrypoint(model_id)
     model.load()
 
