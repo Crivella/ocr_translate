@@ -72,6 +72,7 @@ jobs:
 
       - name: Test install from TestPyPI
         run: >
+          sleep 10 &&
           pip install
           --index-url https://test.pypi.org/simple/
           --extra-index-url https://pypi.org/simple/
