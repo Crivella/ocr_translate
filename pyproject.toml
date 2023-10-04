@@ -57,6 +57,7 @@ tests = [
     "pytest",
     "pytest-cov",
     "pytest-django~=4.5.2",
+    "pytest-regressions~=2.4",
 ]
 pre-commit = [
     "pre-commit~=3.3.3",
