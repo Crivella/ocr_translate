@@ -19,11 +19,11 @@
 """Run the django migrations and start the server."""
 # pylint: disable=import-outside-toplevel
 
+import importlib
 import os
 from pathlib import Path
 
 import django
-import torch
 from django.core.management import call_command
 
 
@@ -41,11 +41,17 @@ def main():
         os.environ['DATABASE_NAME'] = str(home / '.ocr_translate' / 'db.sqlite3')
         home.mkdir(exist_ok=True, parents=True)
 
-    if not torch.cuda.is_available():
-        print('CUDA is not available, falling back to using CPU')
-        os.environ['DEVICE'] = 'cpu'
+    try:
+        importlib.import_module('torch')
+    except ModuleNotFoundError:
+        pass
     else:
-        os.environ.setdefault('DEVICE', 'cuda')
+        import torch
+        if not torch.cuda.is_available():
+            print('CUDA is not available, falling back to using CPU')
+            os.environ['DEVICE'] = 'cpu'
+        else:
+            os.environ.setdefault('DEVICE', 'cuda')
 
     django.setup()
 
