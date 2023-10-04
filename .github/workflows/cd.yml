@@ -75,7 +75,7 @@ jobs:
           pip install
           --index-url https://test.pypi.org/simple/
           --extra-index-url https://pypi.org/simple/
-          django-ocr_translate==${{ steps.get_version.outputs.VERSION }}}
+          django-ocr_translate==${{ steps.get_version.outputs.VERSION }}
 
       - name: Build and publish on PyPI
         run: >
