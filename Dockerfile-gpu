@@ -13,6 +13,7 @@ COPY .pip_cache-gpu /pip_cache
 RUN mkdir -p /pip_cache
 RUN /venv/bin/pip install -r /src/requirements-torch-cuda.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install -r /src/requirements.txt --cache-dir /pip_cache
+RUN /venv/bin/pip install -r /src/plugins.txt --cache-dir /pip_cache
 RUN /venv/bin/pip install gunicorn --cache-dir /pip_cache
 
 FROM python:3.10.12-slim-bookworm
