@@ -1,0 +1,97 @@
+name: cd
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+          path: ~/.cache/pip
+          key: pip-3.10-docs-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: pip-3.10
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+
+    - name: Install python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -e .[docs]
+
+    - name: Build HTML docs
+      id: linkcheck
+      run: |
+        make -C docs html
+
+    - name: Deploy docs to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: docs/build/html
+        force_orphan: true
+
+  cd-pypi:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+            python-version: "3.10"
+
+      - name: Install Python dependencies
+        run: pip install flit
+
+      - name: Build and publish on test PyPI
+        run: >
+          flit publish
+        env:
+          FLIT_INDEX_URL: https://test.pypi.org/legacy/
+          FLIT_USERNAME: __token__
+          FLIT_PASSWORD: ${{ secrets.TESTPYPI_KEY }}
+
+      - name: Get pypi version number
+        id: get_version
+        run: >
+          echo "VERSION=$(echo ${{ github.ref_name }} | cut -c2- )" >> $GITHUB_OUTPUT
+
+      - name: Test install from TestPyPI
+        run: >
+          pip install
+          --index-url https://test.pypi.org/simple/
+          --extra-index-url https://pypi.org/simple/
+          django-ocr_translate==${{ steps.get_version.outputs.VERSION }}}
+
+      - name: Build and publish on PyPI
+        run: >
+          flit publish
+        env:
+          FLIT_INDEX_URL: https://upload.pypi.org/legacy/
+          FLIT_USERNAME: __token__
+          FLIT_PASSWORD: ${{ secrets.PYPI_KEY }}
+
+  # cd-win-release:
+  #   runs-on: windows-latest
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v3
+  #       with:
+  #           python-version: "3.10"
