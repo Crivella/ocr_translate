@@ -117,8 +117,9 @@ def test_auto_create_languages():
     assert jap.default_options.options['break_chars'] is not None
     assert jap.default_options.options['break_chars'] is not None
 
-def test_auto_create_models_nolang():
+def test_auto_create_models_nolang(monkeypatch, mock_load_ept):
     """Test auto_create_models without creating languages before"""
+    monkeypatch.setattr(ocr_tsl.initializers, 'load_ept_data', mock_load_ept)
     with pytest.raises(m.Language.DoesNotExist):
         ocr_tsl.auto_create_models()
 
