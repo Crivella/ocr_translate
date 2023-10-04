@@ -45,6 +45,7 @@ def load_tsl_model(model_id):
     if TSL_MODEL_OBJ is not None:
         TSL_MODEL_OBJ.unload()
 
+    logger.info(f'Loading TSL model: {model_id}')
     model = m.TSLModel.from_entrypoint(model_id)
     model.load()
 
