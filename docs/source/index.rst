@@ -74,7 +74,7 @@ The server is designed to be used together with this browser `extension`_, actin
 .. toctree::
    :hidden:
 
-   running/index
    install/index
+   running/index
    user/index
    contrib/index
