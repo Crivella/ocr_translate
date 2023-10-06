@@ -1,16 +1,23 @@
-name: docs-build
+name: ci-docs
 
 on:
   push:
     branches:
       - master
-    paths: ['docs/**']
+    paths:
+      - "docs/**"
+      - "pyproject.toml"
+      - ".github/workflows/ci-docs.yml"
   pull_request:
     branches-ignore: [gh-pages]
-    paths: ['docs/**']
+    paths:
+      - "docs/**"
+      - "pyproject.toml"
+      - ".github/workflows/ci-docs.yml"
+  workflow_dispatch:
 
 jobs:
-  docs-build:
+  docs:
 
     runs-on: ubuntu-latest
     timeout-minutes: 30
