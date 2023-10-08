@@ -302,6 +302,7 @@ gun
 gut
 guy
 ham
+has
 hat
 her
 hit
