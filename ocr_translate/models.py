@@ -27,6 +27,7 @@ from PIL.Image import Image as PILImage
 
 from . import queues
 from .messaging import Message
+from .tries import get_trie_src
 
 logger = logging.getLogger('ocr.general')
 
@@ -304,7 +305,11 @@ class TSLModel(BaseModel):
     @staticmethod
     def pre_tokenize(
             text: str,
-            ignore_chars: str = None, break_chars: str = None, break_newlines: bool = False,
+            ignore_chars: str = None,
+            break_chars: str = None,
+            allowed_start_end: str = None,
+            break_newlines: bool = False,
+            restore_missing_spaces: bool = False,
             restore_dash_newlines: bool = False,
             **kwargs
             ) -> list[str]:
@@ -312,15 +317,39 @@ class TSLModel(BaseModel):
 
         Args:
             text (str): Text to tokenize.
+            lang (str): Language of the text.
             ignore_chars (str, optional): String of characters to ignore. Defaults to None.
             break_chars (str, optional): String of characters to break on. Defaults to None.
             break_newlines (bool, optional): Whether to break on newlines. Defaults to True.
+            restore_missing_spaces (bool, optional): Whether to restore missing spaces (2 word with no space between).
             restore_dash_newlines (bool, optional): Whether to restore dash-newlines (word broken with a -newline).
                 Defaults to False.
 
         Returns:
             list[str]: List of string tokens.
         """
+        orig_text = text
+        if allowed_start_end is not None:
+            rgx_start = re.compile(
+                '(?x)'
+                rf'^[^{allowed_start_end}]+\S?(?= )'
+                '|'
+                rf'^\S[^{allowed_start_end}](?= )'
+                )
+
+            rgx_end = re.compile(
+                '(?x)'
+                rf'(?<= )\S?[^{allowed_start_end}]+$'
+                '|'
+                rf'(?<= )[^{allowed_start_end}]\S$'
+                )
+
+            app = []
+            for split in text.split('\n'):
+                split = rgx_start.sub('', split)
+                split = rgx_end.sub('', split)
+                app.append(split)
+            text = '\n'.join(app)
         if restore_dash_newlines:
             text = re.sub(r'(?<!\n)- *\n', '', text)
         if ignore_chars is not None:
@@ -332,6 +361,18 @@ class TSLModel(BaseModel):
         else:
             text = text.replace('\n', ' ')
 
+        if restore_missing_spaces:
+            trie = get_trie_src()
+
+            res = [
+                trie.decompose(split, min_length=1)
+                if not trie.search(split, strict=False) else
+                [[split]]
+                for split in text.lower().split(' ')
+                ]
+            res = [' '.join(min(_, key=len)) for _ in filter(None, res)]
+            text = ' '.join(res)
+
         break_chars = re.escape(break_chars)
         tokens = text
         if len(break_chars) > 0:
@@ -341,6 +382,7 @@ class TSLModel(BaseModel):
             tokens = [text]
 
         res = list(filter(None, tokens))
+        logger.debug(f'Pre-tokenized "{orig_text}" to {res}')
         return res if len(res) > 0 else [' ']
 
 

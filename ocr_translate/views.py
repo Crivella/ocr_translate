@@ -39,6 +39,7 @@ from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
 from .ocr_tsl.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
 from .ocr_tsl.tsl import get_tsl_model, load_tsl_model, unload_tsl_model
 from .queues import main_queue as q
+from .tries import load_trie_dst, load_trie_src
 
 logger = logging.getLogger('ocr.general')
 
@@ -166,6 +167,8 @@ def set_lang(request: HttpRequest) -> JsonResponse:
     try:
         load_lang_src(lang_src)
         load_lang_dst(lang_dst)
+        load_trie_src(lang_src)
+        load_trie_dst(lang_dst)
     except Exception as exc:
         return JsonResponse({'error': str(exc)}, status=400)
     new_src = get_lang_src()

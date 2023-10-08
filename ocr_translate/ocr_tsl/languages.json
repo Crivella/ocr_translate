@@ -350,7 +350,8 @@
         "tesseract": "eng",
         "facebookM2M": "en",
         "default_options": {
-            "break_chars": "!?.",
+            "restore_missing_spaces": true,
+            "allowed_start_end": "a-zA-Z0-9\\-\\.\\,\\;\\?\\! ",
             "restore_dash_newlines": true
         }
     },

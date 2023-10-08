@@ -24,6 +24,7 @@ import pytest
 from PIL.Image import Image as PILImage
 
 from ocr_translate import models as m
+from ocr_translate import tries
 from ocr_translate.messaging import Message
 from ocr_translate.ocr_tsl import box, full, ocr, tsl
 
@@ -213,6 +214,18 @@ def test_tsl_pre_tokenize(data_regression, string: str):
         res.append(dct)
 
     data_regression.check({'res': res})
+
+def test_tsl_pre_tokenize_restorespaces(monkeypatch):
+    """Test pre_tokenize with restore spaces."""
+    monkeypatch.setattr(tries, 'TRIE_SRC', None)
+    tries.load_trie_src('en')
+    res = m.TSLModel.pre_tokenize('applepie', lang='en', restore_missing_spaces=True)
+    assert res == ['apple pie']
+
+def test_tsl_pre_tokenize_restorespaces_notrie():
+    """Test pre_tokenize with restore spaces."""
+    with pytest.raises(AttributeError):
+        m.TSLModel.pre_tokenize('applepie', lang='', restore_missing_spaces=True)
 
 def test_tsl_run(
         monkeypatch, mock_called,

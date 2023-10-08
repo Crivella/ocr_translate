@@ -19,8 +19,8 @@
 """Initialize the server based on environment variables."""
 import json
 import logging
+from importlib import resources
 from importlib.metadata import entry_points
-from pathlib import Path
 
 from django.db.models import Count
 
@@ -55,9 +55,7 @@ def init_most_used():
 
 def auto_create_languages():
     """Create Language objects from json file."""
-    cwd = Path(__file__).parent
-    with open(cwd / 'languages.json', encoding='utf-8') as f:
-        langs = json.load(f)
+    langs = json.load(resources.files('ocr_translate.ocr_tsl').joinpath('languages.json').open(encoding='utf-8'))
 
     for lang in langs:
         logger.debug(f'Creating language: {lang}')
