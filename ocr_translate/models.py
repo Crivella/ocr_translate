@@ -370,7 +370,12 @@ class TSLModel(BaseModel):
                 [[split]]
                 for split in text.lower().split(' ')
                 ]
-            res = [' '.join(min(_, key=len)) for _ in filter(None, res)]
+
+            # Use a list of word frequencies to determine the best split
+            def sum_freq(lst: list) -> float:
+                return sum(trie.get_freq(w) for w in lst) / len(lst)**1.5
+
+            res = [' '.join(max(_, key=sum_freq)) for _ in filter(None, res)]
             text = ' '.join(res)
 
         break_chars = re.escape(break_chars)

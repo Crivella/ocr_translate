@@ -23,6 +23,7 @@ class TrieNode:
     def __init__(self):
         self.children = {}
         self.is_word = False
+        self.freq = 0.0
 
     def __str__(self) -> str:
         return f'TrieNode(childs: {list(self.children.keys())}, is_word: {self.is_word})'
@@ -33,7 +34,7 @@ class Trie:
         self.root = TrieNode()
         self.charset = set()
 
-    def insert(self, word: str) -> None:
+    def insert(self, word: str, freq: float = 0.0) -> None:
         """Insert a word in the Trie."""
         self.charset.update(word)
 
@@ -43,6 +44,7 @@ class Trie:
             node = node.children.setdefault(char, TrieNode())
 
         node.is_word = True
+        node.freq = freq
 
     def search(self, word: str, strict: bool = False) -> bool:
         """Search a word in the Trie.
@@ -68,7 +70,32 @@ class Trie:
 
             node = node.children[char]
 
+        if node is self.root and not strict:
+            return True
+
         return node.is_word
+
+    def get_freq(self, word: str) -> float:
+        """Return the frequency of a word in the Trie.
+
+        Args:
+            word (str): Word to search.
+
+        Returns:
+            float: Frequency of the word in the Trie.
+        """
+        node = self.root
+
+        for char in word:
+            if char not in node.children:
+                return 0.0
+
+            node = node.children[char]
+
+        if not node.is_word:
+            return 0.0
+
+        return node.freq
 
     def autocomplete(self, prefix: str) -> list[str]:
         """Autocomplete a prefix.
@@ -87,7 +114,11 @@ class Trie:
 
             node = node.children[char]
 
-        return self._autocomplete(node, prefix)
+        res = self._autocomplete(node, prefix)
+
+        res.sort(key=self.get_freq, reverse=True)
+
+        return res
 
     def _autocomplete(self, node: TrieNode, prefix: str) -> list[str]:
         """Internal function to autocomplete a prefix.
@@ -111,6 +142,7 @@ class Trie:
 
     def decompose(self, word: str, min_length: int = 3) -> list[list[str]]:
         """Fing all combinations of existing words that make up the given word.
+        E.G: "thisissparta" (min_length=2) -> [['this', 'is', 'spar', 'ta'], ['this', 'is', 'sparta']]
 
         Args:
             word (str): Word to decompose.

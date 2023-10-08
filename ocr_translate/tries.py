@@ -17,14 +17,14 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Manages the globaly selected source and destination language tries."""
-
+import json
 import logging
 from importlib import resources
 
 from .trie import Trie
 
 TRIE_SRC = None
-TRIE_DST = None
+# TRIE_DST = None
 
 logger = logging.getLogger('ocr.general')
 
@@ -32,35 +32,38 @@ def get_trie_src():
     """Return the source language trie."""
     return TRIE_SRC
 
-def get_trie_dst():
-    """Return the destination language trie."""
-    return TRIE_DST
+# def get_trie_dst():
+#     """Return the destination language trie."""
+#     return TRIE_DST
+
+def load_trie(iso1: str) -> Trie | None:
+    """Load a trie."""
+    trie_file = resources.files('ocr_translate.dictionaries').joinpath(f'{iso1}.txt')
+    freq_file = resources.files('ocr_translate.dictionaries').joinpath(f'{iso1}_freq.json')
+
+    if not trie_file.exists():
+        logger.debug(f'No source language trie found: {iso1}')
+        return None
+
+    with freq_file.open(encoding='utf-8') as f:
+        freq = json.load(f)
+
+    logger.info(f'Loading source language trie: {iso1}')
+    res = Trie()
+    with trie_file.open(encoding='utf-8') as f:
+        for word in f.read().splitlines():
+            res.insert(word, freq.get(word, -1e-4))
+
+    return res
 
 def load_trie_src(iso1: str) -> None:
     """Load the source language trie."""
     global TRIE_SRC
-    file = resources.files('ocr_translate.dictionaries').joinpath(f'{iso1}.txt')
 
-    if not file.exists():
-        logger.debug(f'No source language trie found: {iso1}')
-        TRIE_SRC = None
-    else:
-        logger.info(f'Loading source language trie: {iso1}')
-        TRIE_SRC = Trie()
-        with file.open(encoding='utf-8') as f:
-            for word in f.read().splitlines():
-                TRIE_SRC.insert(word)
+    TRIE_SRC = load_trie(iso1)
 
-def load_trie_dst(iso1: str) -> None:
-    """Load the destination language trie."""
-    global TRIE_DST
-    file = resources.files('ocr_translate.dictionaries').joinpath(f'{iso1}.txt')
-    if not file.exists():
-        logger.debug(f'No destination language trie found: {iso1}')
-        TRIE_DST = None
-    else:
-        logger.info(f'Loading destination language trie: {iso1}')
-        TRIE_DST = Trie()
-        with file.open(encoding='utf-8') as f:
-            for word in f.read().splitlines():
-                TRIE_DST.insert(word)
+# def load_trie_dst(iso1: str) -> None:
+#     """Load the destination language trie."""
+#     global TRIE_DST
+
+#     TRIE_DST = load_trie(iso1)
