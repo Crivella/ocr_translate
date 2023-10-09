@@ -341,6 +341,7 @@ nil
 nim
 nop
 now
+not
 nun
 oak
 odd

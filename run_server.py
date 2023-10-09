@@ -63,7 +63,8 @@ def main():
 
     auto_create_languages()
     auto_create_models()
-    init_most_used()
+    if os.getenv('LOAD_ON_START', 'false') == 'true':
+        init_most_used()
 
     call_command('runserver', '--noreload', '4000')
 
