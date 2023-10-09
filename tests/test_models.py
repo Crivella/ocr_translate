@@ -24,8 +24,10 @@ import pytest
 from PIL.Image import Image as PILImage
 
 from ocr_translate import models as m
+from ocr_translate import tries
 from ocr_translate.messaging import Message
 from ocr_translate.ocr_tsl import box, full, ocr, tsl
+from ocr_translate.trie import Trie
 
 pytestmark = pytest.mark.django_db
 
@@ -213,6 +215,35 @@ def test_tsl_pre_tokenize(data_regression, string: str):
         res.append(dct)
 
     data_regression.check({'res': res})
+
+@pytest.mark.parametrize('extra_start', ['$', '$%n', 'n$', 'n$$'])
+def test_tsl_pre_tokenize_allowed_start(extra_start):
+    """Test pre_tokenize with allowed_start_end."""
+    pret = m.TSLModel.pre_tokenize
+    res = pret(extra_start + ' ' + 'apple', allowed_start_end='a-zA-Z0-9\\-\\.\\,\\;\\?\\! ')
+    assert res[0].strip() == 'apple'
+
+@pytest.mark.parametrize('extra_end', ['$', '$%n', 'n$', 'n$$'])
+def test_tsl_pre_tokenize_allowed_end(extra_end):
+    """Test pre_tokenize with allowed_start_end."""
+    pret = m.TSLModel.pre_tokenize
+    res = pret('apple' + ' ' + extra_end, allowed_start_end='a-zA-Z0-9\\-\\.\\,\\;\\?\\! ')
+    assert res[0].strip() == 'apple'
+
+def test_tsl_pre_tokenize_restorespaces(monkeypatch):
+    """Test pre_tokenize with restore spaces."""
+    trie = Trie()
+    trie.insert('app')
+    trie.insert('apple')
+    trie.insert('pie')
+    monkeypatch.setattr(tries, 'TRIE_SRC', trie)
+    res = m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
+    assert res == ['apple pie']
+
+def test_tsl_pre_tokenize_restorespaces_notrie():
+    """Test pre_tokenize with restore spaces."""
+    with pytest.raises(AttributeError):
+        m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
 
 def test_tsl_run(
         monkeypatch, mock_called,
