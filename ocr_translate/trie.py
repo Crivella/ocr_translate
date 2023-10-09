@@ -28,6 +28,12 @@ class TrieNode:
     def __str__(self) -> str:
         return f'TrieNode(childs: {list(self.children.keys())}, is_word: {self.is_word})'
 
+    def __getitem__(self, key: str) -> 'TrieNode':
+        return self.children.get(key, None)
+
+    def __setitem__(self, key: str, value: 'TrieNode') -> None:
+        self.children[key] = value
+
 class Trie:
     """Trie data structure."""
     def __init__(self):

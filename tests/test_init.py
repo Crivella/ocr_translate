@@ -23,7 +23,7 @@ import importlib
 import pytest
 
 from ocr_translate import models as m
-from ocr_translate import ocr_tsl
+from ocr_translate import ocr_tsl, tries
 from ocr_translate.ocr_tsl import box, lang, ocr, tsl
 
 pytestmark = pytest.mark.django_db
@@ -117,6 +117,29 @@ def test_auto_create_languages():
     assert jap.default_options.options['break_chars'] is not None
     assert jap.default_options.options['break_chars'] is not None
 
+def test_load_ept_data(monkeypatch):
+    """Test load_ept_data function."""
+    def mock_entrypoints(*, group):
+        assert group == '123'
+        class Ept:
+            """Mock entrypoint"""
+            def load(self):
+                """Mock entrypoint loader"""
+                return {'i am': 'an entrypoint'}
+
+        return Ept(), Ept()
+
+    monkeypatch.setattr(ocr_tsl.initializers, 'entry_points', mock_entrypoints)
+
+    ept1, ept2 = ocr_tsl.initializers.load_ept_data('123') # pylint: disable=unbalanced-tuple-unpacking
+    assert ept1['i am'] == 'an entrypoint'
+    assert ept2['i am'] == 'an entrypoint'
+    ept1.pop('i am')
+
+    assert 'i am' not in ept1
+    assert 'i am' in ept2
+
+
 def test_auto_create_models_nolang(monkeypatch, mock_load_ept):
     """Test auto_create_models without creating languages before"""
     monkeypatch.setattr(ocr_tsl.initializers, 'load_ept_data', mock_load_ept)
@@ -206,3 +229,31 @@ def test_env_auto_create_models_false(monkeypatch):
 
     importlib.reload(ocr_tsl)
     assert not hasattr(mock_auto_create_models, 'called')
+
+def test_no_load_trie():
+    """Test that the trie is not loaded when LOAD_TRIE is 'false'."""
+    assert tries.TRIE_SRC is None
+    assert tries.get_trie_src() is None
+
+def test_load_trie_unkwnown():
+    """Test that the trie is not loaded when LOAD_TRIE is not 'true' or 'false'."""
+    res = tries.load_trie('unknown')
+    assert res is None
+
+def test_load_trie(monkeypatch):
+    """Test that the trie is loaded properly."""
+    monkeypatch.setattr(tries, 'TRIE_SRC', None)
+    tries.load_trie_src('test')
+    assert tries.TRIE_SRC is not None
+
+    trie = tries.get_trie_src()
+    assert trie is not None
+
+    assert trie.search('ab') is True
+    assert trie.search('cd') is True
+    assert trie.search('abc') is False
+
+    assert trie.get_freq('a') == 0.1
+    assert trie.get_freq('b') == 0.2
+    assert trie.get_freq('c') == 0.3
+    assert trie.get_freq('ab') == -1e-4
