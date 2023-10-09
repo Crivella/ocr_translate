@@ -240,11 +240,6 @@ def test_tsl_pre_tokenize_restorespaces(monkeypatch):
     res = m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
     assert res == ['apple pie']
 
-def test_tsl_pre_tokenize_restorespaces_notrie():
-    """Test pre_tokenize with restore spaces."""
-    with pytest.raises(AttributeError):
-        m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
-
 def test_tsl_run(
         monkeypatch, mock_called,
         text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict

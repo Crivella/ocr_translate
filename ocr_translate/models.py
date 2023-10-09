@@ -361,9 +361,7 @@ class TSLModel(BaseModel):
         else:
             text = text.replace('\n', ' ')
 
-        if restore_missing_spaces:
-            trie = get_trie_src()
-
+        if restore_missing_spaces and not (trie := get_trie_src()) is None:
             res = [
                 trie.decompose(split, min_length=1)
                 if not trie.search(split, strict=False) else

@@ -2,6 +2,11 @@
 
 List of changes between versions
 
+## 0.3.2
+
+restore_missing_spaces with no trie (None for that language) was causing exceptions.
+Now the server will skip this step if the trie for the selected language is not found.
+
 ## 0.3.1
 
 Removed runaway print statements
