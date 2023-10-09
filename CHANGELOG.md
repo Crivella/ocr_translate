@@ -2,6 +2,19 @@
 
 List of changes between versions
 
+## 0.3.1
+
+Removed runaway print statements
+
+## 0.3.0
+
+- All feature for box/ocr/tsl have been moved to plugins in separate packages
+- Improved pre-parsing of OCRed text for languages with latin alphabet
+  - Introduced a way to remove ghost carachter generated at the begin/end of every string
+  - Introduced Trie capability
+    - Can use trie to detect if an incorrect work ("helloworld") should be split into multiple valid words (["hello", "world"])
+  - Added English word list/freq file.
+
 ## 0.2.1
 
 Plugins can now be used to also add models to the database via the following entrypoints:

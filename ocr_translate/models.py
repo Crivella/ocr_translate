@@ -361,7 +361,6 @@ class TSLModel(BaseModel):
         else:
             text = text.replace('\n', ' ')
 
-        print(f'"{text}"')
         if restore_missing_spaces:
             trie = get_trie_src()
 
@@ -378,8 +377,6 @@ class TSLModel(BaseModel):
 
             res = [' '.join(max(_, key=sum_freq)) for _ in filter(None, res)]
             text = ' '.join(res)
-
-        print(f'"{text}"')
 
         break_chars = re.escape(break_chars)
         tokens = text
