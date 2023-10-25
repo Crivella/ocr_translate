@@ -33,12 +33,12 @@ def main():
     os.environ.setdefault('DJANGO_DEBUG', 'True')
     os.environ.setdefault('DJANGO_LOG_LEVEL', 'INFO')
 
-    home = Path.home()
+    home = Path.home()  / '.ocr_translate'
     if not 'TRANSFORMERS_CACHE' in os.environ:
-        os.environ['TRANSFORMERS_CACHE'] = str(home / '.ocr_translate')
+        os.environ['TRANSFORMERS_CACHE'] = str(home)
         home.mkdir(exist_ok=True, parents=True)
     if not 'DATABASE_NAME' in os.environ:
-        os.environ['DATABASE_NAME'] = str(home / '.ocr_translate' / 'db.sqlite3')
+        os.environ['DATABASE_NAME'] = str(home / 'db.sqlite3')
         home.mkdir(exist_ok=True, parents=True)
 
     try:
