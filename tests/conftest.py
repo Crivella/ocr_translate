@@ -162,7 +162,7 @@ def box_run(language, image, box_model, option_dict):
 @pytest.fixture()
 def bbox(image, box_run):
     """BBox database object."""
-    return m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4, from_ocr=box_run)
+    return m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4, from_ocr_merged=box_run)
 
 @pytest.fixture()
 def ocr_run(language, bbox, ocr_model, option_dict, text):

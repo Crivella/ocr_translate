@@ -73,16 +73,18 @@ def test_box_run(
 
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
-        return [lbrt]
+        return [lbrt], [lbrt]
 
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     box_model._box_detection = mock_pipeline
 
-    res = box_model.box_detection(image, language, image=1, options=option_dict)
+    single, merged = box_model.box_detection(image, language, image=1, options=option_dict)
 
-    assert isinstance(res, list)
-    assert isinstance(res[0], m.BBox)
-    assert res[0].lbrt == lbrt
+    assert isinstance(single, list)
+    assert isinstance(merged, list)
+    assert isinstance(single[0], m.BBox)
+    assert isinstance(merged[0], m.BBox)
+    assert merged[0].lbrt == lbrt
 
 def test_box_run_reuse(
         monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict
@@ -90,7 +92,7 @@ def test_box_run_reuse(
     """Test adding a new BoxRun"""
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
-        return [lbrt]
+        return [lbrt], [lbrt]
 
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     box_model._box_detection = mock_pipeline
@@ -119,7 +121,7 @@ def test_ocr_run_nooption(
 
     assert isinstance(res, m.Text)
     assert res.text == text
-    assert res.from_ocr.first().options.options == {}
+    assert res.from_ocr_merged.first().options.options == {}
 
 def test_ocr_run_noimage(
         monkeypatch,
@@ -311,7 +313,7 @@ def test_ocr_tsl_work_plus_lazy(
         ):
     """Test performin an ocr_tsl_run non-lazy"""
     def mock_box_run(*args, **kwargs):
-        return [bbox]
+        return [bbox], [bbox]
     def mock_ocr_run(*args, block=True, **kwargs):
         if not block:
             yield
