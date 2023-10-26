@@ -46,7 +46,8 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = None) -> list[dict]:
         img_obj= m.Image.objects.get(md5=md5)
     except m.Image.DoesNotExist as exc:
         raise ValueError(f'Image with md5 {md5} does not exist') from exc
-    bbox_obj_list = box_model.box_detection(img_obj, get_lang_src())
+    _, bbox_obj_list = box_model.box_detection(img_obj, get_lang_src())
+
     for bbox_obj in bbox_obj_list:
         text_obj = ocr_model.ocr(bbox_obj, get_lang_src())
         text_obj = next(text_obj)
@@ -69,7 +70,7 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = None) -> list[dict]:
 # This is already kinda lazy, but the idea for the lazy version is to
 # check if all results are available just with the md5, and if not,
 # ask the extension to send the binary to minimize traffic
-def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, options: dict = None) -> list[dict]:
+def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, options: dict = None) -> list[dict]: # pylint: disable=too-many-locals
     """
     Generate response from md5 and binary.
     Will attempt to behave lazily at every step unless force is True.
@@ -77,6 +78,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     box_model = get_box_model()
     ocr_model = get_ocr_model()
     tsl_model = get_tsl_model()
+    lang_src = get_lang_src()
 
     if options is None:
         options = {}
@@ -84,17 +86,46 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     res = []
 
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
-    bbox_obj_list = box_model.box_detection(img_obj, get_lang_src() ,image=img)
+    bbox_obj_list_single, bbox_obj_lis_merged = box_model.box_detection(img_obj, lang_src ,image=img)
+
+    bbox_obj_list = bbox_obj_lis_merged
+    if ocr_model.ocr_mode == ocr_model.SINGLE:
+        bbox_obj_list = bbox_obj_list_single
 
     texts = []
     for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
 
-        text_obj = ocr_model.ocr(bbox_obj, get_lang_src(), image=img, force=force, block=False)
+        text_obj = ocr_model.ocr(bbox_obj, lang_src, image=img, force=force, block=False)
         next(text_obj)
         texts.append(text_obj)
 
     texts = [next(_) for _ in texts]
+    # If OCR is running in single element mode, must merge the results and pretend runs on the merged
+    # bounding boxes were done with the merged text as outputs
+    if ocr_model.ocr_mode == ocr_model.SINGLE:
+        logger.debug(f'OCR DONE (single): {texts}')
+        str_list = [_.text for _ in texts]
+        lbrt_list_single = [_.lbrt for _ in bbox_obj_list_single]
+        lbrt_list_merged = [_.lbrt for _ in bbox_obj_lis_merged]
+
+        merged_text = ocr_model.merge_single_result(str_list, lbrt_list_single, lbrt_list_merged)
+        for text, bbox_obj in zip(merged_text, bbox_obj_lis_merged):
+            text_obj, _ = m.Text.objects.get_or_create(text=text)
+            params = {
+                'bbox': bbox_obj,
+                'model': ocr_model,
+                'lang': lang_src,
+                'options': m.OptionDict.objects.get(options=options),
+                'result_merged': text_obj
+            }
+            merged_run = m.OCRRun.objects.create(**params)
+
+            logger.debug(f'OCR DONE (mock_merged): {text}')
+
+        # Pretend the current texts are the merged ones
+        texts = list(merged_run.result_merged.all())
+
     logger.debug(f'OCR DONE: {texts}')
 
     trans = []
