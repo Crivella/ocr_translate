@@ -1,0 +1,3 @@
+- Implement function to merge output of single OCR runs
+- TEST extensively both with single-only and also merged-capable models in single mode
+- Add tests
