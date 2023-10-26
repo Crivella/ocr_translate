@@ -117,8 +117,15 @@ class OCRModel(BaseModel):
     entrypoint_namespace = 'ocr_translate.ocr_models'
     # iso1 code for languages that do not use spaces to separate words
     NO_SPACE_LANGUAGES = ['ja', 'zh', 'lo', 'my']
+    SINGLE='single'
+    MERGED='merged'
+    OCR_MODE_CHOICES = [
+        (SINGLE, 'Single'),
+        (MERGED, 'Merged'),
+    ]
 
     languages = models.ManyToManyField(Language, related_name='ocr_models')
+    ocr_mode = models.CharField(max_length=32, choices=OCR_MODE_CHOICES, default=MERGED)
 
     def prepare_image(
             self,
@@ -133,6 +140,24 @@ class OCRModel(BaseModel):
             img = img.crop(bbox)
 
         return img
+
+    @staticmethod
+    def merge_single_result(
+        texts: list[str],
+        bboxes_single: list[tuple[int, int, int, int]],
+        bboxes_merged: list[tuple[int, int, int, int]],
+        ) -> str:
+        """Merge the results of an OCR run on the single components of a detected bounding box.
+        Will try to understand if the text is horizontal or vertical and merge accordingly.
+
+        Args:
+            texts (list[str]): List of texts for each component.
+            bboxes_single (list[tuple[int, int, int, int]]): List of single bounding boxes in lbrt format.
+            bboxes_merged (list[tuple[int, int, int, int]]): List of merged bounding boxes in lbrt format.
+
+        Returns:
+            str: The merged text.
+        """
 
     def _ocr(
             self,
@@ -204,14 +229,14 @@ class OCRModel(BaseModel):
             text_obj, _ = Text.objects.get_or_create(
                 text=text,
                 )
-            params['result'] = text_obj
+            params[f'result_{self.ocr_mode}'] = text_obj
             ocr_run_obj = OCRRun.objects.create(**params)
         else:
             if not block:
                 # Both branches should have the same number of yields
                 yield None
             logger.info(f'Reusing OCR <{ocr_run_obj.id}>')
-            text_obj = ocr_run_obj.result
+            text_obj = ocr_run_obj.result_merged
             # text = ocr_run.result.text
 
         yield text_obj
@@ -227,11 +252,14 @@ class OCRBoxModel(BaseModel):
     def _box_detection(
             self,
             image: PILImage, options: dict = None
-            ) -> list[tuple[int, int, int, int]]:
-        """Placeholder method for performing box detection. To be implemented via entrypoint"""
+            ) -> tuple[list[tuple[int, int, int, int]], list[tuple[int, int, int, int]]]:
+        """Placeholder method for performing box detection. To be implemented via entrypoint
+        The first list of tuples is expected to be the bounding boxes of the non-merged components.
+        The second list of tuples is expected to be the bounding boxes of the merged components.
+        """
         raise NotImplementedError('The base model class does not implement this method.')
 
-    def box_detection(
+    def box_detection( # pylint: disable=too-many-locals
             self,
             img_obj: 'Image', lang: 'Language', image: PILImage = None,
             force: bool = False, options: 'OptionDict' = None
@@ -275,24 +303,32 @@ class OCRBoxModel(BaseModel):
                     'kwargs': {'options': opt_dct},
                 },
             )
-            bboxes = bboxes.response()
+            bboxes_single, bboxes_merged = bboxes.response()
             # Create it here to avoid having a failed entry in DB
             bbox_run = OCRBoxRun.objects.create(**params)
-            for bbox in bboxes:
+            for bbox in bboxes_single:
                 l,b,r,t = bbox
                 BBox.objects.create(
-                    l=l,
-                    b=b,
-                    r=r,
-                    t=t,
+                    l=l, b=b, r=r, t=t,
                     image=img_obj,
-                    from_ocr=bbox_run,
+                    from_ocr_single=bbox_run,
+                    )
+            for bbox in bboxes_merged:
+                l,b,r,t = bbox
+                BBox.objects.create(
+                    l=l, b=b, r=r, t=t,
+                    image=img_obj,
+                    from_ocr_merged=bbox_run,
                     )
         else:
             logger.info(f'Reusing BBox OCR <{bbox_run.id}>')
-        logger.info(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
 
-        return list(bbox_run.result.all())
+        res_single = list(bbox_run.result_single.all())
+        res_merged = list(bbox_run.result_merged.all())
+        logger.debug(f'BBox OCR result: {len(res_single)} single boxes')
+        logger.info(f'BBox OCR result: {len(res_merged)} merged boxes')
+
+        return res_single, res_merged
 
 
 class TSLModel(BaseModel):
@@ -482,7 +518,14 @@ class BBox(models.Model):
     t = models.IntegerField(null=False)
 
     image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='bboxes')
-    from_ocr = models.ForeignKey('OCRBoxRun', on_delete=models.CASCADE, related_name='result')
+    from_ocr_single = models.ForeignKey(
+        'OCRBoxRun', on_delete=models.CASCADE, related_name='result_single',
+        default=None, null=True
+        )
+    from_ocr_merged = models.ForeignKey(
+        'OCRBoxRun', on_delete=models.CASCADE, related_name='result_merged',
+        default=None, null=True
+        )
 
     @property
     def lbrt(self):
@@ -516,7 +559,11 @@ class OCRRun(models.Model):
     # image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='to_ocr')
     bbox = models.ForeignKey(BBox, on_delete=models.CASCADE, related_name='to_ocr')
     model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='ocr_runs')
-    result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr')
+    result_single = models.ForeignKey(
+        Text, on_delete=models.CASCADE, related_name='from_ocr_single',
+        default=None, null=True
+        )
+    result_merged = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr_merged')
 
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""
