@@ -73,7 +73,7 @@ def test_box_run(
 
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
-        return [lbrt], [lbrt]
+        return [{'single': [lbrt], 'merged': lbrt}]
 
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     box_model._box_detection = mock_pipeline
@@ -92,7 +92,7 @@ def test_box_run_reuse(
     """Test adding a new BoxRun"""
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
-        return [lbrt], [lbrt]
+        return [{'single': [lbrt], 'merged': lbrt}]
 
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     box_model._box_detection = mock_pipeline

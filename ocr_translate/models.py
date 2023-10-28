@@ -20,7 +20,7 @@
 import logging
 import re
 from importlib.metadata import entry_points
-from typing import Generator, Type, Union
+from typing import Generator, Type, TypedDict, Union
 
 from django.db import models
 from PIL.Image import Image as PILImage
@@ -163,7 +163,24 @@ class OCRModel(BaseModel):
             self,
             img: PILImage, lang: str = None, options: dict = None
             ) -> str:
-        """Placeholder method for performing OCR. To be implemented via entrypoint"""
+        """Perform OCR on an image.
+
+        Args:
+            img (Image.Image):  A Pillow image on which to perform OCR.
+            lang (str, optional): The language to use for OCR. (Not every model will use this)
+            bbox (tuple[int, int, int, int], optional): The bounding box of the text on the image in lbrt format.
+            options (dict, optional): A dictionary of options to pass to the OCR model.
+
+        Raises:
+            TypeError: If img is not a Pillow image.
+
+        Returns:
+            str: The text extracted from the image.
+        """
+        # Redefine this method with the same signature as above
+        # Should return a sring with the result of the OCR performed on the input PILImage.
+        # Unless the methods `prepare_image` or `ocr` are also being overwritten, the input image will be the
+        #  result of the CROP on the original image using the bounding boxes given by the box detection model.
         raise NotImplementedError('The base model class does not implement this method.')
 
     def ocr(
@@ -171,7 +188,7 @@ class OCRModel(BaseModel):
             bbox_obj: 'BBox', lang: 'Language',  image: PILImage = None, options: 'OptionDict' = None,
             force: bool = False, block: bool = True,
             ) -> Generator[Union[Message, 'Text'], None, None]:
-        """High level function to perform OCR on an image.
+        """PLACEHOLDER (to be implemented via entrypoint): High level function to perform OCR on an image.
 
         Args:
             bbox_obj (m.BBox): The BBox object from the database.
@@ -242,6 +259,11 @@ class OCRModel(BaseModel):
         yield text_obj
 
 
+class BoxDetectionResult(TypedDict):
+    """Type for the result of the box detection"""
+    single: list[tuple[int, int, int, int]]
+    merged: tuple[int, int, int, int]
+
 class OCRBoxModel(BaseModel):
     """OCR model for bounding boxes"""
     #pylint: disable=abstract-method
@@ -252,11 +274,26 @@ class OCRBoxModel(BaseModel):
     def _box_detection(
             self,
             image: PILImage, options: dict = None
-            ) -> tuple[list[tuple[int, int, int, int]], list[tuple[int, int, int, int]]]:
-        """Placeholder method for performing box detection. To be implemented via entrypoint
-        The first list of tuples is expected to be the bounding boxes of the non-merged components.
-        The second list of tuples is expected to be the bounding boxes of the merged components.
+            ) -> list[BoxDetectionResult]:
+        """PLACEHOLDER (to be implemented via entrypoint): Perform box OCR on an image.
+        Returns list of bounding boxes as dicts:
+            - merged: The merged BBox as a tuple[int, int, int, int]
+            - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]
+
+        Args:
+            image (Image.Image): A Pillow image on which to perform OCR.
+            options (dict, optional): A dictionary of options.
+
+        Raises:
+            NotImplementedError: The type of model specified is not implemented.
+
+        Returns:
+            list[BoxDetectionResult]: List of dictionary with key/value pairs:
+              - merged: The merged BBox as a tuple[int, int, int, int]
+              - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]
         """
+        # Redefine this method with the same signature as above
+        # Should return a list of `lrbt` boxes after processing the input PILImage
         raise NotImplementedError('The base model class does not implement this method.')
 
     def box_detection( # pylint: disable=too-many-locals
@@ -303,23 +340,26 @@ class OCRBoxModel(BaseModel):
                     'kwargs': {'options': opt_dct},
                 },
             )
-            bboxes_single, bboxes_merged = bboxes.response()
+            # bboxes_single, bboxes_merged = bboxes.response()
+            bboxes_list = bboxes.response()
             # Create it here to avoid having a failed entry in DB
             bbox_run = OCRBoxRun.objects.create(**params)
-            for bbox in bboxes_single:
-                l,b,r,t = bbox
-                BBox.objects.create(
-                    l=l, b=b, r=r, t=t,
-                    image=img_obj,
-                    from_ocr_single=bbox_run,
-                    )
-            for bbox in bboxes_merged:
-                l,b,r,t = bbox
-                BBox.objects.create(
+            for dct in bboxes_list:
+                merged = dct['merged']
+                l,b,r,t = merged
+                bbox_merged_obj = BBox.objects.create(
                     l=l, b=b, r=r, t=t,
                     image=img_obj,
                     from_ocr_merged=bbox_run,
                     )
+                for bbox in dct['single']:
+                    l,b,r,t = bbox
+                    BBox.objects.create(
+                        l=l, b=b, r=r, t=t,
+                        image=img_obj,
+                        from_ocr_single=bbox_run,
+                        to_merged=bbox_merged_obj,
+                        )
         else:
             logger.info(f'Reusing BBox OCR <{bbox_run.id}>')
 
@@ -425,8 +465,31 @@ class TSLModel(BaseModel):
         return res if len(res) > 0 else [' ']
 
 
-    def _translate(self, tokens: list, src_lang: str, dst_lang: str, options: dict = None) -> str | list[str]:
-        """Placeholder method for translating a text. To be implemented via entrypoint"""
+    def _translate(
+            self,
+            tokens: list, src_lang: str, dst_lang: str, options: dict = None) -> str | list[str]:
+        """PLACEHOLDER (to be implemented via entrypoint): Translate a text using a the loaded model.
+
+        Args:
+            tokens (list): list or list[list] of string tokens to be translated.
+            lang_src (str): Source language.
+            lang_dst (str): Destination language.
+            options (dict, optional): Options for the translation. Defaults to {}.
+
+        Raises:
+            TypeError: If text is not a string or a list of strings.
+
+        Returns:
+            Union[str,list[str]]: Translated text. If text is a list, returns a list of translated strings.
+        """
+        # Redefine this method with the same signature as above
+        # Should return a sring with the translated text.
+        # IMPORTANT: the main codebase treats this function as batchable:
+        # The input `tokens` can be a list of strings or a list of list of strings. The output should match the input
+        #   being a string or list of strings.
+        # (This is used to leverage the capability of pytorch to batch inputs and outputs for faster performances,
+        #   or it can also used to write a plugin for an online service by using a single request for multiple inputs
+        #   using some separator that the service will leave unaltered.)
         raise NotImplementedError('The base model class does not implement this method.')
 
     def translate(
@@ -524,6 +587,10 @@ class BBox(models.Model):
         )
     from_ocr_merged = models.ForeignKey(
         'OCRBoxRun', on_delete=models.CASCADE, related_name='result_merged',
+        default=None, null=True
+        )
+    to_merged = models.ForeignKey(
+        'BBox', on_delete=models.CASCADE, related_name='from_single',
         default=None, null=True
         )
 
