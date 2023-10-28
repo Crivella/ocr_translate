@@ -68,7 +68,7 @@ def language_dict():
 
 @pytest.fixture()
 def box_model_dict():
-    """Dict defiining an OCRBoxModel"""
+    """Dict defining an OCRBoxModel"""
     return {
         'name': 'test_box_model/id',
         'language_format': 'iso1',
@@ -80,7 +80,7 @@ def box_model_dict():
 
 @pytest.fixture()
 def ocr_model_dict():
-    """Dict defiining an OCRModel"""
+    """Dict defining an OCRModel"""
     return {
         'name': 'test_ocr_model/id',
         'language_format': 'iso1',
@@ -88,8 +88,18 @@ def ocr_model_dict():
     }
 
 @pytest.fixture()
+def ocr_model_dict_single():
+    """Dict defining an OCRModel working in single mode only"""
+    return {
+        'name': 'test_ocr_model/id',
+        'language_format': 'iso1',
+        'entrypoint': 'test_entrypoint.ocr',
+        'ocr_mode': 'single'
+    }
+
+@pytest.fixture()
 def tsl_model_dict():
-    """Dict defiining a TSLModel"""
+    """Dict defining a TSLModel"""
     return {
         'name': 'test_tsl_model/id',
         'language_format': 'iso1',
@@ -145,6 +155,14 @@ def ocr_model(language, ocr_model_dict):
     return res
 
 @pytest.fixture()
+def ocr_model_single(language, ocr_model_dict_single):
+    """OCRModel database object."""
+    res = m.OCRModel.objects.create(**ocr_model_dict_single)
+    res.languages.add(language)
+
+    return res
+
+@pytest.fixture()
 def tsl_model(language, tsl_model_dict):
     """TSLModel database object."""
     res = m.TSLModel.objects.create(**tsl_model_dict)
@@ -163,6 +181,11 @@ def box_run(language, image, box_model, option_dict):
 def bbox(image, box_run):
     """BBox database object."""
     return m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4, from_ocr_merged=box_run)
+
+@pytest.fixture()
+def bbox_single(image, box_run):
+    """BBox database object."""
+    return m.BBox.objects.create(image=image, l=1, b=2, r=1, t=2, from_ocr_single=box_run)
 
 @pytest.fixture()
 def ocr_run(language, bbox, ocr_model, option_dict, text):

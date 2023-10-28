@@ -87,9 +87,9 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     res = []
 
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
-    bbox_obj_list_single, bbox_obj_lis_merged = box_model.box_detection(img_obj, lang_src ,image=img)
+    bbox_obj_list_single, bbox_obj_list_merged = box_model.box_detection(img_obj, lang_src ,image=img)
 
-    bbox_obj_list = bbox_obj_lis_merged
+    bbox_obj_list = bbox_obj_list_merged
     if ocr_model.ocr_mode == ocr_model.SINGLE:
         bbox_obj_list = bbox_obj_list_single
 
@@ -112,10 +112,10 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
             lang_src.iso1,
             str_list,
             bbox_obj_list_single,
-            bbox_obj_lis_merged
+            bbox_obj_list_merged
             )
         texts = []
-        for text, bbox_obj in zip(merged_text, bbox_obj_lis_merged):
+        for text, bbox_obj in zip(merged_text, bbox_obj_list_merged):
             text_obj, _ = m.Text.objects.get_or_create(text=text)
             params = {
                 'bbox': bbox_obj,
@@ -143,7 +143,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     trans = [next(_) for _ in trans]
     logger.debug(f'TRANSLATION DONE: {trans}')
 
-    for bbox_obj, text_obj, tsl_obj in zip(bbox_obj_list, texts, trans):
+    for bbox_obj, text_obj, tsl_obj in zip(bbox_obj_list_merged, texts, trans):
         text = text_obj.text
         new = tsl_obj.text
 

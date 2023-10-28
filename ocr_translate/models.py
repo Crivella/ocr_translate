@@ -250,7 +250,7 @@ class OCRModel(BaseModel):
             str: The text extracted from the image.
         """
         # Redefine this method with the same signature as above
-        # Should return a sring with the result of the OCR performed on the input PILImage.
+        # Should return a string with the result of the OCR performed on the input PILImage.
         # Unless the methods `prepare_image` or `ocr` are also being overwritten, the input image will be the
         #  result of the CROP on the original image using the bounding boxes given by the box detection model.
         raise NotImplementedError('The base model class does not implement this method.')
@@ -555,7 +555,7 @@ class TSLModel(BaseModel):
             Union[str,list[str]]: Translated text. If text is a list, returns a list of translated strings.
         """
         # Redefine this method with the same signature as above
-        # Should return a sring with the translated text.
+        # Should return a string with the translated text.
         # IMPORTANT: the main codebase treats this function as batchable:
         # The input `tokens` can be a list of strings or a list of list of strings. The output should match the input
         #   being a string or list of strings.
