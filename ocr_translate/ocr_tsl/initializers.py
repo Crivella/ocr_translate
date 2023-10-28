@@ -82,6 +82,8 @@ def load_ept_data(namespace):
 
     return res
 
+# Pop and set after so that running this after a migration should modify the existing model (with less
+# attributes) instead of creating a new one
 def auto_create_box():
     """Create OCRBoxModel objects from entrypoints."""
     for box in load_ept_data('ocr_translate.box_data'):
@@ -108,6 +110,7 @@ def auto_create_ocr():
         logger.debug(f'Creating ocr model: {ocr}')
         lang = ocr.pop('lang')
         lcode = ocr.pop('lang_code')
+        ocr_mode = ocr.pop('ocr_mode', m.OCRModel.MERGED)
         entrypoint = ocr.pop('entrypoint')
         iso1_map = ocr.pop('iso1_map', {})
         def_opt = ocr.pop('default_options', {})
@@ -115,6 +118,7 @@ def auto_create_ocr():
         model, _ = m.OCRModel.objects.get_or_create(**ocr)
         model.default_options = opt_obj
         model.language_format = lcode
+        model.ocr_mode = ocr_mode
         model.iso1_map = iso1_map
         model.entrypoint = entrypoint
         model.languages.clear()
