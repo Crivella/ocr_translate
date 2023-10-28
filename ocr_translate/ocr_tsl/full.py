@@ -79,6 +79,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     ocr_model = get_ocr_model()
     tsl_model = get_tsl_model()
     lang_src = get_lang_src()
+    lang_dst = get_lang_dst()
 
     if options is None:
         options = {}
@@ -106,31 +107,36 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     if ocr_model.ocr_mode == ocr_model.SINGLE:
         logger.debug(f'OCR DONE (single): {texts}')
         str_list = [_.text for _ in texts]
-        lbrt_list_single = [_.lbrt for _ in bbox_obj_list_single]
-        lbrt_list_merged = [_.lbrt for _ in bbox_obj_lis_merged]
 
-        merged_text = ocr_model.merge_single_result(str_list, lbrt_list_single, lbrt_list_merged)
+        merged_text = ocr_model.merge_single_result(
+            lang_src.iso1,
+            str_list,
+            bbox_obj_list_single,
+            bbox_obj_lis_merged
+            )
+        texts = []
         for text, bbox_obj in zip(merged_text, bbox_obj_lis_merged):
             text_obj, _ = m.Text.objects.get_or_create(text=text)
             params = {
                 'bbox': bbox_obj,
                 'model': ocr_model,
-                'lang': lang_src,
+                'lang_src': lang_src,
                 'options': m.OptionDict.objects.get(options=options),
                 'result_merged': text_obj
             }
             merged_run = m.OCRRun.objects.create(**params)
 
+            # Pretend the current texts are the merged ones
+            texts.append(merged_run.result_merged)
+
             logger.debug(f'OCR DONE (mock_merged): {text}')
 
-        # Pretend the current texts are the merged ones
-        texts = list(merged_run.result_merged.all())
 
     logger.debug(f'OCR DONE: {texts}')
 
     trans = []
     for text_obj in texts:
-        tsl_obj = tsl_model.translate(text_obj, get_lang_src(), get_lang_dst(), force=force, block=False)
+        tsl_obj = tsl_model.translate(text_obj, lang_src, lang_dst, force=force, block=False)
         next(tsl_obj)
         trans.append(tsl_obj)
 

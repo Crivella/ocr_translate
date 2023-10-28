@@ -22,6 +22,7 @@ import re
 from importlib.metadata import entry_points
 from typing import Generator, Type, TypedDict, Union
 
+import numpy as np
 from django.db import models
 from PIL.Image import Image as PILImage
 
@@ -52,6 +53,13 @@ class Language(models.Model):
 
     def __str__(self):
         return str(self.iso1)
+
+    def __eq__(self, other):
+        if isinstance(other, Language):
+            return self.iso1 == other.iso1
+        if isinstance(other, str):
+            return self.iso1 == other
+        return False
 
 class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""
@@ -116,7 +124,8 @@ class OCRModel(BaseModel):
     """OCR model."""
     entrypoint_namespace = 'ocr_translate.ocr_models'
     # iso1 code for languages that do not use spaces to separate words
-    NO_SPACE_LANGUAGES = ['ja', 'zh', 'lo', 'my']
+    _NO_SPACE_LANGUAGES = ['ja', 'zh', 'zht', 'lo', 'my']
+    _VERTICAL_LANGS = ['ja', 'zh', 'zht', 'ko']
     SINGLE='single'
     MERGED='merged'
     OCR_MODE_CHOICES = [
@@ -142,22 +151,85 @@ class OCRModel(BaseModel):
         return img
 
     @staticmethod
-    def merge_single_result(
-        texts: list[str],
-        bboxes_single: list[tuple[int, int, int, int]],
-        bboxes_merged: list[tuple[int, int, int, int]],
-        ) -> str:
+    def merge_single_result( # pylint: disable=too-many-locals
+            lang: str,
+            texts: list[str],
+            bboxes_single: list['BBox'],
+            bboxes_merged: list['BBox'],
+            ) -> list[str]:
         """Merge the results of an OCR run on the single components of a detected bounding box.
         Will try to understand if the text is horizontal or vertical and merge accordingly.
 
         Args:
+            lang (str): Language of the text in iso1 format.
             texts (list[str]): List of texts for each component.
-            bboxes_single (list[tuple[int, int, int, int]]): List of single bounding boxes in lbrt format.
-            bboxes_merged (list[tuple[int, int, int, int]]): List of merged bounding boxes in lbrt format.
+            bboxes_single (list['BBox']): List of single bounding boxes.
+            bboxes_merged (list['BBox']): List of merged bounding boxes.
 
         Returns:
-            str: The merged text.
+            list[str]: The merged text.
         """
+        grouped = {}
+        # Group texts and single_bboxes by merged bounding box
+        for text, bbox in zip(texts, bboxes_single):
+            merged = bbox.to_merged
+            ptr = grouped.setdefault(merged, [])
+            ptr.append((text, *bbox.lbrt))
+
+        sep = '' if lang in OCRModel._NO_SPACE_LANGUAGES else ' '
+
+        res = []
+        for bbox in bboxes_merged:
+            single_array = np.array(grouped[bbox], dtype=object)
+            l,b,r,t = bbox.lbrt
+            width = r - l
+            height = t - b
+
+            # Vertical langs can also be written horizontal
+            # Assume that if box.width > box.height * 1.3 then it's horizontal
+            vertical = lang in OCRModel._VERTICAL_LANGS and height * 1.3 > width
+
+            if vertical:
+                # Vertical text find columns
+                thr = np.average(single_array[:, 3] - single_array[:, 1]) / 1.5
+                centers = (single_array[:, 1] + single_array[:, 3]) / 2
+            else:
+                # Horizontal text find lines
+                thr = np.average(single_array[:, 4] - single_array[:, 2]) / 1.5
+                centers = (single_array[:, 2] + single_array[:, 4]) / 2
+
+            # Group lines/cols if the centers are closer than the average line width/height (vertical/non-vert)
+            classifiers = np.empty(0)
+            line_classifiers = []
+            for cen in centers:
+                if len(classifiers) == 0:
+                    classifiers = np.array([cen])
+                    line_classifiers.append(0)
+                    continue
+                # Index of classifier closest to the center
+                i_min = np.argmin(np.abs(classifiers - cen))
+                # If the closest classifier is closer than the threshold, reuse it
+                if np.abs(classifiers[i_min] - cen) < thr:
+                    line_classifiers.append(i_min)
+                # Otherwise create a new classifier
+                else:
+                    classifiers = np.append(classifiers, cen)
+                    line_classifiers.append(len(classifiers) - 1)
+
+            line_classifiers = np.array(line_classifiers)
+            # Sort lines/cols top-to-bottom or right-to-left
+            i_sort = np.argsort(classifiers)[::-1 if vertical else 1]
+            text_chunks = []
+            # Sort lines/cols chunks left-to-right or top-to-bottom
+            sort_col_index = 4 if vertical else 1
+            for i in i_sort:
+                ind = np.where(line_classifiers == i)[0]
+                j_sort = np.argsort(single_array[ind, sort_col_index])
+                text_chunks += single_array[ind[j_sort], 0].tolist()
+
+            res.append(sep.join(text_chunks))
+
+        return res
 
     def _ocr(
             self,
@@ -241,7 +313,7 @@ class OCRModel(BaseModel):
             if not block:
                 yield text
             text = text.response()
-            if lang.iso1 in self.NO_SPACE_LANGUAGES:
+            if lang.iso1 in self._NO_SPACE_LANGUAGES:
                 text = text.replace(' ', '')
             text_obj, _ = Text.objects.get_or_create(
                 text=text,
@@ -630,7 +702,10 @@ class OCRRun(models.Model):
         Text, on_delete=models.CASCADE, related_name='from_ocr_single',
         default=None, null=True
         )
-    result_merged = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr_merged')
+    result_merged = models.ForeignKey(
+        Text, on_delete=models.CASCADE, related_name='from_ocr_merged',
+        default=None, null=True
+        )
 
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""
