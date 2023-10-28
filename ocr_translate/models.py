@@ -325,7 +325,8 @@ class OCRModel(BaseModel):
                 # Both branches should have the same number of yields
                 yield None
             logger.info(f'Reusing OCR <{ocr_run_obj.id}>')
-            text_obj = ocr_run_obj.result_merged
+            # It is possible that single has to be performed is a previous pipeline was interrupted
+            text_obj = ocr_run_obj.result_merged or ocr_run_obj.result_single
             # text = ocr_run.result.text
 
         yield text_obj
@@ -398,6 +399,12 @@ class OCRBoxModel(BaseModel):
         }
 
         bbox_run = OCRBoxRun.objects.filter(**params).first()
+        # Needed to rerun the OCR from <0.4.x to >=0.4.x
+        # Before only merged boxes where saved, now also the single are needed
+        if isinstance(bbox_run, OCRBoxRun):
+            if len(bbox_run.result_single.all()) == 0:
+                bbox_run.delete()
+                bbox_run = None
         if bbox_run is None or force:
             if image is None:
                 raise ValueError('Image is required for BBox OCR')

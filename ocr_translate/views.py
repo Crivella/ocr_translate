@@ -130,6 +130,7 @@ def set_models(request: HttpRequest) -> JsonResponse:
             if not tsl_model_id is None and not tsl_model_id == '':
                 load_tsl_model(tsl_model_id)
         except Exception as exc:
+            logger.error(f'Failed to load models: {exc}')
             return JsonResponse({'error': str(exc)}, status=400)
 
         return JsonResponse({})
@@ -264,6 +265,7 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
             try:
                 res = ocr_tsl_pipeline_lazy(md5, options=opt)
             except ValueError:
+                logger.info('Failed to lazyload ocr')
                 return JsonResponse({'error': 'Failed to lazyload ocr'}, status=406)
         else:
             binary = base64.b64decode(b64)

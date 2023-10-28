@@ -85,6 +85,11 @@ LOGGING = {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
         },
+        'plugin': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+        },
     },
 }
 
@@ -113,7 +118,7 @@ INSTALLED_APPS = [
     'ocr_translate',
     'ocr_translate_tesseract',
     'ocr_translate_easyocr',
-    # 'ocr_translate_google',
+    'ocr_translate_google',
     'ocr_translate_hugging_face',
 ]
 
