@@ -26,7 +26,7 @@ All the different way to run the server may provide different set of default val
 From the [github releases page](/../../releases/) you can download either:
 
 - The [CPU only version](/../../releases/latest/download/run_server-cpu.zip)
-- The GPU version split in [file 1](/../../releases/latest/download/run_server-gpu.zip.001) and [file 2](/../../releases/latest/download/run_server-gpu.zip.002) (The CUDA dependencies makes it take much more space), wich can be restored using tools like [7zip](https://www.7-zip.org/https://www.7-zip.org/) and [NanaZip](https://github.com/M2Team/NanaZip).
+- The GPU version split in [file 1](/../../releases/latest/download/run_server-gpu.zip.001) and [file 2](/../../releases/latest/download/run_server-gpu.zip.002) (The CUDA dependencies makes it take much more space), which can be restored using tools like [7zip](https://www.7-zip.org/https://www.7-zip.org/) and [NanaZip](https://github.com/M2Team/NanaZip).
 
 Usage:
 Unzip the file and from inside the folder, run the `run_server-XXX.exe` file (XXX=cpu/gpu)
@@ -50,6 +50,9 @@ Create/Initialize your database by running
 - `python manage.py migrate`
 
 inside your project folder.
+
+**NOTE**: From version 0.3.X model installation and functionalities have been moved to plugins that need to be *pip installed* separately.
+See [this documentation page](https://crivella.github.io/ocr_translate/user/index.html) for a list of validated plugins.
 
 Run the server using for example one of the following options:
 
@@ -93,7 +96,7 @@ Run the command:
 
 - `docker run --name CONTAINER_NAME -v PATH_TO_YOUR_MODEL_DIRECTORY:/models -v PATH_TO_DIR_WITH_SQLITE_FILE:/data --env-file=PATH_TO_AND_ENV_VARIABLE_FILE -p SERVER_PORT:4000 -d ocr_translate`
 
-See the [Environment variables](#environment-variables) section for configuring your environment variable file. Additionaly the docker image defines several other variables to automatically create an admin user for managing the database via the django-admin interface:
+See the [Environment variables](#environment-variables) section for configuring your environment variable file. Additionally the docker image defines several other variables to automatically create an admin user for managing the database via the django-admin interface:
 
 - `UID`: UID of the user owning the files in /models and /data
 - `GID`: GID of the user owning the files in /models and /data
@@ -101,10 +104,9 @@ See the [Environment variables](#environment-variables) section for configuring 
 - `DJANGO_SUPERUSER_USERNAME`: The username of the admin user to be created.
 - `DJANGO_SUPERUSER_PASSWORD`: The password of the admin user to be created.
 
-
 ## Installation
 
-For both the Githyb and PyPI installation it is strongly suggested to install this project using a [virtual environment](https://docs.python.org/3/library/venv.html).
+For both the Github and PyPI installation it is strongly suggested to install this project using a [virtual environment](https://docs.python.org/3/library/venv.html).
 
 ### From Github
 
@@ -139,6 +141,7 @@ If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](r
 - `pip install -r requirements-torch-cpu.txt`
 
 before installing the python package.
+
 ## Supported Box OCR models
 
 - [EasyOCR](https://github.com/JaidedAI/EasyOCR)

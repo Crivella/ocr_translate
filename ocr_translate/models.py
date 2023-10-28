@@ -20,8 +20,9 @@
 import logging
 import re
 from importlib.metadata import entry_points
-from typing import Generator, Type, Union
+from typing import Generator, Type, TypedDict, Union
 
+import numpy as np
 from django.db import models
 from PIL.Image import Image as PILImage
 
@@ -52,6 +53,13 @@ class Language(models.Model):
 
     def __str__(self):
         return str(self.iso1)
+
+    def __eq__(self, other):
+        if isinstance(other, Language):
+            return self.iso1 == other.iso1
+        if isinstance(other, str):
+            return self.iso1 == other
+        return False
 
 class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""
@@ -116,9 +124,17 @@ class OCRModel(BaseModel):
     """OCR model."""
     entrypoint_namespace = 'ocr_translate.ocr_models'
     # iso1 code for languages that do not use spaces to separate words
-    NO_SPACE_LANGUAGES = ['ja', 'zh', 'lo', 'my']
+    _NO_SPACE_LANGUAGES = ['ja', 'zh', 'zht', 'lo', 'my']
+    _VERTICAL_LANGS = ['ja', 'zh', 'zht', 'ko']
+    SINGLE='single'
+    MERGED='merged'
+    OCR_MODE_CHOICES = [
+        (SINGLE, 'Single'),
+        (MERGED, 'Merged'),
+    ]
 
     languages = models.ManyToManyField(Language, related_name='ocr_models')
+    ocr_mode = models.CharField(max_length=32, choices=OCR_MODE_CHOICES, default=MERGED)
 
     def prepare_image(
             self,
@@ -134,11 +150,109 @@ class OCRModel(BaseModel):
 
         return img
 
+    @staticmethod
+    def merge_single_result( # pylint: disable=too-many-locals
+            lang: str,
+            texts: list[str],
+            bboxes_single: list['BBox'],
+            bboxes_merged: list['BBox'],
+            ) -> list[str]:
+        """Merge the results of an OCR run on the single components of a detected bounding box.
+        Will try to understand if the text is horizontal or vertical and merge accordingly.
+
+        Args:
+            lang (str): Language of the text in iso1 format.
+            texts (list[str]): List of texts for each component.
+            bboxes_single (list['BBox']): List of single bounding boxes.
+            bboxes_merged (list['BBox']): List of merged bounding boxes.
+
+        Returns:
+            list[str]: The merged text.
+        """
+        grouped = {}
+        # Group texts and single_bboxes by merged bounding box
+        for text, bbox in zip(texts, bboxes_single):
+            merged = bbox.to_merged
+            ptr = grouped.setdefault(merged, [])
+            ptr.append((text, *bbox.lbrt))
+
+        sep = '' if lang in OCRModel._NO_SPACE_LANGUAGES else ' '
+
+        res = []
+        for bbox in bboxes_merged:
+            single_array = np.array(grouped[bbox], dtype=object)
+            l,b,r,t = bbox.lbrt
+            width = r - l
+            height = t - b
+
+            # Vertical langs can also be written horizontal
+            # Assume that if box.width > box.height * 1.3 then it's horizontal
+            vertical = lang in OCRModel._VERTICAL_LANGS and height * 1.3 > width
+
+            if vertical:
+                # Vertical text find columns
+                thr = np.average(single_array[:, 3] - single_array[:, 1]) / 1.5
+                centers = (single_array[:, 1] + single_array[:, 3]) / 2
+            else:
+                # Horizontal text find lines
+                thr = np.average(single_array[:, 4] - single_array[:, 2]) / 1.5
+                centers = (single_array[:, 2] + single_array[:, 4]) / 2
+
+            # Group lines/cols if the centers are closer than the average line width/height (vertical/non-vert)
+            classifiers = np.empty(0)
+            line_classifiers = []
+            for cen in centers:
+                if len(classifiers) == 0:
+                    classifiers = np.array([cen])
+                    line_classifiers.append(0)
+                    continue
+                # Index of classifier closest to the center
+                i_min = np.argmin(np.abs(classifiers - cen))
+                # If the closest classifier is closer than the threshold, reuse it
+                if np.abs(classifiers[i_min] - cen) < thr:
+                    line_classifiers.append(i_min)
+                # Otherwise create a new classifier
+                else:
+                    classifiers = np.append(classifiers, cen)
+                    line_classifiers.append(len(classifiers) - 1)
+
+            line_classifiers = np.array(line_classifiers)
+            # Sort lines/cols top-to-bottom or right-to-left
+            i_sort = np.argsort(classifiers)[::-1 if vertical else 1]
+            text_chunks = []
+            # Sort lines/cols chunks left-to-right or top-to-bottom
+            sort_col_index = 4 if vertical else 1
+            for i in i_sort:
+                ind = np.where(line_classifiers == i)[0]
+                j_sort = np.argsort(single_array[ind, sort_col_index])
+                text_chunks += single_array[ind[j_sort], 0].tolist()
+
+            res.append(sep.join(text_chunks))
+
+        return res
+
     def _ocr(
             self,
             img: PILImage, lang: str = None, options: dict = None
             ) -> str:
-        """Placeholder method for performing OCR. To be implemented via entrypoint"""
+        """Perform OCR on an image.
+
+        Args:
+            img (Image.Image):  A Pillow image on which to perform OCR.
+            lang (str, optional): The language to use for OCR. (Not every model will use this)
+            bbox (tuple[int, int, int, int], optional): The bounding box of the text on the image in lbrt format.
+            options (dict, optional): A dictionary of options to pass to the OCR model.
+
+        Raises:
+            TypeError: If img is not a Pillow image.
+
+        Returns:
+            str: The text extracted from the image.
+        """
+        # Redefine this method with the same signature as above
+        # Should return a string with the result of the OCR performed on the input PILImage.
+        # Unless the methods `prepare_image` or `ocr` are also being overwritten, the input image will be the
+        #  result of the CROP on the original image using the bounding boxes given by the box detection model.
         raise NotImplementedError('The base model class does not implement this method.')
 
     def ocr(
@@ -146,7 +260,7 @@ class OCRModel(BaseModel):
             bbox_obj: 'BBox', lang: 'Language',  image: PILImage = None, options: 'OptionDict' = None,
             force: bool = False, block: bool = True,
             ) -> Generator[Union[Message, 'Text'], None, None]:
-        """High level function to perform OCR on an image.
+        """PLACEHOLDER (to be implemented via entrypoint): High level function to perform OCR on an image.
 
         Args:
             bbox_obj (m.BBox): The BBox object from the database.
@@ -199,23 +313,29 @@ class OCRModel(BaseModel):
             if not block:
                 yield text
             text = text.response()
-            if lang.iso1 in self.NO_SPACE_LANGUAGES:
+            if lang.iso1 in self._NO_SPACE_LANGUAGES:
                 text = text.replace(' ', '')
             text_obj, _ = Text.objects.get_or_create(
                 text=text,
                 )
-            params['result'] = text_obj
+            params[f'result_{self.ocr_mode}'] = text_obj
             ocr_run_obj = OCRRun.objects.create(**params)
         else:
             if not block:
                 # Both branches should have the same number of yields
                 yield None
             logger.info(f'Reusing OCR <{ocr_run_obj.id}>')
-            text_obj = ocr_run_obj.result
+            # It is possible that single has to be performed is a previous pipeline was interrupted
+            text_obj = ocr_run_obj.result_merged or ocr_run_obj.result_single
             # text = ocr_run.result.text
 
         yield text_obj
 
+
+class BoxDetectionResult(TypedDict):
+    """Type for the result of the box detection"""
+    single: list[tuple[int, int, int, int]]
+    merged: tuple[int, int, int, int]
 
 class OCRBoxModel(BaseModel):
     """OCR model for bounding boxes"""
@@ -227,11 +347,29 @@ class OCRBoxModel(BaseModel):
     def _box_detection(
             self,
             image: PILImage, options: dict = None
-            ) -> list[tuple[int, int, int, int]]:
-        """Placeholder method for performing box detection. To be implemented via entrypoint"""
+            ) -> list[BoxDetectionResult]:
+        """PLACEHOLDER (to be implemented via entrypoint): Perform box OCR on an image.
+        Returns list of bounding boxes as dicts:
+            - merged: The merged BBox as a tuple[int, int, int, int]
+            - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]
+
+        Args:
+            image (Image.Image): A Pillow image on which to perform OCR.
+            options (dict, optional): A dictionary of options.
+
+        Raises:
+            NotImplementedError: The type of model specified is not implemented.
+
+        Returns:
+            list[BoxDetectionResult]: List of dictionary with key/value pairs:
+              - merged: The merged BBox as a tuple[int, int, int, int]
+              - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]
+        """
+        # Redefine this method with the same signature as above
+        # Should return a list of `lrbt` boxes after processing the input PILImage
         raise NotImplementedError('The base model class does not implement this method.')
 
-    def box_detection(
+    def box_detection( # pylint: disable=too-many-locals
             self,
             img_obj: 'Image', lang: 'Language', image: PILImage = None,
             force: bool = False, options: 'OptionDict' = None
@@ -261,6 +399,12 @@ class OCRBoxModel(BaseModel):
         }
 
         bbox_run = OCRBoxRun.objects.filter(**params).first()
+        # Needed to rerun the OCR from <0.4.x to >=0.4.x
+        # Before only merged boxes where saved, now also the single are needed
+        if isinstance(bbox_run, OCRBoxRun):
+            if len(bbox_run.result_single.all()) == 0:
+                bbox_run.delete()
+                bbox_run = None
         if bbox_run is None or force:
             if image is None:
                 raise ValueError('Image is required for BBox OCR')
@@ -275,24 +419,35 @@ class OCRBoxModel(BaseModel):
                     'kwargs': {'options': opt_dct},
                 },
             )
-            bboxes = bboxes.response()
+            # bboxes_single, bboxes_merged = bboxes.response()
+            bboxes_list = bboxes.response()
             # Create it here to avoid having a failed entry in DB
             bbox_run = OCRBoxRun.objects.create(**params)
-            for bbox in bboxes:
-                l,b,r,t = bbox
-                BBox.objects.create(
-                    l=l,
-                    b=b,
-                    r=r,
-                    t=t,
+            for dct in bboxes_list:
+                merged = dct['merged']
+                l,b,r,t = merged
+                bbox_merged_obj = BBox.objects.create(
+                    l=l, b=b, r=r, t=t,
                     image=img_obj,
-                    from_ocr=bbox_run,
+                    from_ocr_merged=bbox_run,
                     )
+                for bbox in dct['single']:
+                    l,b,r,t = bbox
+                    BBox.objects.create(
+                        l=l, b=b, r=r, t=t,
+                        image=img_obj,
+                        from_ocr_single=bbox_run,
+                        to_merged=bbox_merged_obj,
+                        )
         else:
             logger.info(f'Reusing BBox OCR <{bbox_run.id}>')
-        logger.info(f'BBox OCR result: {len(bbox_run.result.all())} boxes')
 
-        return list(bbox_run.result.all())
+        res_single = list(bbox_run.result_single.all())
+        res_merged = list(bbox_run.result_merged.all())
+        logger.debug(f'BBox OCR result: {len(res_single)} single boxes')
+        logger.info(f'BBox OCR result: {len(res_merged)} merged boxes')
+
+        return res_single, res_merged
 
 
 class TSLModel(BaseModel):
@@ -389,8 +544,31 @@ class TSLModel(BaseModel):
         return res if len(res) > 0 else [' ']
 
 
-    def _translate(self, tokens: list, src_lang: str, dst_lang: str, options: dict = None) -> str | list[str]:
-        """Placeholder method for translating a text. To be implemented via entrypoint"""
+    def _translate(
+            self,
+            tokens: list, src_lang: str, dst_lang: str, options: dict = None) -> str | list[str]:
+        """PLACEHOLDER (to be implemented via entrypoint): Translate a text using a the loaded model.
+
+        Args:
+            tokens (list): list or list[list] of string tokens to be translated.
+            lang_src (str): Source language.
+            lang_dst (str): Destination language.
+            options (dict, optional): Options for the translation. Defaults to {}.
+
+        Raises:
+            TypeError: If text is not a string or a list of strings.
+
+        Returns:
+            Union[str,list[str]]: Translated text. If text is a list, returns a list of translated strings.
+        """
+        # Redefine this method with the same signature as above
+        # Should return a string with the translated text.
+        # IMPORTANT: the main codebase treats this function as batchable:
+        # The input `tokens` can be a list of strings or a list of list of strings. The output should match the input
+        #   being a string or list of strings.
+        # (This is used to leverage the capability of pytorch to batch inputs and outputs for faster performances,
+        #   or it can also used to write a plugin for an online service by using a single request for multiple inputs
+        #   using some separator that the service will leave unaltered.)
         raise NotImplementedError('The base model class does not implement this method.')
 
     def translate(
@@ -482,7 +660,18 @@ class BBox(models.Model):
     t = models.IntegerField(null=False)
 
     image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='bboxes')
-    from_ocr = models.ForeignKey('OCRBoxRun', on_delete=models.CASCADE, related_name='result')
+    from_ocr_single = models.ForeignKey(
+        'OCRBoxRun', on_delete=models.CASCADE, related_name='result_single',
+        default=None, null=True
+        )
+    from_ocr_merged = models.ForeignKey(
+        'OCRBoxRun', on_delete=models.CASCADE, related_name='result_merged',
+        default=None, null=True
+        )
+    to_merged = models.ForeignKey(
+        'BBox', on_delete=models.CASCADE, related_name='from_single',
+        default=None, null=True
+        )
 
     @property
     def lbrt(self):
@@ -516,7 +705,14 @@ class OCRRun(models.Model):
     # image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='to_ocr')
     bbox = models.ForeignKey(BBox, on_delete=models.CASCADE, related_name='to_ocr')
     model = models.ForeignKey(OCRModel, on_delete=models.CASCADE, related_name='ocr_runs')
-    result = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='from_ocr')
+    result_single = models.ForeignKey(
+        Text, on_delete=models.CASCADE, related_name='from_ocr_single',
+        default=None, null=True
+        )
+    result_merged = models.ForeignKey(
+        Text, on_delete=models.CASCADE, related_name='from_ocr_merged',
+        default=None, null=True
+        )
 
 class TranslationRun(models.Model):
     """Translation run on a text using a specific model"""

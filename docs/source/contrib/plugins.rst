@@ -69,6 +69,11 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
 
 .. code-block:: python
 
+    class BoxDetectionResult(TypedDict):
+        """Type for the result of the box detection"""
+        single: list[tuple[int, int, int, int]]
+        merged: tuple[int, int, int, int]
+
     class SomeNewClassName(m.OCRBoxModel):
         """OCRBoxtranslate plugin to allow usage of ... for box detection."""
         class Meta:
@@ -86,8 +91,11 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
         def _box_detection(
                 self,
                 image: PILImage, options: dict = None
-                ) -> list[tuple[int, int, int, int]]:
-            """Perform box OCR on an image.
+                ) -> list[BoxDetectionResult]:
+            """PLACEHOLDER (to be implemented via entrypoint): Perform box OCR on an image.
+            Returns list of bounding boxes as dicts:
+                - merged: The merged BBox as a tuple[int, int, int, int]
+                - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]
 
             Args:
                 image (Image.Image): A Pillow image on which to perform OCR.
@@ -97,7 +105,9 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
                 NotImplementedError: The type of model specified is not implemented.
 
             Returns:
-                list[tuple[int, int, int, int]]: A list of bounding boxes in lrbt format.
+                list[BoxDetectionResult]: List of dictionary with key/value pairs:
+                - merged: The merged BBox as a tuple[int, int, int, int]
+                - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]
             """
             # Redefine this method with the same signature as above
             # Should return a list of `lrbt` boxes after processing the input PILImage
@@ -122,7 +132,7 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
 
         def _ocr(
                 self,
-                img: Image.Image, lang: str = None, options: dict = None
+                img: PILImage, lang: str = None, options: dict = None
                 ) -> str:
             """Perform OCR on an image.
 

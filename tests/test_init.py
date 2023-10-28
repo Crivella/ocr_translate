@@ -75,16 +75,16 @@ def test_init_most_used_more_content(mock_loaders, language_dict, image, option_
         model=ocr_box_model2, lang_src=lang2, image=image, options=option_dict
         )
 
-    bbox = m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4, from_ocr=box_run1)
+    bbox = m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4, from_ocr_merged=box_run1)
 
     ocr_run1 = m.OCRRun.objects.create(
-        lang_src=lang1, bbox=bbox, model=ocr_model1, options=option_dict, result=text
+        lang_src=lang1, bbox=bbox, model=ocr_model1, options=option_dict, result_merged=text
         )
     ocr_run2_1 = m.OCRRun.objects.create(
-        lang_src=lang1, bbox=bbox, model=ocr_model2, options=option_dict, result=text
+        lang_src=lang1, bbox=bbox, model=ocr_model2, options=option_dict, result_merged=text
         )
     ocr_run2_2 = m.OCRRun.objects.create(
-        lang_src=lang1, bbox=bbox, model=ocr_model2, options=option_dict, result=text
+        lang_src=lang1, bbox=bbox, model=ocr_model2, options=option_dict, result_merged=text
         )
 
     tsl_run1_1 = m.TranslationRun.objects.create(

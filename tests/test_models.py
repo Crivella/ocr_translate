@@ -19,14 +19,17 @@
 """Tests for the database models."""
 #pylint: disable=protected-access
 
+from dataclasses import dataclass
+
 import django
+import numpy as np
 import pytest
 from PIL.Image import Image as PILImage
 
 from ocr_translate import models as m
 from ocr_translate import tries
 from ocr_translate.messaging import Message
-from ocr_translate.ocr_tsl import box, full, ocr, tsl
+from ocr_translate.ocr_tsl import box, full, lang, ocr, tsl
 from ocr_translate.trie import Trie
 
 pytestmark = pytest.mark.django_db
@@ -41,6 +44,14 @@ def test_add_language_existing(language_dict: dict, language: m.Language):
     """Test adding a language."""
     with pytest.raises(django.db.utils.IntegrityError):
         m.Language.objects.create(**language_dict)
+
+def test_language_eq_obj(language: m.Language):
+    """Test language equality."""
+    assert language == language # pylint: disable=comparison-with-itself
+
+def test_language_eq_iso1(language: m.Language):
+    """Test language equality."""
+    assert language == language.iso1
 
 def test_add_ocr_box_model(box_model_dict: dict, box_model: m.OCRBoxModel):
     """Test adding a new OCRBoxModel"""
@@ -73,16 +84,18 @@ def test_box_run(
 
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
-        return [lbrt]
+        return [{'single': [lbrt], 'merged': lbrt}]
 
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     box_model._box_detection = mock_pipeline
 
-    res = box_model.box_detection(image, language, image=1, options=option_dict)
+    single, merged = box_model.box_detection(image, language, image=1, options=option_dict)
 
-    assert isinstance(res, list)
-    assert isinstance(res[0], m.BBox)
-    assert res[0].lbrt == lbrt
+    assert isinstance(single, list)
+    assert isinstance(merged, list)
+    assert isinstance(single[0], m.BBox)
+    assert isinstance(merged[0], m.BBox)
+    assert merged[0].lbrt == lbrt
 
 def test_box_run_reuse(
         monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict
@@ -90,7 +103,7 @@ def test_box_run_reuse(
     """Test adding a new BoxRun"""
     lbrt = (1,2,3,4)
     def mock_pipeline(*args, **kwargs):
-        return [lbrt]
+        return [{'single': [lbrt], 'merged': lbrt}]
 
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     box_model._box_detection = mock_pipeline
@@ -105,7 +118,7 @@ def test_ocr_run_nooption(
         monkeypatch, image_pillow: PILImage,
         bbox: m.BBox, language: m.Language, ocr_model: m.OCRModel, option_dict: m.OptionDict
         ):
-    """Test performin an ocr_run blocking"""
+    """Test performing an ocr_run blocking"""
     text = 'test_text'
     def mock_ocr(*args, **kwargs):
         return text
@@ -119,13 +132,13 @@ def test_ocr_run_nooption(
 
     assert isinstance(res, m.Text)
     assert res.text == text
-    assert res.from_ocr.first().options.options == {}
+    assert res.from_ocr_merged.first().options.options == {}
 
 def test_ocr_run_noimage(
         monkeypatch,
         bbox: m.BBox, language: m.Language, ocr_model: m.OCRModel, option_dict: m.OptionDict
         ):
-    """Test performin an ocr_run blocking"""
+    """Test performing an ocr_run blocking"""
     text = 'test_text'
     def mock_ocr(*args, **kwargs):
         return text
@@ -142,7 +155,7 @@ def test_ocr_run(
         monkeypatch, mock_called, image_pillow: PILImage,
         bbox: m.BBox, language: m.Language, ocr_model: m.OCRModel, option_dict: m.OptionDict
         ):
-    """Test performin an ocr_run blocking + same pipeline (has to run lazily by refetching previous result)"""
+    """Test performing an ocr_run blocking + same pipeline (has to run lazily by refetching previous result)"""
     text = 'test_text'
     def mock_ocr(*args, **kwargs):
         return text
@@ -167,7 +180,7 @@ def test_ocr_run_nonblock(
         monkeypatch, mock_called, image_pillow: PILImage,
         bbox: m.BBox, language: m.Language, ocr_model: m.OCRModel, option_dict: m.OptionDict
         ):
-    """Test performin an ocr_run non-blocking + same pipeline (has to run lazily by refetching previous result)"""
+    """Test performing an ocr_run non-blocking + same pipeline (has to run lazily by refetching previous result)"""
     text = 'test_text'
     def mock_ocr(*args, **kwargs):
         return text
@@ -191,6 +204,67 @@ def test_ocr_run_nonblock(
     assert not hasattr(mock_called, 'called')
     assert next(gen_lazy) is None
     assert next(gen_lazy) == res
+
+@pytest.mark.parametrize('lang_src', ['ja', 'en'])
+def test_ocr_merge_single_result(lang_src): # pylint: disable=too-many-locals
+    # pylint: disable=invalid-name
+    """Test merge_single_result behavior"""
+    @dataclass
+    class BBox:
+        """Mock BBox class not related to database"""
+        l: int
+        b: int
+        r: int
+        t: int
+        to_merged: 'BBox' = None
+
+        def __post_init__(self, *args, **kwargs):
+            self.id = np.random.rand(1)[0]
+
+        @property
+        def lbrt(self): # pylint: disable=missing-function-docstring
+            return self.l, self.b, self.r, self.t
+
+        def __hash__(self):
+            return hash(self.id)
+
+    merged_lst = [
+        BBox(0, 100, 30, 130),
+        BBox(100, 0, 130, 30),
+        BBox(50, 50, 80, 80),
+    ]
+
+    w = 10
+    h = 10
+    s = 2
+    rrx = 2
+    rry = 2
+    boxes = []
+    np.random.seed(0)
+    for merged in merged_lst:
+        xoff = merged.l
+        yoff = merged.b
+        for i in range(9):
+            errx =  np.random.rand(2) * rrx
+            erry =  np.random.rand(2) * rry
+            l = i % 3 * (w+s) + xoff + errx[0]
+            b = i // 3 * (w+s) + yoff + errx[1]
+            r = l + w + erry[0]
+            t = b + h + erry[1]
+            boxes.append((str(i+1), BBox(l, b, r, t, merged)))
+
+    texts = [_[0] for _ in boxes]
+    bboxes_single = [_[1] for _ in boxes]
+
+    vertical = lang_src in  m.OCRModel._VERTICAL_LANGS
+    expected = '369258147' if vertical else '1 2 3 4 5 6 7 8 9'
+
+    res = m.OCRModel.merge_single_result(lang_src, texts, bboxes_single, merged_lst)
+
+    for result in res:
+        assert result == expected
+
+
 
 def test_tsl_pre_tokenize(data_regression, string: str):
     """Test tsl module."""
@@ -244,7 +318,7 @@ def test_tsl_run(
         monkeypatch, mock_called,
         text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict
         ):
-    """Test performin an tsl_run blocking"""
+    """Test performing an tsl_run blocking"""
     def mock_tsl_pipeline(*args, **kwargs):
         return text.text
 
@@ -268,7 +342,7 @@ def test_tsl_run_nonblock(
         monkeypatch, mock_called,
         text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict
         ):
-    """Test performin an tsl_run non-blocking"""
+    """Test performing an tsl_run non-blocking"""
     def mock_tsl_pipeline(*args, **kwargs):
         return text.text
 
@@ -304,14 +378,57 @@ def test_tsl_run_lazy(text: m.Text, language: m.Language, tsl_model: m.TSLModel,
         gen = tsl_model.translate(text, language, language, lazy=True)
         next(gen)
 
+@pytest.mark.parametrize('mock_called', [['test_text_ocred']], indirect=True)
+def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
+        monkeypatch, image_pillow: PILImage, mock_called,
+        image: m.Image, text: m.Text, bbox: m.BBox, bbox_single: m.BBox, language: m.Language,
+        box_model: m.OCRBoxModel, ocr_model_single: m.OCRModel, tsl_model: m.TSLModel, option_dict: m.OptionDict
+        ):
+    """Test performing an ocr_tsl_run non-lazy"""
+    def mock_box_run(*args, **kwargs):
+        return [bbox_single], [bbox]
+    def mock_ocr_run(*args, block=True, **kwargs):
+        if not block:
+            yield
+        res, _ = m.Text.objects.get_or_create(text = text.text + '_ocred')
+        yield res
+    def mock_tsl_run(obj, *args, block=True, **kwargs):
+        if not block:
+            yield
+        res, _ = m.Text.objects.get_or_create(text = obj.text + '_translated')
+        yield res
+
+    box_model.box_detection = mock_box_run
+    ocr_model_single.ocr = mock_ocr_run
+    tsl_model.translate = mock_tsl_run
+
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(ocr_model_single, 'merge_single_result', mock_called)
+
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model_single)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+
+    res = full.ocr_tsl_pipeline_work(image_pillow, image.md5)
+
+    # Check that `merge_single_result` is being called with the expected arguments
+    assert mock_called.args[0] == language.iso1
+    assert mock_called.args[1] == [text.text + '_ocred']
+    assert mock_called.args[2] == [bbox_single]
+    assert mock_called.args[3] == [bbox]
+
+    res_lazy = full.ocr_tsl_pipeline_lazy(image.md5)
+
+    assert res == res_lazy
+
 def test_ocr_tsl_work_plus_lazy(
         monkeypatch, image_pillow: PILImage,
         image: m.Image, text: m.Text, bbox: m.BBox, language: m.Language,
         box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel, option_dict: m.OptionDict
         ):
-    """Test performin an ocr_tsl_run non-lazy"""
+    """Test performing an ocr_tsl_run non-lazy"""
     def mock_box_run(*args, **kwargs):
-        return [bbox]
+        return [bbox], [bbox]
     def mock_ocr_run(*args, block=True, **kwargs):
         if not block:
             yield
@@ -345,7 +462,7 @@ def test_ocr_tsl_work_plus_lazy(
     assert res == res_lazy
 
 def test_ocr_tsl_lazy():
-    """Test performin an ocr_tsl_run lazy (no image)"""
+    """Test performing an ocr_tsl_run lazy (no image)"""
     with pytest.raises(ValueError, match=r'^Image with md5 .* does not exist$'):
         full.ocr_tsl_pipeline_lazy('')
 
@@ -353,7 +470,7 @@ def test_ocr_tsl_lazy_image(
         monkeypatch, image: m.Image,
         box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel, option_dict: m.OptionDict
         ):
-    """Test performin an ocr_tsl_run lazy (with image but missing ocr-tsl steps)"""
+    """Test performing an ocr_tsl_run lazy (with image but missing ocr-tsl steps)"""
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)

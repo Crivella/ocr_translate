@@ -85,6 +85,11 @@ LOGGING = {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
         },
+        'plugin': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+        },
     },
 }
 

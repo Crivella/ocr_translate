@@ -33,13 +33,19 @@ jobs:
         run: >
           echo "VERSION=$(echo ${{ github.ref_name }} | cut -c2- )" >> $GITHUB_OUTPUT
 
+      # This way the CD workflow will note fail if test PyPI is not updated yet
       - name: Test install from TestPyPI
-        run: >
-          sleep 10 &&
-          pip install
-          --index-url https://test.pypi.org/simple/
-          --extra-index-url https://pypi.org/simple/
-          django-ocr_translate==${{ steps.get_version.outputs.VERSION }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 3
+          retry_on: error
+          timeout_minutes: 10
+          command: >
+            sleep 10 &&
+            pip install
+              --index-url https://test.pypi.org/simple/
+              --extra-index-url https://pypi.org/simple/
+              django-ocr_translate==${{ steps.get_version.outputs.VERSION }}
 
       - name: Build and publish on PyPI
         run: >
