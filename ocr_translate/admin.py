@@ -17,6 +17,9 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Admin interface for ocr_translate app."""
+from importlib.metadata import entry_points
+
+from django import forms
 from django.contrib import admin
 
 from . import models as m
@@ -26,17 +29,40 @@ class LanguageAdmin(admin.ModelAdmin):
     """Admin interface for Language model"""
     list_display = ('name', 'iso1', 'iso2b', 'iso2t', 'iso3')
 
+class OCRBoxModelForm(forms.ModelForm):
+    """Form for OCRBoxModel model"""
+    entrypoint = forms.ChoiceField(
+        choices=[(ep.name, ep.name) for ep in entry_points(group=m.OCRBoxModel.entrypoint_namespace)]
+        )
+
+class OCRModelForm(forms.ModelForm):
+    """Form for OCRModel model"""
+    entrypoint = forms.ChoiceField(
+        choices=[(ep.name, ep.name) for ep in entry_points(group=m.OCRModel.entrypoint_namespace)]
+        )
+
+class TSLModelForm(forms.ModelForm):
+    """Form for TSLModel model"""
+    entrypoint = forms.ChoiceField(
+        choices=[(ep.name, ep.name) for ep in entry_points(group=m.TSLModel.entrypoint_namespace)]
+        )
 class OCRBoxModelAdmin(admin.ModelAdmin):
     """Admin interface for OCRBoxModel model"""
     list_display = ('name',)
+    filter_horizontal = ('languages',)
+    form = OCRBoxModelForm
 
 class OCRModelAdmin(admin.ModelAdmin):
     """Admin interface for OCRModel model"""
     list_display = ('name',)
+    filter_horizontal = ('languages',)
+    form = OCRModelForm
 
 class TSLModelAdmin(admin.ModelAdmin):
     """Admin interface for TSLModel model"""
     list_display = ('name',)
+    filter_horizontal = ('src_languages', 'dst_languages')
+    form = TSLModelForm
 
 
 admin.site.register(m.Language, LanguageAdmin)
