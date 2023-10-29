@@ -40,7 +40,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           timeout_minutes: 10
-          command: >
+          command: >-
             sleep 10 &&
             pip install
               --index-url https://test.pypi.org/simple/
