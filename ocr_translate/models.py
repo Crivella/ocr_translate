@@ -52,7 +52,7 @@ class Language(models.Model):
         )
 
     def __str__(self):
-        return str(self.iso1)
+        return f'{self.name} ({self.iso1})'
 
     def __eq__(self, other):
         if isinstance(other, Language):

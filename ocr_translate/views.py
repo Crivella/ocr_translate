@@ -81,11 +81,11 @@ def handshake(request: HttpRequest) -> JsonResponse:
     ocr_model = get_ocr_model() or ''
     tsl_model = get_tsl_model() or ''
 
-    lang_src = lang_src or ''
-    lang_dst = lang_dst or ''
+    lang_src = getattr(lang_src, 'iso1', None) or ''
+    lang_dst = getattr(lang_dst, 'iso1', None) or ''
 
     return JsonResponse({
-        'Languages': [str(_) for _ in languages],
+        'Languages': [_.iso1 for _ in languages],
         'BOXModels': [str(_) for _ in box_models],
         'OCRModels': [str(_) for _ in ocr_models],
         'TSLModels': [str(_) for _ in tsl_models],
@@ -93,8 +93,8 @@ def handshake(request: HttpRequest) -> JsonResponse:
         'box_selected': str(box_model),
         'ocr_selected': str(ocr_model),
         'tsl_selected': str(tsl_model),
-        'lang_src': str(lang_src),
-        'lang_dst': str(lang_dst),
+        'lang_src': lang_src,
+        'lang_dst': lang_dst,
         })
 
 @csrf_exempt

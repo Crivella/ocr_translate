@@ -38,7 +38,7 @@ def test_add_language(language_dict: dict, language: m.Language):
     """Test adding a language."""
     query = m.Language.objects.filter(**language_dict)
     assert query.exists()
-    assert str(query.first()) == language_dict['iso1']
+    assert query.first() == language
 
 def test_add_language_existing(language_dict: dict, language: m.Language):
     """Test adding a language."""
