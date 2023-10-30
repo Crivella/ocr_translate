@@ -116,10 +116,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ocr_translate',
-    # 'ocr_translate_tesseract',
-    # 'ocr_translate_easyocr',
+    'ocr_translate_tesseract',
+    'ocr_translate_easyocr',
     # 'ocr_translate_google',
-    # 'ocr_translate_hugging_face',
+    'ocr_translate_hugging_face',
 ]
 
 MIDDLEWARE = [
