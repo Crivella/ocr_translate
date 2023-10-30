@@ -526,7 +526,7 @@ class TSLModel(BaseModel):
 
             # Use a list of word frequencies to determine the best split
             def sum_freq(lst: list) -> float:
-                return sum(trie.get_freq(w) for w in lst) / len(lst)**1.5
+                return sum(trie.get_freq(w) for w in lst) / len(lst)**4.0
 
             res = [' '.join(max(_, key=sum_freq)) for _ in filter(None, res)]
             text = ' '.join(res)
