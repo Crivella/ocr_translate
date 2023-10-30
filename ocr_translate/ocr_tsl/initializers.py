@@ -46,11 +46,11 @@ def init_most_used():
     ocr = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count').first()
     tsl = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count').first()
 
-    if box:
+    if box and box.count > 0:
         load_box_model(box.name)
-    if ocr:
+    if ocr and ocr.count > 0:
         load_ocr_model(ocr.name)
-    if tsl:
+    if tsl and tsl.count > 0:
         load_tsl_model(tsl.name)
 
 def auto_create_languages():
