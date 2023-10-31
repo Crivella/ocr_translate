@@ -190,7 +190,9 @@ def bbox_single(image, box_run):
 @pytest.fixture()
 def ocr_run(language, bbox, ocr_model, option_dict, text):
     """OCRRun database object."""
-    return m.OCRRun.objects.create(lang_src=language, bbox=bbox, model=ocr_model, options=option_dict, result=text)
+    return m.OCRRun.objects.create(
+        lang_src=language, bbox=bbox, model=ocr_model, options=option_dict, result_merged=text
+        )
 
 @pytest.fixture()
 def tsl_run(language, text, tsl_model, option_dict):

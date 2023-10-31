@@ -37,9 +37,9 @@ def init_most_used():
     src = m.Language.objects.annotate(count=Count('trans_src')).order_by('-count').first()
     dst = m.Language.objects.annotate(count=Count('trans_dst')).order_by('-count').first()
 
-    if src:
+    if src and src.count > 0:
         load_lang_src(src.iso1)
-    if dst:
+    if dst and dst.count > 0:
         load_lang_dst(dst.iso1)
 
     box = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count').first()
