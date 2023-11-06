@@ -337,9 +337,6 @@ class Trie:
         if max_num == 0:
             return results
 
-        print('---------------')
-        print(word, max_num)
-        # print(self.root.children['a'])
         # Also add all possible combinations of substitutions + deletion/insertion
         for i in range(1, max_num):
             for sub in  self._get_all_substitutions(word, i, invalid_ok=True):
@@ -348,14 +345,10 @@ class Trie:
                 results.extend(self._get_all_insertions(sub, max_num-i))
 
         results.extend(self._get_all_substitutions(word, max_num))
-        print(results)
         results.extend(self._get_all_deletions(word, max_num))
-        print(results)
         results.extend(self._get_all_insertions(word, max_num))
-        print(results)
 
         results = [(res, self.get_freq(res) / (max_num+1)**distance_exp_factor) for res in results]
-        print(results)
 
         results.extend(self._autocorrect_bayes(word, max_num-1, distance_exp_factor))
 
