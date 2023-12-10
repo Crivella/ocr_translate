@@ -573,6 +573,28 @@ class TSLModel(BaseModel):
         #   using some separator that the service will leave unaltered.)
         raise NotImplementedError('The base model class does not implement this method.')
 
+    def find_manual(self,  text_obj: 'Text', src: 'Language', dst: 'Language') -> 'TranslationRun':
+        """Find a manual translation run for the given text with the specified source and destination languages.
+        Args:
+            text_obj (m.Text): Text object from the database to translate.
+            src (m.Language): Source language object from the database.
+            dst (m.Language): Destination language object from the database.
+
+        Returns:
+            m.TranslationRun: The TranslationRun object from the database.
+        """
+        manual_model = TSLModel.objects.filter(name='manual').first()
+        params = {
+            'model': manual_model,
+            'lang_src': src,
+            'lang_dst': dst,
+            'text': text_obj,
+            'options': OptionDict.objects.get(options={})
+        }
+        # logger.debug(f'Looking for manual TSL with params: {params}')
+        return TranslationRun.objects.filter(**params).first()
+
+
     def translate(
             self,
             text_obj: 'Text', src: 'Language', dst: 'Language', options: 'OptionDict' = None,
@@ -600,15 +622,18 @@ class TSLModel(BaseModel):
         """
         if lazy and force:
             raise ValueError('Cannot force + lazy TSL run')
-        options_obj = options or OptionDict.objects.get(options={})
-        params = {
-            'options': options_obj,
-            'text': text_obj,
-            'model': self,
-            'lang_src': src,
-            'lang_dst': dst,
-        }
-        tsl_run_obj = TranslationRun.objects.filter(**params).first()
+        # Check if a ManualModel is being used
+        tsl_run_obj = self.find_manual(text_obj, src, dst)
+        if tsl_run_obj is None:
+            options_obj = options or OptionDict.objects.get(options={})
+            params = {
+                'options': options_obj,
+                'text': text_obj,
+                'model': self,
+                'lang_src': src,
+                'lang_dst': dst,
+            }
+            tsl_run_obj = TranslationRun.objects.filter(**params).first()
         if tsl_run_obj is None or force:
             if lazy:
                 raise ValueError('Value not found for lazy TSL run')
@@ -646,7 +671,10 @@ class TSLModel(BaseModel):
             if not block:
                 # Both branches should have the same number of yields
                 yield None
-            logger.info(f'Reusing TSL <{tsl_run_obj.id}>')
+            manual = ''
+            if tsl_run_obj.model.name == 'manual':
+                manual = 'manual '
+            logger.info(f'Reusing {manual}TSL <{tsl_run_obj.id}>')
 
         yield tsl_run_obj.result
 

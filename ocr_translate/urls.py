@@ -29,4 +29,5 @@ urlpatterns = [
     path('get_trans/', views.get_translations, name='get_trans'),
     path('run_tsl/', views.run_tsl, name='run_tsl'),
     path('run_ocrtsl/', views.run_ocrtsl, name='run_ocrtsl'),
+    path('set_manual_translation/', views.set_manual_translation, name='set_manual_translation'),
 ]

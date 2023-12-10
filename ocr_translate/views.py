@@ -345,3 +345,53 @@ def get_translations(request: HttpRequest) -> JsonResponse:
             'text': _.result.text,
             } for _ in translations],
         })
+
+@csrf_exempt
+def set_manual_translation(request: HttpRequest) -> JsonResponse:
+    """Handle a POST request to apply a manual translation.
+    Expected data:
+    {
+        'text': 'text',
+        'translation': 'translation',
+    }
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+    try:
+        data = post_data_converter(request)
+    except ValueError:
+        return JsonResponse({'error': 'invalid content type'}, status=400)
+
+    text = data.pop('text', None)
+    translation = data.pop('translation', None)
+    if text is None:
+        return JsonResponse({'error': 'no text'}, status=400)
+    if translation is None:
+        return JsonResponse({'error': 'no translation'}, status=400)
+    if len(data) > 0:
+        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+
+    text_obj = m.Text.objects.filter(text=text).first()
+    if text_obj is None:
+        return JsonResponse({'error': 'text not found'}, status=404)
+
+    manual_model = m.TSLModel.objects.filter(name='manual').first()
+    params = {
+        'model': manual_model,
+        'text': text_obj,
+        'lang_src': get_lang_src(),
+        'lang_dst': get_lang_dst(),
+        'options': m.OptionDict.objects.get(options={}),
+    }
+
+    tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
+    if tsl_run_obj is None:
+        res_obj, _ = m.Text.objects.get_or_create(text=translation)
+        params['result'] = res_obj
+        tsl_run_obj = m.TranslationRun.objects.create(**params)
+    else:
+        tsl_run_obj.result.text = translation
+        tsl_run_obj.result.save()
+
+    return JsonResponse({})
