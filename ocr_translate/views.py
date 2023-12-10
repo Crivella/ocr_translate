@@ -31,6 +31,7 @@ from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 
+from . import __version__array__
 from . import models as m
 from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
 from .ocr_tsl.full import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
@@ -88,6 +89,7 @@ def handshake(request: HttpRequest) -> JsonResponse:
     lang_dst = getattr(lang_dst, 'iso1', None) or ''
 
     return JsonResponse({
+        'version': __version__array__,
         'Languages': [_.iso1 for _ in languages],
         'Languages_hr': [_.name for _ in languages],
         'BOXModels': [str(_) for _ in box_models],
