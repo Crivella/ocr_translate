@@ -64,14 +64,17 @@ def handshake(request: HttpRequest) -> JsonResponse:
     lang_dst = get_lang_dst()
 
     languages = m.Language.objects.annotate(count=Count('trans_src')+Count('trans_dst')).order_by('-count')
-    box_models = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count')
-    ocr_models = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count')
-    tsl_models = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count')
 
+    box_models = []
+    ocr_models = []
+    tsl_models = []
     if not lang_src is None:
+        box_models = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count')
+        ocr_models = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count')
         box_models = box_models.filter(languages=lang_src)
         ocr_models = ocr_models.filter(languages=lang_src)
         if not lang_dst is None:
+            tsl_models = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count')
             tsl_models = tsl_models.filter(
                 src_languages=lang_src,
                 dst_languages=lang_dst,
