@@ -130,10 +130,10 @@ def auto_create_tsl():
     """Create TSLModel objects from entrypoints."""
     for tsl in load_ept_data('ocr_translate.tsl_data'):
         logger.debug(f'Creating tsl model: {tsl}')
-        src = tsl.pop('lang_src')
-        dst = tsl.pop('lang_dst')
+        src = tsl.pop('lang_src', [])
+        dst = tsl.pop('lang_dst', [])
         lcode = tsl.pop('lang_code', None)
-        entrypoint = tsl.pop('entrypoint')
+        entrypoint = tsl.pop('entrypoint', None)
         iso1_map = tsl.pop('iso1_map', {})
         def_opt = tsl.pop('default_options', {})
         opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
