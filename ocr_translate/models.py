@@ -278,8 +278,8 @@ class OCRModel(BaseModel):
 
         Yields:
             Generator[Union[Message, m.Text], None, None]:
-                If block is True, yields a Message object for the OCR run first and the resulting Text object second.
-                If block is False, yields the resulting Text object.
+                If block is False, yields a Message object for the OCR run first and the resulting Text object second.
+                If block is True, yields the resulting Text object.
         """
         options_obj = options
         if options_obj is None:
@@ -373,7 +373,7 @@ class OCRBoxModel(BaseModel):
             self,
             img_obj: 'Image', lang: 'Language', image: PILImage = None,
             force: bool = False, options: 'OptionDict' = None
-            ) -> list['BBox']:
+            ) -> tuple[list['BBox'], list['BBox']]:
         """High level function to perform box OCR on an image. Will attempt to reuse a previous run if possible.
 
         Args:
@@ -388,7 +388,8 @@ class OCRBoxModel(BaseModel):
             ValueError: ValueError is raised if at any step of the pipeline an image is required but not provided.
 
         Returns:
-            list[m.BBox]: A list of BBox objects containing the resulting bounding boxes.
+            tuple[list['BBox'], list['BBox']]: Tuple of lists of BBox objects from the database.
+                First list is the single bounding boxes, second list is the merged bounding boxes.
         """
         options_obj = options or OptionDict.objects.get(options={})
         params = {
@@ -475,6 +476,7 @@ class TSLModel(BaseModel):
             lang (str): Language of the text.
             ignore_chars (str, optional): String of characters to ignore. Defaults to None.
             break_chars (str, optional): String of characters to break on. Defaults to None.
+            allowed_start_end (str, optional): String of characters allowed at the start and end of a line.
             break_newlines (bool, optional): Whether to break on newlines. Defaults to True.
             restore_missing_spaces (bool, optional): Whether to restore missing spaces (2 word with no space between).
             restore_dash_newlines (bool, optional): Whether to restore dash-newlines (word broken with a -newline).
@@ -593,8 +595,8 @@ class TSLModel(BaseModel):
 
         Yields:
             Generator[Union[Message, m.Text], None, None]:
-                If block is True, yields a Message object for the TSL run first and the resulting Text object second.
-                If block is False, yields the resulting Text object.
+                If block is False, yields a Message object for the TSL run first and the resulting Text object second.
+                If block is True, yields the resulting Text object.
         """
         if lazy and force:
             raise ValueError('Cannot force + lazy TSL run')
