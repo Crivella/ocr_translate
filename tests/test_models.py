@@ -40,6 +40,12 @@ def test_add_language(language_dict: dict, language: m.Language):
     assert query.exists()
     assert query.first() == language
 
+def test_language_str(language: m.Language):
+    """Test language string representation."""
+    assert isinstance(str(language), str)
+    assert str(language).startswith(language.name)
+    assert language.iso1 in str(language)
+
 def test_add_language_existing(language_dict: dict, language: m.Language):
     """Test adding a language."""
     with pytest.raises(django.db.utils.IntegrityError):
@@ -106,13 +112,72 @@ def test_box_run_reuse(
         return [{'single': [lbrt], 'merged': lbrt}]
 
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    box_model._box_detection = mock_pipeline
+    monkeypatch.setattr(box_model, '_box_detection', mock_pipeline)
 
     assert m.OCRBoxRun.objects.count() == 0
     box_model.box_detection(image, language, image=1, options=option_dict)
     assert m.OCRBoxRun.objects.count() == 1
     box_model.box_detection(image, language, image=1, options=option_dict)
     assert m.OCRBoxRun.objects.count() == 1
+
+def test_box_run_04migration_donothing(
+        monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict,
+        ):
+    """Test that baxrun on v0.4.x that reuses a run from < v0.4.0 is always re-run"""
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+
+    assert m.OCRBoxRun.objects.count() == 0
+    bbox_run = m.OCRBoxRun.objects.create(
+        image=image,
+        model=box_model,
+        lang_src=language,
+        options=option_dict,
+    )
+    assert m.OCRBoxRun.objects.count() == 1
+
+    lbrt = (1,2,3,4)
+    def mock_pipeline(*args, **kwargs):
+        return [{'single': [lbrt], 'merged': lbrt}]
+
+    monkeypatch.setattr(box_model, '_box_detection', mock_pipeline)
+
+    assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first().id == bbox_run.id
+    single, merged = box_model.box_detection(image, language, image=1, options=option_dict)
+    assert m.OCRBoxRun.objects.count() == 1
+    assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first().id == bbox_run.id
+    assert len(single) == 0
+    assert len(merged) == 0
+
+def test_box_run_04migration_replace(
+        monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict,
+        ):
+    """Test that baxrun on v0.4.x that reuses a run from < v0.4.0 is always re-run"""
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+
+    bbox = m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4)
+
+    assert m.OCRBoxRun.objects.count() == 0
+    bbox_run = m.OCRBoxRun.objects.create(
+        image=image,
+        model=box_model,
+        lang_src=language,
+        options=option_dict,
+    )
+    bbox_run.result_merged.add(bbox)
+    assert m.OCRBoxRun.objects.count() == 1
+
+    lbrt = (1,2,3,4)
+    def mock_pipeline(*args, **kwargs):
+        return [{'single': [lbrt], 'merged': lbrt}]
+
+    monkeypatch.setattr(box_model, '_box_detection', mock_pipeline)
+
+    assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first().id == bbox_run.id
+    single, merged = box_model.box_detection(image, language, image=1, options=option_dict)
+    assert m.OCRBoxRun.objects.count() == 1
+    assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first() is None
+    assert len(single) == 1
+    assert len(merged) == 1
 
 def test_ocr_run_nooption(
         monkeypatch, image_pillow: PILImage,
@@ -337,6 +402,36 @@ def test_tsl_run(
 
     assert not hasattr(mock_called, 'called')
     assert next(gen_lazy) == res
+
+def test_tsl_run_manual(
+        monkeypatch, mock_called,
+        text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict,
+        manual_model: m.TSLModel
+        ):
+    """Test performing an tsl_run blocking"""
+    manual = m.Text.objects.create(text='manual')
+    m.TranslationRun.objects.create(
+        text=text,
+        result=manual,
+        model=manual_model,
+        options=option_dict,
+        lang_src=language,
+        lang_dst=language,
+    )
+    def mock_tsl_pipeline(*args, **kwargs):
+        return text.text
+
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    tsl_model._translate = mock_tsl_pipeline
+
+    tsl_model._translate = mock_called # Should not be called as it should be lazy
+    gen = tsl_model.translate(text, src=language, dst=language, options=option_dict)
+
+    res = next(gen)
+
+    assert isinstance(res, m.Text)
+    assert res.text == manual.text
+    assert not hasattr(mock_called, 'called')
 
 def test_tsl_run_nonblock(
         monkeypatch, mock_called,

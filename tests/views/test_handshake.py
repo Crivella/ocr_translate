@@ -59,16 +59,37 @@ def test_handshake_clean_content(client, language, box_model, ocr_model, tsl_mod
     content = response.json()
 
     assert content['Languages'] == ['ja']
-    assert content['BOXModels'] == [box_model.name]
-    assert content['OCRModels'] == [ocr_model.name]
-    assert content['TSLModels'] == [tsl_model.name]
+    assert content['BOXModels'] == []
+    assert content['OCRModels'] == []
+    assert content['TSLModels'] == []
 
     for key in ['box_selected', 'ocr_selected', 'tsl_selected']:
         assert content[key] == ''
     for key in ['lang_src', 'lang_dst']:
         assert content[key] == ''
 
-def test_handshake_clean_initialized(client, monkeypatch, language, box_model, tsl_model, ocr_model):
+def test_handshake_initialized_lang_only(monkeypatch, client, language, box_model, ocr_model, tsl_model):
+    """Test handshake with content in the database."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(lang, 'LANG_DST', language)
+
+    url = reverse('ocr_translate:handshake')
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.json()
+
+    assert content['Languages'] == ['ja']
+    assert content['BOXModels'] == [box_model.name]
+    assert content['OCRModels'] == [ocr_model.name]
+    assert content['TSLModels'] == [tsl_model.name]
+
+    assert content['lang_src'] == 'ja'
+    assert content['lang_dst'] == 'ja'
+
+    for key in ['box_selected', 'ocr_selected', 'tsl_selected']:
+        assert content[key] == ''
+
+def test_handshake_initialized(client, monkeypatch, language, box_model, tsl_model, ocr_model):
     """Test handshake with content + init."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(lang, 'LANG_DST', language)

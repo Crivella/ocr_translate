@@ -172,6 +172,11 @@ def tsl_model(language, tsl_model_dict):
     return res
 
 @pytest.fixture()
+def manual_model():
+    """ManualModel database object."""
+    return m.TSLModel.objects.create(name='manual')
+
+@pytest.fixture()
 def box_run(language, image, box_model, option_dict):
     """OCRBoxRun database object."""
     return m.OCRBoxRun.objects.create(lang_src=language, image=image, model=box_model, options=option_dict)

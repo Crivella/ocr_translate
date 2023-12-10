@@ -403,7 +403,7 @@ class OCRBoxModel(BaseModel):
         # Needed to rerun the OCR from <0.4.x to >=0.4.x
         # Before only merged boxes where saved, now also the single are needed
         if isinstance(bbox_run, OCRBoxRun):
-            if len(bbox_run.result_single.all()) == 0:
+            if len(bbox_run.result_single.all()) == 0 and len(bbox_run.result_merged.all()) > 0:
                 bbox_run.delete()
                 bbox_run = None
         if bbox_run is None or force:
