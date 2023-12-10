@@ -235,7 +235,7 @@ class OCRModel(BaseModel):
             self,
             img: PILImage, lang: str = None, options: dict = None
             ) -> str:
-        """Perform OCR on an image.
+        """PLACEHOLDER (to be implemented via entrypoint): Perform OCR on an image.
 
         Args:
             img (Image.Image):  A Pillow image on which to perform OCR.
@@ -260,7 +260,7 @@ class OCRModel(BaseModel):
             bbox_obj: 'BBox', lang: 'Language',  image: PILImage = None, options: 'OptionDict' = None,
             force: bool = False, block: bool = True,
             ) -> Generator[Union[Message, 'Text'], None, None]:
-        """PLACEHOLDER (to be implemented via entrypoint): High level function to perform OCR on an image.
+        """High level function to perform OCR on an image.
 
         Args:
             bbox_obj (m.BBox): The BBox object from the database.
