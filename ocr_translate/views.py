@@ -248,72 +248,74 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         'options': 'dict',
     }
     """
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+    try:
+        data = post_data_converter(request)
+    except ValueError:
+        return JsonResponse({'error': 'invalid content type'}, status=400)
+
+    b64 = data.pop('contents', None)
+    md5 = data.pop('md5', None)
+    frc = data.pop('force', False)
+    opt = data.pop('options', {})
+
+    if md5 is None:
+        return JsonResponse({'error': 'no md5'}, status=400)
+    if len(data) > 0:
+        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+
+    if b64 is None:
+        logger.info('No contents, trying to lazyload')
+        if frc:
+            return JsonResponse({'error': 'Cannot force ocr without contents'}, status=400)
         try:
-            data = post_data_converter(request)
+            res = ocr_tsl_pipeline_lazy(md5, options=opt)
         except ValueError:
-            return JsonResponse({'error': 'invalid content type'}, status=400)
+            logger.info('Failed to lazyload ocr')
+            return JsonResponse({'error': 'Failed to lazyload ocr'}, status=406)
+    else:
+        binary = base64.b64decode(b64)
+        # Doing md5 on the base64 to have consistency with the JS generate one
+        # Can't find a way to run md5 on the binary in JS (the blob does not work)
+        if md5 != hashlib.md5(b64.encode('utf-8')).hexdigest():
+            return JsonResponse({'error': 'md5 mismatch'}, status=400)
+        logger.debug(f'md5 {md5} <- {len(binary)} bytes')
 
-        b64 = data.pop('contents', None)
-        md5 = data.pop('md5', None)
-        frc = data.pop('force', False)
-        opt = data.pop('options', {})
+        img = Image.open(io.BytesIO(binary))
+        # Needed to make sure the image is loaded synchronously before going forward
+        # Enforce thread safety. Maybe there is a way to do it without numpy?
+        np.array(img)
 
-        if md5 is None:
-            return JsonResponse({'error': 'no md5'}, status=400)
-        if len(data) > 0:
-            return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+        # Check if same request is already in queue. If yes attach listener to it
+        lang_src = get_lang_src()
+        lang_dst = get_lang_dst()
+        box_model = get_box_model()
+        ocr_model = get_ocr_model()
+        tsl_model = get_tsl_model()
 
-        if b64 is None:
-            logger.info('No contents, trying to lazyload')
-            if frc:
-                return JsonResponse({'error': 'Cannot force ocr without contents'}, status=400)
-            try:
-                res = ocr_tsl_pipeline_lazy(md5, options=opt)
-            except ValueError:
-                logger.info('Failed to lazyload ocr')
-                return JsonResponse({'error': 'Failed to lazyload ocr'}, status=406)
-        else:
-            binary = base64.b64decode(b64)
-            # Doing md5 on the base64 to have consistency with the JS generate one
-            # Can't find a way to run md5 on the binary in JS (the blob does not work)
-            if md5 != hashlib.md5(b64.encode('utf-8')).hexdigest():
-                return JsonResponse({'error': 'md5 mismatch'}, status=400)
-            logger.debug(f'md5 {md5} <- {len(binary)} bytes')
+        try:
+            id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id)
+        except AttributeError:
+            return JsonResponse({'error': 'No models selected'}, status=400)
 
-            img = Image.open(io.BytesIO(binary))
-            # Needed to make sure the image is loaded synchronously before going forward
-            # Enforce thread safety. Maybe there is a way to do it without numpy?
-            np.array(img)
+        msg = q.put(
+            id_ = id_,
+            msg = {
+                'args': (img, md5),
+                'kwargs': {'force': frc, 'options': opt},
+            },
+            handler = ocr_tsl_pipeline_work,
+        )
 
-            # Check if same request is already in queue. If yes attach listener to it
-            lang_src = get_lang_src()
-            lang_dst = get_lang_dst()
-            box_model = get_box_model()
-            ocr_model = get_ocr_model()
-            tsl_model = get_tsl_model()
-
-            try:
-                id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id)
-            except AttributeError:
-                return JsonResponse({'error': 'No models selected'}, status=400)
-
-            msg = q.put(
-                id_ = id_,
-                msg = {
-                    'args': (img, md5),
-                    'kwargs': {'force': frc, 'options': opt},
-                },
-                handler = ocr_tsl_pipeline_work,
-            )
-
-            res = msg.response()
+        res = msg.response()
 
 
-        return JsonResponse({
-            'result': res,
-            })
-    return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+    return JsonResponse({
+        'result': res,
+        })
+
 
 @csrf_exempt
 def get_translations(request: HttpRequest) -> JsonResponse:

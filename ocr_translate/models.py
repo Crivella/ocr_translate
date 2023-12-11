@@ -600,6 +600,7 @@ class TSLModel(BaseModel):
             text_obj: 'Text', src: 'Language', dst: 'Language', options: 'OptionDict' = None,
             force: bool = False,
             block: bool = True,
+            favor_manual: bool = True,
             lazy: bool = False
             ) -> Generator[Union[Message, 'Text'], None, None]:
         """High level translate call generating a TranslationRun entry.
@@ -610,6 +611,7 @@ class TSLModel(BaseModel):
             options (m.OptionDict, optional): OptionDict object from the database. Defaults to None.
             force (bool, optional): Whether to force a new TSL run. Defaults to False.
             block (bool, optional): Whether to block until the task is complete. Defaults to True.
+            favor_manual (bool, optional): Whether to favor manual translations over TSL. Defaults to True.
             lazy (bool, optional): Whether to raise an error if the TSL run is not found. Defaults to False.
 
         Raises:
@@ -623,7 +625,9 @@ class TSLModel(BaseModel):
         if lazy and force:
             raise ValueError('Cannot force + lazy TSL run')
         # Check if a ManualModel is being used
-        tsl_run_obj = self.find_manual(text_obj, src, dst)
+        tsl_run_obj = None
+        if favor_manual:
+            tsl_run_obj = self.find_manual(text_obj, src, dst)
         if tsl_run_obj is None:
             options_obj = options or OptionDict.objects.get(options={})
             params = {
