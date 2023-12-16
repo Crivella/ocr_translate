@@ -243,3 +243,41 @@ paths:
                             description: "l, b, r, t"
                           minItems: 4
                           maxItems: 4
+  /set_manual_translation:
+    post:
+      summary: Set manual translation.
+      description: Set manual translation for a text object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                translation:
+                  type: string
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':  # status code
+          description: Text not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: Success.
