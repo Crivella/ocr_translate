@@ -65,6 +65,11 @@ class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""
     class Meta:
         abstract = True
+    # This should be a dict of dicts where the key is the name of the option and the value contains:
+    #  - type: The type of the option (str, int, float, bool)
+    #  - default: The default value of the option (can be a callable that returns the default value)
+    #  - description: A description of the option
+    ALLOWED_OPTIONS = {}
 
     entrypoint_namespace = None
 
@@ -453,6 +458,55 @@ class OCRBoxModel(BaseModel):
 
 class TSLModel(BaseModel):
     """Translation models using hugging space naming convention"""
+    ALLOWED_OPTIONS = {
+        'ignore_chars': {
+            'type': str,
+            'default': ('cascade', ['lang_src', 'tsl_model'], ''),
+            'description': 'Characters to ignore during translation.',
+        },
+        'break_chars': {
+            'type': str,
+            'default': ('cascade', ['lang_src', 'tsl_model'], ''),
+            'description': (
+                'Characters on which lines will be split for translation.\n'
+                'The split lines are translated separately (no context between them) and then merged back together.)'
+                ),
+        },
+        'allowed_start_end': {
+            'type': str,
+            'default': ('cascade', ['lang_src', 'tsl_model'], ''),
+            'description': (
+                'Characters allowed at the start and end of a line.\n'
+                'Some models like tesseract, will detect the edges of text bubbles as text and spit out garbage '
+                'at the start/end of the translated line. This option will filter out any caracter that is not '
+                'allowed at the start/end of a line.'
+                ),
+        },
+        'break_newlines': {
+            'type': bool,
+            'default': ('cascade', ['lang_src', 'tsl_model'], False),
+            'description': 'Split lines on newlines. If false the newlines will be replaced with spaces.',
+        },
+        'restore_missing_spaces': {
+            'type': bool,
+            'default': ('cascade', ['lang_src', 'tsl_model'], False),
+            'description': (
+                'Some models will OCR text without spaces between some of the words.\n'
+                'This option will attempt to restore the missing spaces by finding the shortest valid decomposition '
+                'also keeping into account the word frequency.\n'
+                '(Only available if a trie is loaded for the source language.)'
+                ),
+        },
+        'restore_dash_newlines': {
+            'type': bool,
+            'default': ('cascade', ['lang_src', 'tsl_model'], False),
+            'description': (
+                'Text can be written with dash splitting a word onto a new line.\n'
+                'If this option is enabled, dashes preceded by a character and followed by a newline will be removed '
+                'togheter with the newline to merge the word back together.'
+                ),
+        },
+    }
     entrypoint_namespace = 'ocr_translate.tsl_models'
 
     src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')
@@ -509,7 +563,7 @@ class TSLModel(BaseModel):
             text = '\n'.join(app)
         if restore_dash_newlines:
             text = re.sub(r'(?<!\n)- *\n', '', text)
-        if ignore_chars is not None:
+        if ignore_chars:
             text = re.sub(f'[{ignore_chars}]+', '', text)
         if break_chars is None:
             break_chars = ''
