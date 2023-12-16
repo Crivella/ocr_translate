@@ -23,6 +23,7 @@ import hashlib
 import io
 import json
 import logging
+from typing import Union
 
 import numpy as np
 from django.db.models import Count
@@ -400,3 +401,79 @@ def set_manual_translation(request: HttpRequest) -> JsonResponse:
         tsl_run_obj.result.save()
 
     return JsonResponse({})
+
+def get_default_options_from_cascade(
+        objects: list[Union[str, 'm.OptionDict']], option: str, default: Union[int, float, str, bool] = None
+        ) -> Union[int, float, str, bool]:
+    """Get the default value of an option from a cascade of objects.
+
+    Args:
+        objects (list[Union[str, OptionDict]]): List of option objects or string identifying a model type.
+        option (str): Name of the option to get.
+        default (Union[int, float, str, bool], optional): Default value to return for the option. Defaults to None.
+
+    Raises:
+        ValueError: Invalid string in objects list.
+        TypeError: Invalid type in objects list.
+
+    Returns:
+        Union[int, float, str, bool]: The default value of the option.
+    """    """"""
+    res = default
+    for obj in objects:
+        if obj is None:
+            continue
+        if isinstance(obj, m.OptionDict):
+            res = obj.options.get(option, res)
+        elif isinstance(obj, str):
+            if obj == 'lang_src':
+                model = get_lang_src()
+            elif obj == 'lang_dst':
+                model = get_lang_dst()
+            elif obj == 'box_model':
+                model = get_box_model()
+            elif obj == 'ocr_model':
+                model = get_ocr_model()
+            elif obj == 'tsl_model':
+                model = get_tsl_model()
+            else:
+                raise ValueError(f'Unknown option cascade object: {obj}')
+            res = model.default_options.options.get(option, res)
+        else:
+            raise TypeError(f'Cannot get default options from {type(obj)}')
+    return res
+
+def get_active_options(request: HttpRequest) -> JsonResponse:
+    """Handle a GET request to get active options."""
+    if request.method != 'GET':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+    params = request.GET.dict()
+    if len(params) > 0:
+        return JsonResponse({'error': f'invalid data: {params}'}, status=400)
+
+    res = {}
+    for typ,model in [
+        ('box_model', get_box_model()),
+        ('ocr_model', get_ocr_model()),
+        ('tsl_model', get_tsl_model()),
+        ]:
+        ptr = res.setdefault(typ, {})
+        if model is None:
+            continue
+            # return JsonResponse({'error': 'No models selected'}, status=400)
+
+        for opt,val in model.ALLOWED_OPTIONS.items():
+            val = val.copy()
+            ptr[opt] = val
+            default = val['default']
+            if isinstance(default, tuple):
+                if default[0] == 'cascade':
+                    default = get_default_options_from_cascade(default[1], opt, default[2])
+                    default = val['type'](default)
+                    val['default'] = default
+                else:
+                    raise ValueError(f'Unknown default action type: {default[0]}')
+            val['type'] = val['type'].__name__
+
+    return JsonResponse({'options': res})
