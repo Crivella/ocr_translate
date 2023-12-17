@@ -29,6 +29,17 @@ class AllowEmptyJSONField(forms.JSONField):
     """JSONField that allows empty values"""
     empty_values = [None, '', [], ()]
 
+class OptionDictForm(forms.ModelForm):
+    """Form for OptionDict model"""
+    options = AllowEmptyJSONField(required=False)
+
+@admin.register(m.OptionDict)
+class OptionDictAdmin(admin.ModelAdmin):
+    """Admin interface for OptionDict model"""
+    list_display = ('options',)
+    form = OptionDictForm
+
+@admin.register(m.Language)
 class LanguageAdmin(admin.ModelAdmin):
     """Admin interface for Language model"""
     list_display = ('name', 'iso1', 'iso2b', 'iso2t', 'iso3')
@@ -54,26 +65,23 @@ class TSLModelForm(forms.ModelForm):
         )
     iso1_map = AllowEmptyJSONField(required=False)
 
+@admin.register(m.OCRBoxModel)
 class OCRBoxModelAdmin(admin.ModelAdmin):
     """Admin interface for OCRBoxModel model"""
     list_display = ('name',)
     filter_horizontal = ('languages',)
     form = OCRBoxModelForm
 
+@admin.register(m.OCRModel)
 class OCRModelAdmin(admin.ModelAdmin):
     """Admin interface for OCRModel model"""
     list_display = ('name',)
     filter_horizontal = ('languages',)
     form = OCRModelForm
 
+@admin.register(m.TSLModel)
 class TSLModelAdmin(admin.ModelAdmin):
     """Admin interface for TSLModel model"""
     list_display = ('name',)
     filter_horizontal = ('src_languages', 'dst_languages')
     form = TSLModelForm
-
-
-admin.site.register(m.Language, LanguageAdmin)
-admin.site.register(m.OCRBoxModel, OCRBoxModelAdmin)
-admin.site.register(m.OCRModel, OCRModelAdmin)
-admin.site.register(m.TSLModel, TSLModelAdmin)
