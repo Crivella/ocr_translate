@@ -34,6 +34,7 @@ logger = logging.getLogger('ocr.general')
 
 def init_most_used():
     """Initialize the server with the most used languages and models."""
+    logger.info('Initializing server with most used languages and models')
     src = m.Language.objects.annotate(count=Count('trans_src')).order_by('-count').first()
     dst = m.Language.objects.annotate(count=Count('trans_dst')).order_by('-count').first()
 
@@ -157,6 +158,7 @@ def auto_create_tsl():
 
 def auto_create_models():
     """Create OCR and TSL models from json file. Also create default OptionDict"""
+    logger.info('Creating default models')
     auto_create_box()
     auto_create_ocr()
     auto_create_tsl()
