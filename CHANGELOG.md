@@ -2,6 +2,16 @@
 
 List of changes between versions
 
+## 0.5.1
+
+- Implemented endpoint for manual translation
+- Added autocorrect capability to Trie
+- Added endpoint for sending allowed options given the loaded models
+- Improved admin interface to allow users to more easily add models to the database
+- Changed handshake endpoint behavior to send more information required by the extension
+- Improved run_server script for better modularity and reporting
+- Minor fixes
+
 ## 0.4.0
 
 Now it is possible to use OCR models that work on a single line.
