@@ -78,7 +78,7 @@ class BaseModel(models.Model):
     entrypoint = models.CharField(max_length=128, null=True)
 
     language_format = models.CharField(max_length=32, null=True)
-    iso1_map = models.JSONField(null=True)
+    iso1_map = models.JSONField(null=True, blank=True)
 
     default_options = models.ForeignKey(
         OptionDict, on_delete=models.SET_NULL, related_name='used_by_%(class)s', null=True
