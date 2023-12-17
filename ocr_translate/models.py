@@ -513,7 +513,7 @@ class TSLModel(BaseModel):
     dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
 
     @staticmethod
-    def pre_tokenize(
+    def pre_tokenize( # pylint: disable=too-many-branches
             text: str,
             ignore_chars: str = None,
             break_chars: str = None,
@@ -539,6 +539,12 @@ class TSLModel(BaseModel):
         Returns:
             list[str]: List of string tokens.
         """
+        if isinstance(break_newlines, str):
+            break_newlines = break_newlines.lower() == 'true'
+        if isinstance(restore_missing_spaces, str):
+            restore_missing_spaces = restore_missing_spaces.lower() == 'true'
+        if isinstance(restore_dash_newlines, str):
+            restore_dash_newlines = restore_dash_newlines.lower() == 'true'
         orig_text = text
         if allowed_start_end is not None:
             rgx_start = re.compile(

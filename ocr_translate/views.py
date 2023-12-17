@@ -262,6 +262,12 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
     frc = data.pop('force', False)
     opt = data.pop('options', {})
 
+    opt = {
+        **opt.get(get_box_model().name, {}),
+        **opt.get(get_ocr_model().name, {}),
+        **opt.get(get_tsl_model().name, {}),
+    }
+
     if md5 is None:
         return JsonResponse({'error': 'no md5'}, status=400)
     if len(data) > 0:
