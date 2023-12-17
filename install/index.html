@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/design-tabs.js?v=36754332"></script>
+        <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Running" href="../running/index.html" />
+    <link rel="prev" title="Welcome to ocr_translate’s documentation!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#from-release-file-windows-only">From Release file (Windows only)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-github">From Github</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-docker">From Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-pypi">From PyPI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../running/index.html">Running</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib/index.html">Contributor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/install/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p>For both the Githyb and PyPI installation it is strongly suggested to install this project using a <a class="reference external" href="https://docs.python.org/3/library/venv.html">virtual environment</a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+<section id="from-release-file-windows-only">
+<h2>From Release file (Windows only)<a class="headerlink" href="#from-release-file-windows-only" title="Link to this heading"></a></h2>
+<p>From the <a class="reference external" href="https://github.com/Crivella/ocr_translate/releases/">github releases page</a> you can download either:</p>
+<ul class="simple">
+<li><p>The <a class="reference external" href="https://github.com/Crivella/ocr_translate/releases/latest/download/run_server-cpu.zip">CPU only version</a></p></li>
+<li><p>The GPU version split in <a class="reference external" href="https://github.com/Crivella/ocr_translate/releases/latest/download/run_server-gpu.zip.001">file1</a> and <a class="reference external" href="https://github.com/Crivella/ocr_translate/releases/latest/download/run_server-gpu.zip.002">file2</a> (The CUDA dependencies makes it take much more space), wich can be restored using tools like <a class="reference external" href="https://www.7-zip.org/">7zip</a> and <a class="reference external" href="https://github.com/M2Team/NanaZip">NanaZip</a>.</p></li>
+</ul>
+</section>
+<section id="from-github">
+<h2>From Github<a class="headerlink" href="#from-github" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Clone or download the repository
+- <code class="code docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/Crivella/ocr_translate.git</span></code></p></li>
+<li><p>Install the project dependencies (choose the appropriate files depending if you wanna run on GPU or CPU only):
+- <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements-torch-[cpu/cuda].txt</span></code>
+- <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirementscs.txt</span></code></p></li>
+</ul>
+</section>
+<section id="from-docker">
+<h2>From Docker<a class="headerlink" href="#from-docker" title="Link to this heading"></a></h2>
+<p>CPU and CUDA specific images are available on <a class="reference external" href="https://hub.docker.com/r/crivella1/ocr_translate/">Dockerhub</a>:</p>
+<ul class="simple">
+<li><p>CPU: <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">crivella1/ocr_translate:latest-cpu</span></code></p></li>
+<li><p>GPU: <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">crivella1/ocr_translate:latest-gpu</span></code></p></li>
+</ul>
+<p>Manually create your image:</p>
+<ul class="simple">
+<li><p>Create a .pip-cache-[cpu/gpu] directory inside your project.</p></li>
+<li><p>Optional: re-install the project dependencies pointing this as the cache folder for pip (will make the build process much faster, by reusing the cached dependencies)</p></li>
+<li><p>Run <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">build</span> <span class="pre">-t</span> <span class="pre">IMAGE_TAG</span> <span class="pre">-f</span> <span class="pre">Dockerfile-[cpu/gpu]</span> <span class="pre">.</span></code></p></li>
+</ul>
+</section>
+<section id="from-pypi">
+<h2>From PyPI<a class="headerlink" href="#from-pypi" title="Link to this heading"></a></h2>
+<p>Run the command</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">django-ocr_translate</span></code></p></li>
+</ul>
+<p>By default torch 2.x will come in its CUDA enabled version. While this works also for CPU, it will also install ~1 GB of cuda dependencies.
+If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](requirements-torch-cpu.txt) first and run</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements-torch-cpu.txt</span></code></p></li>
+</ul>
+<p>before installing the python package.</p>
+<p>Than install the validated plugins (or edit the settings.py file to remove them from the <cite>INSTALLED_APPS</cite>)</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">plugins.txt</span></code></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to ocr_translate’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../running/index.html" class="btn btn-neutral float-right" title="Running" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
