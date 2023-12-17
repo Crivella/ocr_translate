@@ -643,7 +643,7 @@ class TSLModel(BaseModel):
         Returns:
             m.TranslationRun: The TranslationRun object from the database.
         """
-        manual_model = TSLModel.objects.filter(name='manual').first()
+        manual_model, _ = TSLModel.objects.get_or_create(name='manual')
         params = {
             'model': manual_model,
             'lang_src': src,

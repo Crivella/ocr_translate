@@ -70,9 +70,6 @@ release = [
     "pyinstaller"
 ]
 
-[project.entry-points."ocr_translate.tsl_data"]
-"tsl.manual" = "ocr_translate.ocr_tsl.tsl:manual_data"
-
 [tool.flit.module]
 name = "ocr_translate"
 

@@ -55,7 +55,3 @@ def load_tsl_model(model_id):
 def get_tsl_model() -> m.TSLModel:
     """Get the current TSL model."""
     return TSL_MODEL_OBJ
-
-manual_data = {
-    'name': 'manual',
-}
