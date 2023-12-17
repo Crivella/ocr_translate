@@ -53,7 +53,7 @@ def dir_check():
     else:
         Path(os.environ['TRANSFORMERS_CACHE']).mkdir(exist_ok=True, parents=True)
     if not 'DATABASE_NAME' in os.environ:
-        print(f'DATABASE_NAME nto set:  Using "{home / "db.sqlite3"}" as database')
+        print(f'DATABASE_NAME not set:  Using "{home / "db.sqlite3"}" as database')
         os.environ['DATABASE_NAME'] = str(home / 'db.sqlite3')
         home.mkdir(exist_ok=True, parents=True)
     elif (db_name := os.environ['DATABASE_NAME']).endswith('.sqlite3'):
