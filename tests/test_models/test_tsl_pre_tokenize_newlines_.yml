@@ -19,6 +19,17 @@ res:
   - With a newline.
   - And another.
 - options:
+    break_newlines: 'True'
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string.
+  - With a newline.
+  - And another.
+- options:
     break_newlines: false
   string: 'This is a test string.
 
@@ -70,7 +81,34 @@ res:
   tokens:
   - This is a test string With a newline And another
 - options:
+    restore_missing_spaces: true
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string. With a newline. And another.
+- options:
+    restore_missing_spaces: 'True'
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string. With a newline. And another.
+- options:
     restore_dash_newlines: true
+  string: 'This is a test string.
+
+    With a newline.
+
+    And another.'
+  tokens:
+  - This is a test string. With a newline. And another.
+- options:
+    restore_dash_newlines: 'True'
   string: 'This is a test string.
 
     With a newline.

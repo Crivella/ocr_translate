@@ -263,9 +263,9 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
     opt = data.pop('options', {})
 
     opt = {
-        **opt.get(get_box_model().name, {}),
-        **opt.get(get_ocr_model().name, {}),
-        **opt.get(get_tsl_model().name, {}),
+        **opt.get(get_box_model().name if get_box_model() else None, {}),
+        **opt.get(get_ocr_model().name if get_ocr_model() else None, {}),
+        **opt.get(get_tsl_model().name if get_tsl_model() else None, {}),
     }
 
     if md5 is None:

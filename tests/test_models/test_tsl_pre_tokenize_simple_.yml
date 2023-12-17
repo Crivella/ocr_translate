@@ -9,6 +9,11 @@ res:
   tokens:
   - This is a test string.
 - options:
+    break_newlines: 'True'
+  string: This is a test string.
+  tokens:
+  - This is a test string.
+- options:
     break_newlines: false
   string: This is a test string.
   tokens:
@@ -36,7 +41,22 @@ res:
   tokens:
   - This is a test string
 - options:
+    restore_missing_spaces: true
+  string: This is a test string.
+  tokens:
+  - This is a test string.
+- options:
+    restore_missing_spaces: 'True'
+  string: This is a test string.
+  tokens:
+  - This is a test string.
+- options:
     restore_dash_newlines: true
+  string: This is a test string.
+  tokens:
+  - This is a test string.
+- options:
+    restore_dash_newlines: 'True'
   string: This is a test string.
   tokens:
   - This is a test string.

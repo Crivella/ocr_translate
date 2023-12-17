@@ -336,12 +336,16 @@ def test_tsl_pre_tokenize(data_regression, string: str):
     options = [
         {},
         {'break_newlines': True},
+        {'break_newlines': 'True'},
         {'break_newlines': False},
         {'break_chars': '?.!'},
         {'ignore_chars': '?.!'},
         {'break_newlines': False, 'break_chars': '?.!'},
         {'break_newlines': False, 'ignore_chars': '?.!'},
+        {'restore_missing_spaces': True},
+        {'restore_missing_spaces': 'True'},
         {'restore_dash_newlines': True},
+        {'restore_dash_newlines': 'True'},
     ]
 
     res = []
