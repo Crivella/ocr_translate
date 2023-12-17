@@ -14,6 +14,14 @@ res:
   - This is a test string.? With a special break character.
   - And a newline.
 - options:
+    break_newlines: 'True'
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string.? With a special break character.
+  - And a newline.
+- options:
     break_newlines: false
   string: 'This is a test string.? With a special break character.
 
@@ -55,7 +63,28 @@ res:
   tokens:
   - This is a test string With a special break character And a newline
 - options:
+    restore_missing_spaces: true
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string.? With a special break character. And a newline.
+- options:
+    restore_missing_spaces: 'True'
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string.? With a special break character. And a newline.
+- options:
     restore_dash_newlines: true
+  string: 'This is a test string.? With a special break character.
+
+    And a newline.'
+  tokens:
+  - This is a test string.? With a special break character. And a newline.
+- options:
+    restore_dash_newlines: 'True'
   string: 'This is a test string.? With a special break character.
 
     And a newline.'

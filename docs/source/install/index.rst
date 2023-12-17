@@ -51,3 +51,7 @@ If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](r
 - :code:`pip install -r requirements-torch-cpu.txt`
 
 before installing the python package.
+
+Than install the validated plugins (or edit the settings.py file to remove them from the `INSTALLED_APPS`)
+
+- :code:`pip install -r plugins.txt`

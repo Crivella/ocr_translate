@@ -9,6 +9,11 @@ res:
   tokens:
   - This is a test string.? With a special break character.
 - options:
+    break_newlines: 'True'
+  string: This is a test string.? With a special break character.
+  tokens:
+  - This is a test string.? With a special break character.
+- options:
     break_newlines: false
   string: This is a test string.? With a special break character.
   tokens:
@@ -38,7 +43,22 @@ res:
   tokens:
   - This is a test string With a special break character
 - options:
+    restore_missing_spaces: true
+  string: This is a test string.? With a special break character.
+  tokens:
+  - This is a test string.? With a special break character.
+- options:
+    restore_missing_spaces: 'True'
+  string: This is a test string.? With a special break character.
+  tokens:
+  - This is a test string.? With a special break character.
+- options:
     restore_dash_newlines: true
+  string: This is a test string.? With a special break character.
+  tokens:
+  - This is a test string.? With a special break character.
+- options:
+    restore_dash_newlines: 'True'
   string: This is a test string.? With a special break character.
   tokens:
   - This is a test string.? With a special break character.

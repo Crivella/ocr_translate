@@ -14,6 +14,14 @@ res:
   - String with a dash-newline brok-
   - en word.
 - options:
+    break_newlines: 'True'
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok-
+  - en word.
+- options:
     break_newlines: false
   string: 'String with a dash-newline brok-
 
@@ -51,7 +59,28 @@ res:
   tokens:
   - String with a dash-newline brok- en word
 - options:
+    restore_missing_spaces: true
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word.
+- options:
+    restore_missing_spaces: 'True'
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline brok- en word.
+- options:
     restore_dash_newlines: true
+  string: 'String with a dash-newline brok-
+
+    en word.'
+  tokens:
+  - String with a dash-newline broken word.
+- options:
+    restore_dash_newlines: 'True'
   string: 'String with a dash-newline brok-
 
     en word.'

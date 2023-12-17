@@ -52,7 +52,7 @@ class Language(models.Model):
         )
 
     def __str__(self):
-        return str(self.iso1)
+        return f'{self.name} ({self.iso1})'
 
     def __eq__(self, other):
         if isinstance(other, Language):
@@ -65,6 +65,11 @@ class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""
     class Meta:
         abstract = True
+    # This should be a dict of dicts where the key is the name of the option and the value contains:
+    #  - type: The type of the option (str, int, float, bool)
+    #  - default: The default value of the option (can be a callable that returns the default value)
+    #  - description: A description of the option
+    ALLOWED_OPTIONS = {}
 
     entrypoint_namespace = None
 
@@ -235,7 +240,7 @@ class OCRModel(BaseModel):
             self,
             img: PILImage, lang: str = None, options: dict = None
             ) -> str:
-        """Perform OCR on an image.
+        """PLACEHOLDER (to be implemented via entrypoint): Perform OCR on an image.
 
         Args:
             img (Image.Image):  A Pillow image on which to perform OCR.
@@ -260,7 +265,7 @@ class OCRModel(BaseModel):
             bbox_obj: 'BBox', lang: 'Language',  image: PILImage = None, options: 'OptionDict' = None,
             force: bool = False, block: bool = True,
             ) -> Generator[Union[Message, 'Text'], None, None]:
-        """PLACEHOLDER (to be implemented via entrypoint): High level function to perform OCR on an image.
+        """High level function to perform OCR on an image.
 
         Args:
             bbox_obj (m.BBox): The BBox object from the database.
@@ -278,8 +283,8 @@ class OCRModel(BaseModel):
 
         Yields:
             Generator[Union[Message, m.Text], None, None]:
-                If block is True, yields a Message object for the OCR run first and the resulting Text object second.
-                If block is False, yields the resulting Text object.
+                If block is False, yields a Message object for the OCR run first and the resulting Text object second.
+                If block is True, yields the resulting Text object.
         """
         options_obj = options
         if options_obj is None:
@@ -373,7 +378,7 @@ class OCRBoxModel(BaseModel):
             self,
             img_obj: 'Image', lang: 'Language', image: PILImage = None,
             force: bool = False, options: 'OptionDict' = None
-            ) -> list['BBox']:
+            ) -> tuple[list['BBox'], list['BBox']]:
         """High level function to perform box OCR on an image. Will attempt to reuse a previous run if possible.
 
         Args:
@@ -388,7 +393,8 @@ class OCRBoxModel(BaseModel):
             ValueError: ValueError is raised if at any step of the pipeline an image is required but not provided.
 
         Returns:
-            list[m.BBox]: A list of BBox objects containing the resulting bounding boxes.
+            tuple[list['BBox'], list['BBox']]: Tuple of lists of BBox objects from the database.
+                First list is the single bounding boxes, second list is the merged bounding boxes.
         """
         options_obj = options or OptionDict.objects.get(options={})
         params = {
@@ -402,7 +408,7 @@ class OCRBoxModel(BaseModel):
         # Needed to rerun the OCR from <0.4.x to >=0.4.x
         # Before only merged boxes where saved, now also the single are needed
         if isinstance(bbox_run, OCRBoxRun):
-            if len(bbox_run.result_single.all()) == 0:
+            if len(bbox_run.result_single.all()) == 0 and len(bbox_run.result_merged.all()) > 0:
                 bbox_run.delete()
                 bbox_run = None
         if bbox_run is None or force:
@@ -452,13 +458,62 @@ class OCRBoxModel(BaseModel):
 
 class TSLModel(BaseModel):
     """Translation models using hugging space naming convention"""
+    ALLOWED_OPTIONS = {
+        'ignore_chars': {
+            'type': str,
+            'default': ('cascade', ['lang_src', 'tsl_model'], ''),
+            'description': 'Characters to ignore during translation.',
+        },
+        'break_chars': {
+            'type': str,
+            'default': ('cascade', ['lang_src', 'tsl_model'], ''),
+            'description': (
+                'Characters on which lines will be split for translation.\n'
+                'The split lines are translated separately (no context between them) and then merged back together.)'
+                ),
+        },
+        'allowed_start_end': {
+            'type': str,
+            'default': ('cascade', ['lang_src', 'tsl_model'], ''),
+            'description': (
+                'Characters allowed at the start and end of a line.\n'
+                'Some models like tesseract, will detect the edges of text bubbles as text and spit out garbage '
+                'at the start/end of the translated line. This option will filter out any caracter that is not '
+                'allowed at the start/end of a line.'
+                ),
+        },
+        'break_newlines': {
+            'type': bool,
+            'default': ('cascade', ['lang_src', 'tsl_model'], False),
+            'description': 'Split lines on newlines. If false the newlines will be replaced with spaces.',
+        },
+        'restore_missing_spaces': {
+            'type': bool,
+            'default': ('cascade', ['lang_src', 'tsl_model'], False),
+            'description': (
+                'Some models will OCR text without spaces between some of the words.\n'
+                'This option will attempt to restore the missing spaces by finding the shortest valid decomposition '
+                'also keeping into account the word frequency.\n'
+                '(Only available if a trie is loaded for the source language.)'
+                ),
+        },
+        'restore_dash_newlines': {
+            'type': bool,
+            'default': ('cascade', ['lang_src', 'tsl_model'], False),
+            'description': (
+                'Text can be written with dash splitting a word onto a new line.\n'
+                'If this option is enabled, dashes preceded by a character and followed by a newline will be removed '
+                'togheter with the newline to merge the word back together.'
+                ),
+        },
+    }
     entrypoint_namespace = 'ocr_translate.tsl_models'
 
     src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')
     dst_languages = models.ManyToManyField(Language, related_name='tsl_models_dst')
 
     @staticmethod
-    def pre_tokenize(
+    def pre_tokenize( # pylint: disable=too-many-branches
             text: str,
             ignore_chars: str = None,
             break_chars: str = None,
@@ -475,6 +530,7 @@ class TSLModel(BaseModel):
             lang (str): Language of the text.
             ignore_chars (str, optional): String of characters to ignore. Defaults to None.
             break_chars (str, optional): String of characters to break on. Defaults to None.
+            allowed_start_end (str, optional): String of characters allowed at the start and end of a line.
             break_newlines (bool, optional): Whether to break on newlines. Defaults to True.
             restore_missing_spaces (bool, optional): Whether to restore missing spaces (2 word with no space between).
             restore_dash_newlines (bool, optional): Whether to restore dash-newlines (word broken with a -newline).
@@ -483,6 +539,12 @@ class TSLModel(BaseModel):
         Returns:
             list[str]: List of string tokens.
         """
+        if isinstance(break_newlines, str):
+            break_newlines = break_newlines.lower() == 'true'
+        if isinstance(restore_missing_spaces, str):
+            restore_missing_spaces = restore_missing_spaces.lower() == 'true'
+        if isinstance(restore_dash_newlines, str):
+            restore_dash_newlines = restore_dash_newlines.lower() == 'true'
         orig_text = text
         if allowed_start_end is not None:
             rgx_start = re.compile(
@@ -507,7 +569,7 @@ class TSLModel(BaseModel):
             text = '\n'.join(app)
         if restore_dash_newlines:
             text = re.sub(r'(?<!\n)- *\n', '', text)
-        if ignore_chars is not None:
+        if ignore_chars:
             text = re.sub(f'[{ignore_chars}]+', '', text)
         if break_chars is None:
             break_chars = ''
@@ -526,7 +588,7 @@ class TSLModel(BaseModel):
 
             # Use a list of word frequencies to determine the best split
             def sum_freq(lst: list) -> float:
-                return sum(trie.get_freq(w) for w in lst) / len(lst)**1.5
+                return sum(trie.get_freq(w) for w in lst) / len(lst)**4.0
 
             res = [' '.join(max(_, key=sum_freq)) for _ in filter(None, res)]
             text = ' '.join(res)
@@ -571,11 +633,34 @@ class TSLModel(BaseModel):
         #   using some separator that the service will leave unaltered.)
         raise NotImplementedError('The base model class does not implement this method.')
 
+    def find_manual(self,  text_obj: 'Text', src: 'Language', dst: 'Language') -> 'TranslationRun':
+        """Find a manual translation run for the given text with the specified source and destination languages.
+        Args:
+            text_obj (m.Text): Text object from the database to translate.
+            src (m.Language): Source language object from the database.
+            dst (m.Language): Destination language object from the database.
+
+        Returns:
+            m.TranslationRun: The TranslationRun object from the database.
+        """
+        manual_model = TSLModel.objects.filter(name='manual').first()
+        params = {
+            'model': manual_model,
+            'lang_src': src,
+            'lang_dst': dst,
+            'text': text_obj,
+            'options': OptionDict.objects.get(options={})
+        }
+        # logger.debug(f'Looking for manual TSL with params: {params}')
+        return TranslationRun.objects.filter(**params).first()
+
+
     def translate(
             self,
             text_obj: 'Text', src: 'Language', dst: 'Language', options: 'OptionDict' = None,
             force: bool = False,
             block: bool = True,
+            favor_manual: bool = True,
             lazy: bool = False
             ) -> Generator[Union[Message, 'Text'], None, None]:
         """High level translate call generating a TranslationRun entry.
@@ -586,6 +671,7 @@ class TSLModel(BaseModel):
             options (m.OptionDict, optional): OptionDict object from the database. Defaults to None.
             force (bool, optional): Whether to force a new TSL run. Defaults to False.
             block (bool, optional): Whether to block until the task is complete. Defaults to True.
+            favor_manual (bool, optional): Whether to favor manual translations over TSL. Defaults to True.
             lazy (bool, optional): Whether to raise an error if the TSL run is not found. Defaults to False.
 
         Raises:
@@ -593,20 +679,25 @@ class TSLModel(BaseModel):
 
         Yields:
             Generator[Union[Message, m.Text], None, None]:
-                If block is True, yields a Message object for the TSL run first and the resulting Text object second.
-                If block is False, yields the resulting Text object.
+                If block is False, yields a Message object for the TSL run first and the resulting Text object second.
+                If block is True, yields the resulting Text object.
         """
         if lazy and force:
             raise ValueError('Cannot force + lazy TSL run')
-        options_obj = options or OptionDict.objects.get(options={})
-        params = {
-            'options': options_obj,
-            'text': text_obj,
-            'model': self,
-            'lang_src': src,
-            'lang_dst': dst,
-        }
-        tsl_run_obj = TranslationRun.objects.filter(**params).first()
+        # Check if a ManualModel is being used
+        tsl_run_obj = None
+        if favor_manual:
+            tsl_run_obj = self.find_manual(text_obj, src, dst)
+        if tsl_run_obj is None:
+            options_obj = options or OptionDict.objects.get(options={})
+            params = {
+                'options': options_obj,
+                'text': text_obj,
+                'model': self,
+                'lang_src': src,
+                'lang_dst': dst,
+            }
+            tsl_run_obj = TranslationRun.objects.filter(**params).first()
         if tsl_run_obj is None or force:
             if lazy:
                 raise ValueError('Value not found for lazy TSL run')
@@ -644,7 +735,10 @@ class TSLModel(BaseModel):
             if not block:
                 # Both branches should have the same number of yields
                 yield None
-            logger.info(f'Reusing TSL <{tsl_run_obj.id}>')
+            manual = ''
+            if tsl_run_obj.model.name == 'manual':
+                manual = 'manual '
+            logger.info(f'Reusing {manual}TSL <{tsl_run_obj.id}>')
 
         yield tsl_run_obj.result
 

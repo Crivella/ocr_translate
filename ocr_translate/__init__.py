@@ -19,3 +19,4 @@
 """OCR and translation of images."""
 
 __version__ = '0.4.0'
+__version__array__ = [int(_) for _ in __version__.split('.')]

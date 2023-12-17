@@ -6,7 +6,7 @@ The OCR and translation is performed using freely available machine learning mod
 
 The server is designed to be used together with [this browser extension](https://github.com/Crivella/ocr_extension), acting as a front-end providing the images and controlling the model languages and models being used.
 
-[Full Documentation](https://crivella.github.io/ocr_translate/)
+For more information, please consult the **[Full Documentation](https://crivella.github.io/ocr_translate/)**
 
 ## Running the server
 
@@ -20,7 +20,7 @@ You will also have to modify the `ALLOWED_HOSTS` in case you plan to access the 
 
 All the different way to run the server may provide different set of default values (each of them is targeted for a different level of usage).
 
-### From Release file
+### From Release file (Windows)
 
 (Tested on Windows 11)
 From the [github releases page](/../../releases/) you can download either:
@@ -36,18 +36,31 @@ Also the gpu version will attempt to run on GPU by default, and fall-back to CPU
 
 For customization, you can set the [environment variable](#environment-variables) yourself:
 
-- Linux: use `export ENV_VAR_NAME=XXX` before launching the code from terminal.
 - Windows: either via powershell or by searching for *environment variable* in the settings menu.
 
-### From Github installation
+**SuperUser**: By default the server will be created with a admin user *admin*:*password* (release only).
+You can login to the admin interface at `http://127.0.0.1:4000/admin/` in order to manage the database.
+The main idea is to use this to manually add new models (with the appropriate entrypoint) if you want to test out,
+model that are not yet available. (If you find good models, please do share).
 
-See the section on how to [install from Github](#from-github) first.
+**NOTE**: The server by default is open only to localhost. If you ever plan to change this, make sure to change the admin password.
+
+### From Github
 
 The Github repo provides not only the Django app files, but also the already configured project files used to start the server.
 
+- Clone or download the repository
+
+      git clone https://github.com/Crivella/ocr_translate.git
+
+- Install the project dependencies (choose the appropriate files depending if you wanna run on GPU or CPU only):
+
+      pip install -r requirements-torch-[cpu/cuda].txt
+      pip install -r requirements.txt
+
 Create/Initialize your database by running
 
-- `python manage.py migrate`
+    python manage.py migrate
 
 inside your project folder.
 
@@ -57,7 +70,10 @@ See [this documentation page](https://crivella.github.io/ocr_translate/user/inde
 Run the server using for example one of the following options:
 
 - Django development server. This is more oriented for developing than deploying, but is fine for a self-hosted single-user server accepting connections only on *localhost*
-  - From inside the project directory: `python manage.py runserver PORT`
+  - From inside the project directory:
+
+        python manage.py runserver PORT
+
   - The suggested PORT would be 4000 as it is the one set by default in the extension
 - [Nginx](https://www.nginx.com/) + [Gunicorn](https://gunicorn.org/):
   - Check the [Dockerfile](Dockerfile), as this is what the provided image makes use of.
@@ -69,9 +85,22 @@ Notes:
 - Gunicorn workers will each spawn a separate instance of the loaded models, each taking its own space in the memory. This can quickly fill up the memory especially if running on GPU. Ideally set this to 1.
 - Django development server will spawn new threads for handling incoming requests (if no currently existing thread is free), which share the same memory. Running more than one worker per loaded model concurrently might slow down the actual computation and in some case also block the execution.
 
+**SuperUser**: You can create a superuser for managing the database via the django-admin interface by running
+
+    python manage.py createsuperuser
+
 ### From PyPI installation
 
-See the section on how to [install from PyPI](#from-pypi) first.
+Run the command
+
+    pip install django-ocr_translate
+
+By default torch 2.x will come in its CUDA enabled version. While this works also for CPU, it will also install ~1 GB of cuda dependencies.
+If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](requirements-torch-cpu.txt) first and run
+
+    pip install -r requirements-torch-cpu.txt
+
+before installing the python package.
 
 When installing the project from PyPI, only the app is available.
 This will need to be integrated in a Django project in order to be used.
@@ -88,13 +117,24 @@ These are the minimal instruction for creating a project and start running the s
 
 ### From docker image
 
-See the section on how to [install from DockerHUB](#from-docker) first.
+This section assumes you have docker installed!!!
 
-This section assumes you have docker installed and the image of the project.
+CPU and CUDA specific images are available on [DockerHUB](https://hub.docker.com/r/crivella1/ocr_translate):
+
+Download the image from DockerHUB:
+
+- CPU: `docker pull crivella1/ocr_translate:latest-cpu`
+- GPU: `docker pull crivella1/ocr_translate:latest-gpu`
+
+or create it manually create your image:
+
+- Create a .pip-cache-[cpu/gpu] directory inside your project.
+- Optional: re-install the project dependencies pointing this as the cache folder for pip (will make the build process much faster, by reusing the cached dependencies)
+- Run `docker build -t IMAGE_TAG -f Dockerfile-[cpu/gpu] .`
 
 Run the command:
 
-- `docker run --name CONTAINER_NAME -v PATH_TO_YOUR_MODEL_DIRECTORY:/models -v PATH_TO_DIR_WITH_SQLITE_FILE:/data --env-file=PATH_TO_AND_ENV_VARIABLE_FILE -p SERVER_PORT:4000 -d ocr_translate`
+    docker run --name CONTAINER_NAME -v PATH_TO_YOUR_MODEL_DIRECTORY:/models -v PATH_TO_DIR_WITH_SQLITE_FILE:/data --env-file=PATH_TO_AND_ENV_VARIABLE_FILE -p SERVER_PORT:4000 -d ocr_translate
 
 See the [Environment variables](#environment-variables) section for configuring your environment variable file. Additionally the docker image defines several other variables to automatically create an admin user for managing the database via the django-admin interface:
 
@@ -103,138 +143,3 @@ See the [Environment variables](#environment-variables) section for configuring 
 - `NUM_WEB_WORKERS`: Number of gunicorn workers for the server
 - `DJANGO_SUPERUSER_USERNAME`: The username of the admin user to be created.
 - `DJANGO_SUPERUSER_PASSWORD`: The password of the admin user to be created.
-
-## Installation
-
-For both the Github and PyPI installation it is strongly suggested to install this project using a [virtual environment](https://docs.python.org/3/library/venv.html).
-
-### From Github
-
-- Clone or download the repository
-  - `git clone https://github.com/Crivella/ocr_translate.git`
-- Install the project dependencies (choose the appropriate files depending if you wanna run on GPU or CPU only):
-  - `pip install -r requirements-torch-[cpu/cuda].txt`
-  - `pip install -r requirements.txt`
-
-### From Docker
-
-CPU and CUDA specific images are available on [DockerHUB](https://hub.docker.com/r/crivella1/ocr_translate):
-
-- CPU: `docker pull crivella1/ocr_translate:latest-cpu`
-- GPU: `docker pull crivella1/ocr_translate:latest-gpu`
-
-Manually create your image:
-
-- Create a .pip-cache-[cpu/gpu] directory inside your project.
-- Optional: re-install the project dependencies pointing this as the cache folder for pip (will make the build process much faster, by reusing the cached dependencies)
-- Run `docker build -t IMAGE_TAG -f Dockerfile-[cpu/gpu] .`
-
-### From PyPI
-
-Run the command
-
-- `pip install django-ocr_translate`
-
-By default torch 2.x will come in its CUDA enabled version. While this works also for CPU, it will also install ~1 GB of cuda dependencies.
-If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](requirements-torch-cpu.txt) first and run
-
-- `pip install -r requirements-torch-cpu.txt`
-
-before installing the python package.
-
-## Supported Box OCR models
-
-- [EasyOCR](https://github.com/JaidedAI/EasyOCR)
-
-## Supported text OCR models
-
-- Hugging Face [Transformers](https://huggingface.co/docs/transformers/index) VisionEncoderDecoder models
-- [Tesseract](https://github.com/tesseract-ocr/tesseract) (Requires tesseract to be [installed on the machine](https://tesseract-ocr.github.io/tessdoc/Installation.html))
-
-## Supported translation models
-
-- Hugging Face [Seq2Seq](https://huggingface.co/learn/nlp-course/chapter1/7) models
-
-## Writing plugins for the server
-
-Since version 0.2.1 plugins can now be used to also add models to the database via the following entrypoints. See [CHANGELOG](/CHANGELOG.md) for more details.
-
-Since version 0.2.0 the server has been made pluginable.
-You can write a plugin for a model/web-service that has not yet been implemented, by subclassing the following models
-
-- `ocr_translate.models.OCRBoxModel`: Must define the following methods (see the base models and the plugins under `ocr_translate.plugins` for example of function signature and expected input outputs):
-  - `load`: function to load the model into memory. Can be defined to do nothing if not needed (e.g. another library that load the model on import or a plugin for a web-service)
-  - `unload`: function to unload the model from memory.
-  - `_box_detection`: Function that takes a PIL image as input and returns a list of bounding boxes.
-- `ocr_translate.models.OCRModel`: Must define the following methods (see the base models and the plugins under `ocr_translate.plugins` for example of function signature and expected input outputs):
-  - `load`: function to load the model into memory. Can be defined to do nothing if not needed (e.g. another library that load the model on import or a plugin for a web-service)
-  - `unload`: function to unload the model from memory.
-  - `_ocr`: Function that takes an image as input and returns the OCRed text (the image is the content of the bounding generated by a BOX model run)
-- `ocr_translate.models.TSLModel`: Must define the following methods (see the base models and the plugins under `ocr_translate.plugins` for example of function signature and expected input outputs):
-  - `load`: function to load the model into memory. Can be defined to do nothing if not needed (e.g. another library that load the model on import or a plugin for a web-service)
-  - `unload`: function to unload the model from memory.
-  - `_translate`: Function that takes a list of tokens or a list(list(tokens)) as inputs and returns the translated text as output either as a `str` or `list[str]` (this is needed to work efficiently with AI models that can perform multiple translations simultaneously)
-
-NOTE:
-When subclassing the following has to be set inside the class (see [django models doc](https://docs.djangoproject.com/en/4.2/topics/db/models/#proxy-models))
-
-    class Meta:
-        proxy = True
-
-Until there is a registry service, do contact me if you write a plugin for the server so i can add a link to it in this README
-
-## Endpoints
-
-This is not a REST API. As of now the communication between the server and a front-end is stateful and depend on the languages and models currently loaded on the server.
-In the future it would be interesting to separate the worker and database server, for an actual deployment, but might make the self-hosting more difficult to manage.
-
-| Endpoint | Method | Usage |
-| --- | --- | ---|
-| `/` | GET | Handshake: the server will replay with a JSON response containing information about the available languages/models and the currently in use src/dst language and box/ocr/tsl models |
-| `/get_trans/` | GET | Request to get all the available translations (e.g. using different models) of the text specified by the `text` GET parameter |
-| `/set_lang` | POST | JSON request to switch the currently selected languages to the one specified by the keys: `lang_src`, `lang_dst` |
-| `/set_models` | POST | JSON request to switch the currently loaded models to the one specified by the keys: `box_model_id`, `ocr_model_id`, `tsl_model_id` |
-| `/run_tsl` | POST | JSON request to run the translation for the text specified by the key `text` |
-| `/run_ocrtsl` | POST | JSON request to run the OCR and translation of an image (base64 as the `contents` key) or provide a previously obtained result (md5 of the base64 as the `md5` key). `md5` should be always specified, `contents` is optional |
-
-## Environment variables
-
-The first section of variable is defined at the APP level and will be available both for installation from Github or PyPI.
-The second section of variables is defined at the project level and is only available if using the [settings.py](mysite/settings.py) provided in the repo.
-
-### App variables
-
-| Variable | Values | Usage |
-| --- | --- | --- |
-| `LOAD_ON_START`| false[/true] | Will automatically load the most used source/destination languages and most used models for that language combination at server start|
-| `AUTOCREATE_LANGUAGES` | false[/true] | Will automatically create the Language entries in the database as defined in [languages.json](ocr_translate/OCR_TSL/languages.json) |
-| `AUTOCREATE_VALIDATED_MODELS` | false[/true] | Will automatically create the model entries defined in code and plugins `entrypoints`. |
-| `DEVICE` | cpu[/cuda] | Which device to use with torch |
-| `EASYOCR_MODULE_PATH` | `$HOME/.EasyOCR` | Directory where EasyOCR store its downloaded models |
-| `TRANSFORMERS_CACHE` | `$HOME/.cache/huggingface/hub/` | Directory where [Hugging Face](https://huggingface.co/) models are being stored (either downloaded manually or downloaded by `transformers`) |
-| `TRANSFORMERS_OFFLINE` | 1[/0] | By default `transformers` will try to download missing models. Set this to 0 to only work in offline mode |
-| `TESSERACT_PREFIX` | `$TRANSFORMERS_CACHE/tesseract` | Directory where tesseract will store and look for models |
-| `TESSERACT_ALLOW_DOWNLOAD` | false[/true] | Control whether the app should download missing models (true) or work in offline mode only (false) |
-| `NUM_MAIN_WORKERS` | 4 | Number of `WorkerMessageQueue` workers handling incoming OCR_TSL post requests |
-| `NUM_BOX_WORKERS` | 1 | Number of `WorkerMessageQueue` workers handling box_ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns) |
-| `NUM_OCR_WORKERS` | 1 | Number of `WorkerMessageQueue` workers handling ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns) |
-| `NUM_TSL_WORKERS` | 1 | Number of `WorkerMessageQueue` workers handling translation pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns) |
-
-### Project/server variables
-
-| Variable | Values | Usage |
-| ---- | ---- | ---- |
-| `DJANGO_DEBUG` | false[/true] | Whether to run the server in debug (true) or production (false) mode |
-| `DJANGO_LOG_LEVEL` | INFO | python `logging` level for  |
-| `DATABASE_NAME` | *db.sqlite3* | For `sqlite3` this is the path to the database file. For other backend it should be the name of the database |
-| `DATABASE_ENGINE` | `django.db.backends.sqlite3` | Change this to either a Django or 3rd party provided backend to use another Database type |
-| `DATABASE_HOST` | optional | Required if using another db back-end |
-| `DATABASE_PORT` | optional | Required if using another db back-end |
-| `DATABASE_USER` | optional | Probably required if using another db back-end |
-| `DATABASE_PASSWORD` | optional | Probably required if using another db back-end |
-
-## Supported databases
-
-- [SQLite](https://www.sqlite.org/index.html) This is mostly fine for a self-hosted server accessed by a single  or few users (and it's probably gonna be faster than any other database not running on the same network as the server because of latency).
-- [Postgresql](https://www.postgresql.org/)
-- [MySQL](https://www.mysql.com)/[MariaDB](https://mariadb.org/)

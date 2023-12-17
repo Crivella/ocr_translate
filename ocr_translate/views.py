@@ -23,6 +23,7 @@ import hashlib
 import io
 import json
 import logging
+from typing import Union
 
 import numpy as np
 from django.db.models import Count
@@ -31,6 +32,7 @@ from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 
+from . import __version__array__
 from . import models as m
 from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
 from .ocr_tsl.full import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
@@ -64,14 +66,17 @@ def handshake(request: HttpRequest) -> JsonResponse:
     lang_dst = get_lang_dst()
 
     languages = m.Language.objects.annotate(count=Count('trans_src')+Count('trans_dst')).order_by('-count')
-    box_models = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count')
-    ocr_models = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count')
-    tsl_models = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count')
 
+    box_models = []
+    ocr_models = []
+    tsl_models = []
     if not lang_src is None:
+        box_models = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count')
+        ocr_models = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count')
         box_models = box_models.filter(languages=lang_src)
         ocr_models = ocr_models.filter(languages=lang_src)
         if not lang_dst is None:
+            tsl_models = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count')
             tsl_models = tsl_models.filter(
                 src_languages=lang_src,
                 dst_languages=lang_dst,
@@ -81,11 +86,13 @@ def handshake(request: HttpRequest) -> JsonResponse:
     ocr_model = get_ocr_model() or ''
     tsl_model = get_tsl_model() or ''
 
-    lang_src = lang_src or ''
-    lang_dst = lang_dst or ''
+    lang_src = getattr(lang_src, 'iso1', None) or ''
+    lang_dst = getattr(lang_dst, 'iso1', None) or ''
 
     return JsonResponse({
-        'Languages': [str(_) for _ in languages],
+        'version': __version__array__,
+        'Languages': [_.iso1 for _ in languages],
+        'Languages_hr': [_.name for _ in languages],
         'BOXModels': [str(_) for _ in box_models],
         'OCRModels': [str(_) for _ in ocr_models],
         'TSLModels': [str(_) for _ in tsl_models],
@@ -93,8 +100,8 @@ def handshake(request: HttpRequest) -> JsonResponse:
         'box_selected': str(box_model),
         'ocr_selected': str(ocr_model),
         'tsl_selected': str(tsl_model),
-        'lang_src': str(lang_src),
-        'lang_dst': str(lang_dst),
+        'lang_src': lang_src,
+        'lang_dst': lang_dst,
         })
 
 @csrf_exempt
@@ -242,72 +249,80 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         'options': 'dict',
     }
     """
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+    try:
+        data = post_data_converter(request)
+    except ValueError:
+        return JsonResponse({'error': 'invalid content type'}, status=400)
+
+    b64 = data.pop('contents', None)
+    md5 = data.pop('md5', None)
+    frc = data.pop('force', False)
+    opt = data.pop('options', {})
+
+    opt = {
+        **opt.get(get_box_model().name if get_box_model() else None, {}),
+        **opt.get(get_ocr_model().name if get_ocr_model() else None, {}),
+        **opt.get(get_tsl_model().name if get_tsl_model() else None, {}),
+    }
+
+    if md5 is None:
+        return JsonResponse({'error': 'no md5'}, status=400)
+    if len(data) > 0:
+        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+
+    if b64 is None:
+        logger.info('No contents, trying to lazyload')
+        if frc:
+            return JsonResponse({'error': 'Cannot force ocr without contents'}, status=400)
         try:
-            data = post_data_converter(request)
+            res = ocr_tsl_pipeline_lazy(md5, options=opt)
         except ValueError:
-            return JsonResponse({'error': 'invalid content type'}, status=400)
+            logger.info('Failed to lazyload ocr')
+            return JsonResponse({'error': 'Failed to lazyload ocr'}, status=406)
+    else:
+        binary = base64.b64decode(b64)
+        # Doing md5 on the base64 to have consistency with the JS generate one
+        # Can't find a way to run md5 on the binary in JS (the blob does not work)
+        if md5 != hashlib.md5(b64.encode('utf-8')).hexdigest():
+            return JsonResponse({'error': 'md5 mismatch'}, status=400)
+        logger.debug(f'md5 {md5} <- {len(binary)} bytes')
 
-        b64 = data.pop('contents', None)
-        md5 = data.pop('md5', None)
-        frc = data.pop('force', False)
-        opt = data.pop('options', {})
+        img = Image.open(io.BytesIO(binary))
+        # Needed to make sure the image is loaded synchronously before going forward
+        # Enforce thread safety. Maybe there is a way to do it without numpy?
+        np.array(img)
 
-        if md5 is None:
-            return JsonResponse({'error': 'no md5'}, status=400)
-        if len(data) > 0:
-            return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+        # Check if same request is already in queue. If yes attach listener to it
+        lang_src = get_lang_src()
+        lang_dst = get_lang_dst()
+        box_model = get_box_model()
+        ocr_model = get_ocr_model()
+        tsl_model = get_tsl_model()
 
-        if b64 is None:
-            logger.info('No contents, trying to lazyload')
-            if frc:
-                return JsonResponse({'error': 'Cannot force ocr without contents'}, status=400)
-            try:
-                res = ocr_tsl_pipeline_lazy(md5, options=opt)
-            except ValueError:
-                logger.info('Failed to lazyload ocr')
-                return JsonResponse({'error': 'Failed to lazyload ocr'}, status=406)
-        else:
-            binary = base64.b64decode(b64)
-            # Doing md5 on the base64 to have consistency with the JS generate one
-            # Can't find a way to run md5 on the binary in JS (the blob does not work)
-            if md5 != hashlib.md5(b64.encode('utf-8')).hexdigest():
-                return JsonResponse({'error': 'md5 mismatch'}, status=400)
-            logger.debug(f'md5 {md5} <- {len(binary)} bytes')
+        try:
+            id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id)
+        except AttributeError:
+            return JsonResponse({'error': 'No models selected'}, status=400)
 
-            img = Image.open(io.BytesIO(binary))
-            # Needed to make sure the image is loaded synchronously before going forward
-            # Enforce thread safety. Maybe there is a way to do it without numpy?
-            np.array(img)
+        msg = q.put(
+            id_ = id_,
+            msg = {
+                'args': (img, md5),
+                'kwargs': {'force': frc, 'options': opt},
+            },
+            handler = ocr_tsl_pipeline_work,
+        )
 
-            # Check if same request is already in queue. If yes attach listener to it
-            lang_src = get_lang_src()
-            lang_dst = get_lang_dst()
-            box_model = get_box_model()
-            ocr_model = get_ocr_model()
-            tsl_model = get_tsl_model()
-
-            try:
-                id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id)
-            except AttributeError:
-                return JsonResponse({'error': 'No models selected'}, status=400)
-
-            msg = q.put(
-                id_ = id_,
-                msg = {
-                    'args': (img, md5),
-                    'kwargs': {'force': frc, 'options': opt},
-                },
-                handler = ocr_tsl_pipeline_work,
-            )
-
-            res = msg.response()
+        res = msg.response()
 
 
-        return JsonResponse({
-            'result': res,
-            })
-    return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+    return JsonResponse({
+        'result': res,
+        })
+
 
 @csrf_exempt
 def get_translations(request: HttpRequest) -> JsonResponse:
@@ -342,3 +357,129 @@ def get_translations(request: HttpRequest) -> JsonResponse:
             'text': _.result.text,
             } for _ in translations],
         })
+
+@csrf_exempt
+def set_manual_translation(request: HttpRequest) -> JsonResponse:
+    """Handle a POST request to apply a manual translation.
+    Expected data:
+    {
+        'text': 'text',
+        'translation': 'translation',
+    }
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+    try:
+        data = post_data_converter(request)
+    except ValueError:
+        return JsonResponse({'error': 'invalid content type'}, status=400)
+
+    text = data.pop('text', None)
+    translation = data.pop('translation', None)
+    if text is None:
+        return JsonResponse({'error': 'no text'}, status=400)
+    if translation is None:
+        return JsonResponse({'error': 'no translation'}, status=400)
+    if len(data) > 0:
+        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+
+    text_obj = m.Text.objects.filter(text=text).first()
+    if text_obj is None:
+        return JsonResponse({'error': 'text not found'}, status=404)
+
+    manual_model = m.TSLModel.objects.filter(name='manual').first()
+    params = {
+        'model': manual_model,
+        'text': text_obj,
+        'lang_src': get_lang_src(),
+        'lang_dst': get_lang_dst(),
+        'options': m.OptionDict.objects.get(options={}),
+    }
+
+    tsl_run_obj = m.TranslationRun.objects.filter(**params).first()
+    if tsl_run_obj is None:
+        res_obj, _ = m.Text.objects.get_or_create(text=translation)
+        params['result'] = res_obj
+        tsl_run_obj = m.TranslationRun.objects.create(**params)
+    else:
+        tsl_run_obj.result.text = translation
+        tsl_run_obj.result.save()
+
+    return JsonResponse({})
+
+def get_default_options_from_cascade(
+        objects: list[Union[str, 'm.OptionDict']], option: str, default: Union[int, float, str, bool] = None
+        ) -> Union[int, float, str, bool]:
+    """Get the default value of an option from a cascade of objects.
+
+    Args:
+        objects (list[Union[str, OptionDict]]): List of option objects or string identifying a model type.
+        option (str): Name of the option to get.
+        default (Union[int, float, str, bool], optional): Default value to return for the option. Defaults to None.
+
+    Raises:
+        ValueError: Invalid string in objects list.
+        TypeError: Invalid type in objects list.
+
+    Returns:
+        Union[int, float, str, bool]: The default value of the option.
+    """    """"""
+    res = default
+    for obj in objects:
+        if obj is None:
+            continue
+        if isinstance(obj, m.OptionDict):
+            res = obj.options.get(option, res)
+        elif isinstance(obj, str):
+            if obj == 'lang_src':
+                model = get_lang_src()
+            elif obj == 'lang_dst':
+                model = get_lang_dst()
+            elif obj == 'box_model':
+                model = get_box_model()
+            elif obj == 'ocr_model':
+                model = get_ocr_model()
+            elif obj == 'tsl_model':
+                model = get_tsl_model()
+            else:
+                raise ValueError(f'Unknown option cascade object: {obj}')
+            res = model.default_options.options.get(option, res)
+        else:
+            raise TypeError(f'Cannot get default options from {type(obj)}')
+    return res
+
+def get_active_options(request: HttpRequest) -> JsonResponse:
+    """Handle a GET request to get active options."""
+    if request.method != 'GET':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+    params = request.GET.dict()
+    if len(params) > 0:
+        return JsonResponse({'error': f'invalid data: {params}'}, status=400)
+
+    res = {}
+    for typ,model in [
+        ('box_model', get_box_model()),
+        ('ocr_model', get_ocr_model()),
+        ('tsl_model', get_tsl_model()),
+        ]:
+        ptr = res.setdefault(typ, {})
+        if model is None:
+            continue
+            # return JsonResponse({'error': 'No models selected'}, status=400)
+
+        for opt,val in model.ALLOWED_OPTIONS.items():
+            val = val.copy()
+            ptr[opt] = val
+            default = val['default']
+            if isinstance(default, tuple):
+                if default[0] == 'cascade':
+                    default = get_default_options_from_cascade(default[1], opt, default[2])
+                    default = val['type'](default)
+                    val['default'] = default
+                else:
+                    raise ValueError(f'Unknown default action type: {default[0]}')
+            val['type'] = val['type'].__name__
+
+    return JsonResponse({'options': res})

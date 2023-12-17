@@ -34,23 +34,24 @@ logger = logging.getLogger('ocr.general')
 
 def init_most_used():
     """Initialize the server with the most used languages and models."""
+    logger.info('Initializing server with most used languages and models')
     src = m.Language.objects.annotate(count=Count('trans_src')).order_by('-count').first()
     dst = m.Language.objects.annotate(count=Count('trans_dst')).order_by('-count').first()
 
-    if src:
+    if src and src.count > 0:
         load_lang_src(src.iso1)
-    if dst:
+    if dst and dst.count > 0:
         load_lang_dst(dst.iso1)
 
     box = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count').first()
     ocr = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count').first()
     tsl = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count').first()
 
-    if box:
+    if box and box.count > 0:
         load_box_model(box.name)
-    if ocr:
+    if ocr and ocr.count > 0:
         load_ocr_model(ocr.name)
-    if tsl:
+    if tsl and tsl.count > 0:
         load_tsl_model(tsl.name)
 
 def auto_create_languages():
@@ -130,10 +131,10 @@ def auto_create_tsl():
     """Create TSLModel objects from entrypoints."""
     for tsl in load_ept_data('ocr_translate.tsl_data'):
         logger.debug(f'Creating tsl model: {tsl}')
-        src = tsl.pop('lang_src')
-        dst = tsl.pop('lang_dst')
+        src = tsl.pop('lang_src', [])
+        dst = tsl.pop('lang_dst', [])
         lcode = tsl.pop('lang_code', None)
-        entrypoint = tsl.pop('entrypoint')
+        entrypoint = tsl.pop('entrypoint', None)
         iso1_map = tsl.pop('iso1_map', {})
         def_opt = tsl.pop('default_options', {})
         opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
@@ -157,6 +158,7 @@ def auto_create_tsl():
 
 def auto_create_models():
     """Create OCR and TSL models from json file. Also create default OptionDict"""
+    logger.info('Creating default models')
     auto_create_box()
     auto_create_ocr()
     auto_create_tsl()

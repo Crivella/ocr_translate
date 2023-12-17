@@ -40,19 +40,25 @@ def ocr_tsl_pipeline_lazy(md5: str, options: dict = None) -> list[dict]:
 
     if options is None:
         options = {}
+    favor_manual = options.pop('favor_manual', True)
+    options, _ = m.OptionDict.objects.get_or_create(options=options)
     logger.debug(f'LAZY: START {md5}')
     res = []
     try:
         img_obj= m.Image.objects.get(md5=md5)
     except m.Image.DoesNotExist as exc:
         raise ValueError(f'Image with md5 {md5} does not exist') from exc
-    _, bbox_obj_list = box_model.box_detection(img_obj, get_lang_src())
+    _, bbox_obj_list = box_model.box_detection(img_obj, get_lang_src(), options=options)
 
     for bbox_obj in bbox_obj_list:
-        text_obj = ocr_model.ocr(bbox_obj, get_lang_src())
+        text_obj = ocr_model.ocr(bbox_obj, get_lang_src(), options=options)
         text_obj = next(text_obj)
 
-        tsl_obj = tsl_model.translate(text_obj, get_lang_src(), get_lang_dst(), lazy=True)
+        tsl_obj = tsl_model.translate(
+            text_obj, get_lang_src(), get_lang_dst(),
+            options=options, favor_manual=favor_manual,
+            lazy=True
+            )
         tsl_obj = next(tsl_obj)
 
         text = text_obj.text
@@ -83,11 +89,12 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
 
     if options is None:
         options = {}
+    favor_manual = options.pop('favor_manual', True)
+    options, _ = m.OptionDict.objects.get_or_create(options=options)
     logger.debug(f'WORK: START {md5}')
-    res = []
 
     img_obj, _ = m.Image.objects.get_or_create(md5=md5)
-    bbox_obj_list_single, bbox_obj_list_merged = box_model.box_detection(img_obj, lang_src ,image=img)
+    bbox_obj_list_single, bbox_obj_list_merged = box_model.box_detection(img_obj, lang_src ,image=img, options=options)
 
     bbox_obj_list = bbox_obj_list_merged
     if ocr_model.ocr_mode == ocr_model.SINGLE:
@@ -97,7 +104,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
     for bbox_obj in bbox_obj_list:
         logger.debug(str(bbox_obj))
 
-        text_obj = ocr_model.ocr(bbox_obj, lang_src, image=img, force=force, block=False)
+        text_obj = ocr_model.ocr(bbox_obj, lang_src, image=img, force=force, block=False, options=options)
         next(text_obj)
         texts.append(text_obj)
 
@@ -121,7 +128,7 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
                 'bbox': bbox_obj,
                 'model': ocr_model,
                 'lang_src': lang_src,
-                'options': m.OptionDict.objects.get(options=options),
+                'options': options,
                 'result_merged': text_obj
             }
             merged_run = m.OCRRun.objects.create(**params)
@@ -136,13 +143,17 @@ def ocr_tsl_pipeline_work(img: Image.Image, md5: str, force: bool = False, optio
 
     trans = []
     for text_obj in texts:
-        tsl_obj = tsl_model.translate(text_obj, lang_src, lang_dst, force=force, block=False)
+        tsl_obj = tsl_model.translate(
+            text_obj, lang_src, lang_dst, options=options,
+            force=force, block=False, favor_manual=favor_manual
+            )
         next(tsl_obj)
         trans.append(tsl_obj)
 
     trans = [next(_) for _ in trans]
     logger.debug(f'TRANSLATION DONE: {trans}')
 
+    res = []
     for bbox_obj, text_obj, tsl_obj in zip(bbox_obj_list_merged, texts, trans):
         text = text_obj.text
         new = tsl_obj.text

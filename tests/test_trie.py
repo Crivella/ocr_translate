@@ -52,6 +52,14 @@ def test_node_setitem():
     assert node.children['a'] is new
     assert node.children['a'].children['b'] is new.children['b']
 
+def test_node_contains():
+    """Test TrieNode.__contains__ method."""
+    node = TrieNode()
+    new = TrieNode()
+    node.children['a'] = new
+    assert 'a' in node
+    assert 'b' not in node
+
 def test_trie_init():
     """Test Trie.__init__ method."""
     trie = Trie()
@@ -225,3 +233,179 @@ def test_trie_get_all_branches_with_invalid_termination():
 
     res = trie.get_all_branches()
     assert res == [['a'], ['a', 'a'], ['a', 'a', 'b'], ['a', 'a', 'c']]
+
+def test_trie_get_all_substitutions_max1():
+    """Test Trie.get_all_substitutions method with maximum 1 substitution."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('aa')
+    trie.insert('b')
+    trie.insert('c')
+
+    res = trie.get_all_substitutions('a', max_num=1)
+    assert sorted(res) == sorted(['b', 'c'])
+
+def test_trie_get_all_substitutions_max2():
+    """Test Trie.get_all_substitutions method with maximum 2 substitutions."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('aa')
+    trie.insert('ab')
+    trie.insert('bb')
+    trie.insert('cc')
+    trie.insert('c')
+
+    res = trie.get_all_substitutions('aa', max_num=2)
+    assert sorted(res) == sorted(['ab', 'bb', 'cc'])
+
+def test_trie_get_all_substitutions_max_gt_len():
+    """Test Trie.get_all_substitutions method with maximum 1 substitution."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('aa')
+    trie.insert('b')
+    trie.insert('c')
+
+    res = trie.get_all_substitutions('a', max_num=2)
+    assert sorted(res) == sorted(['b', 'c'])
+
+def test_trie_get_all_deletions_max1():
+    """Test Trie.get_all_deletions method with maximum 1 deletion."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('ab')
+    trie.insert('b')
+    trie.insert('c')
+
+    res = trie.get_all_deletions('ab', max_num=1)
+    assert sorted(res) == sorted(['a', 'b'])
+
+def test_trie_get_all_deletions_max2():
+    """Test Trie.get_all_deletions method with maximum 2 deletions."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('ab')
+    trie.insert('aa')
+    trie.insert('abc')
+    trie.insert('bc')
+    trie.insert('ac')
+    trie.insert('c')
+    trie.insert('d')
+
+    res = trie.get_all_deletions('abc', max_num=2)
+    assert sorted(res) == sorted(['a', 'ab', 'ac', 'bc', 'c'])
+
+def test_trie_get_all_deletions_max_gt_len():
+    """Test Trie.get_all_deletions method with maximum 1 deletion."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('ab')
+    trie.insert('b')
+    trie.insert('c')
+
+    res = trie.get_all_deletions('ab', max_num=3)
+    assert sorted(res) == sorted(['a', 'b'])
+
+def test_trie_get_all_insertions_max1():
+    """Test Trie.get_all_insertions method with maximum 1 insertion."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('ab')
+    trie.insert('ad')
+    trie.insert('b')
+
+    res = trie.get_all_insertions('a', max_num=1)
+    assert sorted(res) == sorted(['ab', 'ad'])
+
+def test_trie_get_all_insertions_max2():
+    """Test Trie.get_all_insertions method with maximum 2 insertions."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('ab')
+    trie.insert('aa')
+    trie.insert('abc')
+    trie.insert('bc')
+    trie.insert('ac')
+    trie.insert('c')
+
+    res = trie.get_all_insertions('a', max_num=2)
+    assert sorted(res) == sorted(['ab', 'aa', 'abc', 'ac'])
+
+def test_trie_autocorrect_bayes_max1():
+    """Test Trie.autocorrect_bayes method."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('ab')
+    trie.insert('aa')
+    trie.insert('abc')
+    trie.insert('abcd')
+    trie.insert('abdd')
+    trie.insert('bc')
+    trie.insert('ac')
+    trie.insert('c')
+    trie.insert('d')
+
+    res = trie.autocorrect_bayes('abc', max_num=1)
+    assert sorted(res) == sorted(['ab', 'abc', 'abcd', 'ac', 'bc'])
+
+def test_trie_autocorrect_bayes_max2():
+    """Test Trie.autocorrect_bayes method."""
+    trie = Trie()
+    trie.insert('a')
+    trie.insert('ab')
+    trie.insert('aa')
+    trie.insert('abc')
+    trie.insert('abcd')
+    trie.insert('abdd')
+    trie.insert('bc')
+    trie.insert('ac')
+    trie.insert('c')
+    trie.insert('d')
+
+    res = trie.autocorrect_bayes('abc', max_num=2)
+    assert sorted(res) == sorted(['a', 'c', 'aa', 'ab', 'abc', 'abcd', 'abdd', 'ac', 'bc'])
+
+def test_trie_autocorrect_bayes_nofreq():
+    """Test Trie.autocorrect_bayes method with no freq."""
+    trie = Trie()
+    trie.insert('ab')
+    trie.insert('aa')
+
+    res = trie.autocorrect_bayes('aa', max_num=1)
+    assert res[0] == 'aa'
+
+def test_trie_autocorrect_bayes_freq():
+    """Test Trie.autocorrect_bayes method with freq."""
+    trie = Trie()
+    trie.insert('ab', 0.1)
+    trie.insert('aa')
+
+    res = trie.autocorrect_bayes('aa', max_num=1)
+    assert res[0] == 'ab'
+
+def test_trie_autocorrect_bayes_freq_favor1():
+    """Test Trie.autocorrect_bayes method with freq."""
+    trie = Trie()
+    trie.insert('ab', 4)
+    trie.insert('a', 9 - 0.1)
+
+    res = trie.autocorrect_bayes('abc', max_num=2)
+    assert res[0] == 'ab'
+
+def test_trie_autocorrect_bayes_freq_favor2():
+    """Test Trie.autocorrect_bayes method with freq."""
+    trie = Trie()
+    trie.insert('ab', 4)
+    trie.insert('a', 9 + 0.1)
+
+    res = trie.autocorrect_bayes('abc', max_num=2)
+    assert res[0] == 'a'
+
+def test_trie_autocorrect_bayes_freq_favor1_factor():
+    """Test Trie.autocorrect_bayes method with freq."""
+    trie = Trie()
+    trie.insert('ab', 4)
+    trie.insert('a', 9 + 0.1)
+
+    res = trie.autocorrect_bayes('abc', max_num=2, distance_exp_factor=2.1)
+    assert res[0] == 'ab'
