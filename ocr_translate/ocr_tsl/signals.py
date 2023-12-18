@@ -16,29 +16,7 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
-"""Manages the globaly selected source and destination language."""
-from .. import models as m
-from .signals import refresh_model_cache_signal
+"""Django signals for the ocr_translate app."""
+import django.dispatch
 
-LANG_SRC: m.Language = None
-LANG_DST: m.Language = None
-
-def get_lang_src():
-    """Return the source language."""
-    return LANG_SRC
-
-def get_lang_dst():
-    """Return the destination language."""
-    return LANG_DST
-
-def load_lang_src(iso1):
-    """Load the source language."""
-    global LANG_SRC
-    LANG_SRC = m.Language.objects.get(iso1=iso1)
-    refresh_model_cache_signal.send(sender=None)
-
-def load_lang_dst(iso1):
-    """Load the destination language."""
-    global LANG_DST
-    LANG_DST = m.Language.objects.get(iso1=iso1)
-    refresh_model_cache_signal.send(sender=None)
+refresh_model_cache_signal = django.dispatch.Signal()

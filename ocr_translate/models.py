@@ -61,6 +61,10 @@ class Language(models.Model):
             return self.iso1 == other
         return False
 
+    # https://stackoverflow.com/questions/61212514/django-model-objects-became-not-hashable-after-upgrading-to-django-2-2
+    def __hash__(self):
+        return hash(self.iso1)
+
 class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""
     class Meta:

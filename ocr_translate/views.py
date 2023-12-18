@@ -26,7 +26,6 @@ import logging
 from typing import Union
 
 import numpy as np
-from django.db.models import Count
 from django.http import HttpRequest, JsonResponse
 from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
@@ -35,6 +34,10 @@ from PIL import Image
 from . import __version__array__
 from . import models as m
 from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
+from .ocr_tsl.cached_lists import (get_all_lang_dst, get_all_lang_src,
+                                   get_allowed_box_models,
+                                   get_allowed_ocr_models,
+                                   get_allowed_tsl_models)
 from .ocr_tsl.full import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
 from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
                            load_lang_src)
@@ -65,22 +68,13 @@ def handshake(request: HttpRequest) -> JsonResponse:
     lang_src = get_lang_src()
     lang_dst = get_lang_dst()
 
-    languages = m.Language.objects.annotate(count=Count('trans_src')+Count('trans_dst')).order_by('-count')
+    languages = get_all_lang_src()
+    languages_src = get_all_lang_src()
+    languages_dst = get_all_lang_dst()
 
-    box_models = []
-    ocr_models = []
-    tsl_models = []
-    if not lang_src is None:
-        box_models = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count')
-        ocr_models = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count')
-        box_models = box_models.filter(languages=lang_src)
-        ocr_models = ocr_models.filter(languages=lang_src)
-        if not lang_dst is None:
-            tsl_models = m.TSLModel.objects.annotate(count=Count('tsl_runs')).order_by('-count')
-            tsl_models = tsl_models.filter(
-                src_languages=lang_src,
-                dst_languages=lang_dst,
-                )
+    box_models = get_allowed_box_models()
+    ocr_models = get_allowed_ocr_models()
+    tsl_models = get_allowed_tsl_models()
 
     box_model = get_box_model() or ''
     ocr_model = get_ocr_model() or ''
@@ -89,9 +83,11 @@ def handshake(request: HttpRequest) -> JsonResponse:
     lang_src = getattr(lang_src, 'iso1', None) or ''
     lang_dst = getattr(lang_dst, 'iso1', None) or ''
 
-    return JsonResponse({
+    res = JsonResponse({
         'version': __version__array__,
-        'Languages': [_.iso1 for _ in languages],
+        'Languages': [_.iso1 for _ in languages_src],
+        'Languages_src': [_.iso1 for _ in languages_src],
+        'Languages_dst': [_.iso1 for _ in languages_dst],
         'Languages_hr': [_.name for _ in languages],
         'BOXModels': [str(_) for _ in box_models],
         'OCRModels': [str(_) for _ in ocr_models],
@@ -103,6 +99,11 @@ def handshake(request: HttpRequest) -> JsonResponse:
         'lang_src': lang_src,
         'lang_dst': lang_dst,
         })
+
+    # res['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+    # res['Access-Control-Allow-Credentials'] = 'true'
+
+    return res
 
 @csrf_exempt
 def set_models(request: HttpRequest) -> JsonResponse:
