@@ -41,6 +41,6 @@ if [ -n "${DJANGO_SUPERUSER_USERNAME}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD}" 
 fi
 
 echo "Starting Gunicorn with #${NUM_WEB_WORKERS} workers."
-su runner -c "source /venv/bin/activate && gunicorn mysite.wsgi --user runner --bind 0.0.0.0:4010 --workers ${NUM_WEB_WORKERS}" &
+su runner -c "source /venv/bin/activate && gunicorn mysite.wsgi --user runner --bind 0.0.0.0:4010 --timeout 1200 --workers ${NUM_WEB_WORKERS}" &
 echo "Starting nginx."
 nginx -g "daemon off;"
