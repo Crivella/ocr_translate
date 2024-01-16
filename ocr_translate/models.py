@@ -305,7 +305,7 @@ class OCRModel(BaseModel):
                 raise ValueError('Image is required for OCR')
             logger.info('Running OCR')
 
-            id_ = (bbox_obj.id, self.id, lang.id)
+            id_ = (bbox_obj.id, self.id, lang.id, options_obj.id)
             mlang = self.get_lang_code(lang)
             opt_dct = options_obj.options
             text = queues.ocr_queue.put(
@@ -420,7 +420,7 @@ class OCRBoxModel(BaseModel):
                 raise ValueError('Image is required for BBox OCR')
             logger.info('Running BBox OCR')
             opt_dct = options_obj.options
-            id_ = (img_obj.id, self.id, lang.id)
+            id_ = (img_obj.id, self.id, lang.id, options_obj.id)
             bboxes = queues.box_queue.put(
                 id_=id_,
                 handler=self._box_detection,
@@ -707,8 +707,8 @@ class TSLModel(BaseModel):
                 raise ValueError('Value not found for lazy TSL run')
             logger.info('Running TSL')
             # Generate a unique id for a message
-            id_ = (text_obj.id, self.id, options_obj.id, src.id, dst.id)
-            batch_id = (self.id, options_obj.id, src.id, dst.id)
+            id_ = (text_obj.id, self.id, options_obj.id, src.id, dst.id, options_obj.id)
+            batch_id = (self.id, options_obj.id, src.id, dst.id, options_obj.id)
             lang_dct = getattr(src.default_options, 'options', {})
             model_dct =  getattr(self.default_options, 'options', {})
             opt_dct = {**lang_dct, **model_dct, **options_obj.options}

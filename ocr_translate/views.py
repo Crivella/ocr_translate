@@ -302,9 +302,10 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         box_model = get_box_model()
         ocr_model = get_ocr_model()
         tsl_model = get_tsl_model()
+        options, _ = m.OptionDict.objects.get_or_create(options=opt)
 
         try:
-            id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id)
+            id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id, options.id)
         except AttributeError:
             return JsonResponse({'error': 'No models selected'}, status=400)
 
