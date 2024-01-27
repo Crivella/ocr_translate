@@ -8,6 +8,10 @@ The server is designed to be used together with [this browser extension](https:/
 
 For more information, please consult the **[Full Documentation](https://crivella.github.io/ocr_translate/)**
 
+## Possible problems
+
+- [Issue 25](#25) Using uBlock origin (or possibly other extension capable of blocking content) could stop the extension from sending requests to the server. This can be recognized if the popup for setting the language and models works fine but than the translations fails without producing any new log in the server windows. (WIP long term fix in the extension)
+
 ## Running the server
 
 If you plan to use a different settings (eg. database, or model location), you can either:
