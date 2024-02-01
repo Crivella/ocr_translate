@@ -144,6 +144,8 @@ class OCRModel(BaseModel):
 
     languages = models.ManyToManyField(Language, related_name='ocr_models')
     ocr_mode = models.CharField(max_length=32, choices=OCR_MODE_CHOICES, default=MERGED)
+    tokenizer_name = models.CharField(max_length=128, null=True)
+    processor_name = models.CharField(max_length=128, null=True)
 
     def prepare_image(
             self,
