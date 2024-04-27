@@ -255,15 +255,6 @@ paths:
           required: true
           description: The text to translate.
       responses:
-        '400':  # status code
-          description: Bad request.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
         '404':  # status code
           description: Text not found.
           content:

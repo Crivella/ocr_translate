@@ -249,17 +249,13 @@ def run_tsl_get_xunityautotrans(request: HttpRequest) -> JsonResponse:
     if request.method != 'GET':
         return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
 
-    try:
-        data = request.GET.dict()
-    except ValueError:
-        return JsonResponse({'error': 'invalid content type'}, status=400)
+    data = request.GET.dict()
 
     text = data.pop('text', None)
     if text is None:
         return JsonResponse({'error': 'no text'}, status=404)
 
     tsl_model = get_tsl_model()
-
 
     src_obj, _ = m.Text.objects.get_or_create(text=text)
     dst_obj = tsl_model.translate(src_obj, get_lang_src(), get_lang_dst())
