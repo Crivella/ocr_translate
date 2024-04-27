@@ -46,6 +46,11 @@ def test_language_str(language: m.Language):
     assert str(language).startswith(language.name)
     assert language.iso1 in str(language)
 
+def test_language_hash(language: m.Language):
+    """Test language hash."""
+    assert isinstance(hash(language), int)
+    assert hash(language) == hash(language.iso1)
+
 def test_add_language_existing(language_dict: dict, language: m.Language):
     """Test adding a language."""
     with pytest.raises(django.db.utils.IntegrityError):
