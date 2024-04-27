@@ -25,6 +25,7 @@ from django.urls import reverse
 
 from ocr_translate import __version__array__
 from ocr_translate.ocr_tsl import box, lang, ocr, tsl
+from ocr_translate.ocr_tsl.cached_lists import refresh_model_cache
 
 pytestmark = pytest.mark.django_db
 
@@ -76,6 +77,7 @@ def test_handshake_initialized_lang_only(monkeypatch, client, language, box_mode
     """Test handshake with content in the database."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(lang, 'LANG_DST', language)
+    refresh_model_cache()
 
     url = reverse('ocr_translate:handshake')
     response = client.get(url)
@@ -101,6 +103,7 @@ def test_handshake_initialized(client, monkeypatch, language, box_model, tsl_mod
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    refresh_model_cache()
 
     url = reverse('ocr_translate:handshake')
     response = client.get(url)
