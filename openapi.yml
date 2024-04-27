@@ -243,6 +243,40 @@ paths:
                             description: "l, b, r, t"
                           minItems: 4
                           maxItems: 4
+  /run_tsl_get_xunityautotrans:
+    get:
+      summary: Run translation from a GET endpoint.
+      description: Runt translation of text with API compatible with https://github.com/bbepis/XUnity.AutoTranslator.
+      parameters:
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: true
+          description: The text to translate.
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':  # status code
+          description: Text not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: Success.
   /set_manual_translation:
     post:
       summary: Set manual translation.

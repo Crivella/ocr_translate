@@ -26,7 +26,7 @@ import logging
 from typing import Union
 
 import numpy as np
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
@@ -238,6 +238,34 @@ def run_tsl(request: HttpRequest) -> JsonResponse:
     return JsonResponse({
         'text': dst_obj.text,
         })
+
+def run_tsl_get_xunityautotrans(request: HttpRequest) -> JsonResponse:
+    """Handle a GET request to run translation.
+    Expected parameters:
+    {
+        'text': 'text',
+    }
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+
+    try:
+        data = request.GET.dict()
+    except ValueError:
+        return JsonResponse({'error': 'invalid content type'}, status=400)
+
+    text = data.pop('text', None)
+    if text is None:
+        return JsonResponse({'error': 'no text'}, status=404)
+
+    tsl_model = get_tsl_model()
+
+
+    src_obj, _ = m.Text.objects.get_or_create(text=text)
+    dst_obj = tsl_model.translate(src_obj, get_lang_src(), get_lang_dst())
+    dst_obj = next(dst_obj)
+
+    return HttpResponse(dst_obj.text)
 
 @csrf_exempt
 def run_ocrtsl(request: HttpRequest) -> JsonResponse:
