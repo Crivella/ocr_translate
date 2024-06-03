@@ -69,7 +69,7 @@ def test_run_ocrtsl_post_noheader(client):
     assert response.status_code == 400
 
 @pytest.mark.parametrize('remove_key', ['md5'])
-def test_run_ocrtsl_post_missing_required(client, post_kwargs, remove_key):
+def test_run_ocrtsl_post_missing_required(client, post_kwargs, remove_key, mock_loaded):
     """Test run_ocrtsl with POST request missing required field."""
     del post_kwargs['data'][remove_key]
     url = reverse('ocr_translate:run_ocrtsl')
@@ -77,7 +77,7 @@ def test_run_ocrtsl_post_missing_required(client, post_kwargs, remove_key):
 
     assert response.status_code == 400
 
-def test_run_ocrtsl_post_invalid_data(client, post_kwargs):
+def test_run_ocrtsl_post_invalid_data(client, post_kwargs, mock_loaded):
     """Test run_ocrtsl with POST request with non recognized field."""
     post_kwargs['data']['invalid_field'] = 'test'
     url = reverse('ocr_translate:run_ocrtsl')
@@ -85,7 +85,7 @@ def test_run_ocrtsl_post_invalid_data(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_run_ocrtsl_post_nocontent_force(client, post_kwargs):
+def test_run_ocrtsl_post_nocontent_force(client, post_kwargs, mock_loaded):
     """Test run_ocrtsl with POST request with no content but force."""
     post_kwargs['data']['force'] = True
     post_kwargs['data'].pop('contents')
@@ -95,7 +95,7 @@ def test_run_ocrtsl_post_nocontent_force(client, post_kwargs):
     assert response.status_code == 400
     assert response.json()['error'] == 'Cannot force ocr without contents'
 
-def test_run_ocrtsl_post_wrong_md5(client, post_kwargs):
+def test_run_ocrtsl_post_wrong_md5(client, post_kwargs, mock_loaded):
     """Test run_ocrtsl with POST request with wrong md5."""
     post_kwargs['data']['md5'] = 'wrong_md5'
     url = reverse('ocr_translate:run_ocrtsl')
@@ -104,7 +104,7 @@ def test_run_ocrtsl_post_wrong_md5(client, post_kwargs):
     assert response.status_code == 400
     assert response.json()['error'] == 'md5 mismatch'
 
-def test_run_ocrtsl_post_valid_lazy_success(client, monkeypatch, post_kwargs):
+def test_run_ocrtsl_post_valid_lazy_success(client, monkeypatch, post_kwargs, mock_loaded):
     """Test run_ocrtsl with POST request with valid data. No contents -> lazy + success"""
     post_kwargs['data'].pop('contents')
     def mock_ocrtsl_lazy(*args, **kwargs):
@@ -124,7 +124,7 @@ def test_run_ocrtsl_post_valid_lazy_success(client, monkeypatch, post_kwargs):
     assert result[0]['tsl'] == 'test_tsl'
     assert result[0]['box'] == [1,2,3,4]
 
-def test_run_ocrtsl_post_valid_lazy_failure(client, monkeypatch, post_kwargs):
+def test_run_ocrtsl_post_valid_lazy_failure(client, monkeypatch, post_kwargs, mock_loaded):
     """Test run_ocrtsl with POST request with valid data. No contents -> lazy + fail"""
     post_kwargs['data'].pop('contents')
     def mock_ocrtsl_lazy(*args, **kwargs):
@@ -136,7 +136,7 @@ def test_run_ocrtsl_post_valid_lazy_failure(client, monkeypatch, post_kwargs):
 
     assert response.status_code == 406
 
-def test_run_ocrtsl_post_valid_work_fail_modelnotloaded(client, monkeypatch, post_kwargs):
+def test_run_ocrtsl_post_valid_work_fail_langnotloaded(client, monkeypatch, post_kwargs):
     """Test run_ocrtsl with POST request with valid data. With contents -> work + success"""
     def mock_ocrtsl_work(*args, **kwargs):
         """Mock ocrtsl work pipeline."""
@@ -145,7 +145,18 @@ def test_run_ocrtsl_post_valid_work_fail_modelnotloaded(client, monkeypatch, pos
     url = reverse('ocr_translate:run_ocrtsl')
     response = client.post(url, **post_kwargs)
 
-    assert response.status_code == 400
+    assert response.status_code == 512
+
+def test_run_ocrtsl_post_valid_work_fail_modelnotloaded(client, monkeypatch, mock_loaded_lang_only, post_kwargs):
+    """Test run_ocrtsl with POST request with valid data. With contents -> work + success"""
+    def mock_ocrtsl_work(*args, **kwargs):
+        """Mock ocrtsl work pipeline."""
+        return [{'ocr': 'test_ocr', 'tsl': 'test_tsl', 'box': (1,2,3,4)}]
+    monkeypatch.setattr(views, 'ocr_tsl_pipeline_work', mock_ocrtsl_work)
+    url = reverse('ocr_translate:run_ocrtsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 513
 
 def test_run_ocrtsl_post_valid_work_success(client, monkeypatch, mock_loaded, post_kwargs):
     """Test run_ocrtsl with POST request with valid data. With contents -> work + success"""

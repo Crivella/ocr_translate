@@ -64,7 +64,7 @@ def test_get_translations_get_notfound(client, get_kwargs):
 
     assert response.status_code == 404
 
-def test_get_translations_get_valid_notslrun(client, get_kwargs):
+def test_get_translations_get_valid_notslrun(client, get_kwargs, mock_loaded_lang_only):
     """Test get_translations with GET request with valid data. No tsl run."""
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
@@ -76,6 +76,13 @@ def test_get_translations_get_valid_notslrun(client, get_kwargs):
     translations = content['translations']
     assert isinstance(translations, list)
     assert len(translations) == 0
+
+def test_get_translations_get_langnotloaded(client, get_kwargs, tsl_run):
+    """Test get_translations with GET request with no language loaded."""
+    url = reverse('ocr_translate:get_trans')
+    response = client.get(url, get_kwargs)
+
+    assert response.status_code == 512
 
 def test_get_translations_get_valid_tslrun(client, get_kwargs, mock_loaded, tsl_run):
     """Test get_translations with GET request with valid data. Tsl run."""

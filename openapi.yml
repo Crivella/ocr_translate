@@ -72,6 +72,8 @@ paths:
           description: Method not allowed.
         '404':  # status code
           description: Text not found.
+        '512': # status code
+          description: Attempting translation with no languages selected.
         '200':    # status code
           description: A JSON dictionary with the translation.
           content:
@@ -173,6 +175,10 @@ paths:
                     type: string
         '405':   # status code
           description: Method not allowed.
+        '512': # status code
+          description: Attempting translation with no languages selected.
+        '513': # status code
+          description: Attempting translation with no models selected.
         '200':    # status code
           description: A JSON dictionary with the translated text.
           content:
@@ -220,6 +226,10 @@ paths:
           description: Method not allowed.
         '406': # status code
           description: Can't lazyload with only md5.
+        '512': # status code
+          description: Attempting translation with no languages selected.
+        '513': # status code
+          description: Attempting translation with no models selected.
         '200':    # status code
           description: A JSON dictionary with the translated text.
           content:
@@ -304,6 +314,8 @@ paths:
                     type: string
         '405':   # status code
           description: Method not allowed.
+        '512': # status code
+          description: Attempting translation with no languages selected.
         '200':    # status code
           description: Success.
   /get_active_options:

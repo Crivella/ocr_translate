@@ -207,6 +207,12 @@ def tsl_run(language, text, tsl_model, option_dict):
         )
 
 @pytest.fixture()
+def mock_loaded_lang_only(monkeypatch, language):
+    """Mock languages being loaded"""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(lang, 'LANG_DST', language)
+
+@pytest.fixture()
 def mock_loaded(monkeypatch, language, box_model, ocr_model, tsl_model):
     """Mock models being loaded"""
     monkeypatch.setattr(box, 'BOX_MODEL_ID', box_model.name)

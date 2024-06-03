@@ -56,6 +56,21 @@ def post_data_converter(request: HttpRequest) -> dict:
 
     raise ValueError('invalid content type')
 
+def check_language_missing() -> bool:
+    """Check if a language is missing."""
+    if any(_ is None for _ in [
+        get_lang_src(), get_lang_dst(),
+        ]):
+        return True
+    return False
+
+def check_model_missing() -> bool:
+    """Check if a model is missing."""
+    if any(_ is None for _ in [
+        get_box_model(), get_ocr_model(), get_tsl_model()
+        ]):
+        return True
+    return False
 
 def handshake(request: HttpRequest) -> JsonResponse:
     """Handshake with the client."""
@@ -228,6 +243,11 @@ def run_tsl(request: HttpRequest) -> JsonResponse:
     if len(data) > 0:
         return JsonResponse({'error': f'invalid data: {data}'}, status=400)
 
+    if check_language_missing():
+        return JsonResponse({'error': 'No languages selected'}, status=512)
+    if check_model_missing():
+        return JsonResponse({'error': 'No models selected'}, status=513)
+
     tsl_model = get_tsl_model()
 
 
@@ -282,6 +302,11 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
     except ValueError:
         return JsonResponse({'error': 'invalid content type'}, status=400)
 
+    if check_language_missing():
+        return JsonResponse({'error': 'No languages selected'}, status=512)
+    if check_model_missing():
+        return JsonResponse({'error': 'No models selected'}, status=513)
+
     b64 = data.pop('contents', None)
     md5 = data.pop('md5', None)
     frc = data.pop('force', False)
@@ -328,10 +353,7 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         tsl_model = get_tsl_model()
         options, _ = m.OptionDict.objects.get_or_create(options=opt)
 
-        try:
-            id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id, options.id)
-        except AttributeError:
-            return JsonResponse({'error': 'No models selected'}, status=400)
+        id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id, options.id)
 
         msg = q.put(
             id_ = id_,
@@ -373,6 +395,9 @@ def get_translations(request: HttpRequest) -> JsonResponse:
     if text_obj is None:
         return JsonResponse({'error': 'text not found'}, status=404)
 
+    if check_language_missing():
+        return JsonResponse({'error': 'No languages selected'}, status=512)
+
     translations = text_obj.to_trans.filter(
         lang_src=get_lang_src(),
         lang_dst=get_lang_dst(),
@@ -413,6 +438,9 @@ def set_manual_translation(request: HttpRequest) -> JsonResponse:
     text_obj = m.Text.objects.filter(text=text).first()
     if text_obj is None:
         return JsonResponse({'error': 'text not found'}, status=404)
+
+    if check_language_missing():
+        return JsonResponse({'error': 'No languages selected'}, status=512)
 
     manual_model = m.TSLModel.objects.filter(name='manual').first()
     params = {
