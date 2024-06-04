@@ -21,7 +21,6 @@
 import base64
 import hashlib
 import io
-import json
 import logging
 from typing import Union
 
@@ -52,35 +51,9 @@ from .tries import load_trie_src
 logger = logging.getLogger('ocr.general')
 
 
-def post_data_converter(request: HttpRequest) -> dict:
-    """Convert POST data to a dict."""
-    if request.content_type == 'application/json':
-        return json.loads(request.body)
-
-    raise ValueError('invalid content type')
-
-def check_language_missing() -> bool:
-    """Check if a language is missing."""
-    if any(_ is None for _ in [
-        get_lang_src(), get_lang_dst(),
-        ]):
-        return True
-    return False
-
-def check_model_missing() -> bool:
-    """Check if a model is missing."""
-    if any(_ is None for _ in [
-        get_box_model(), get_ocr_model(), get_tsl_model()
-        ]):
-        return True
-    return False
-
 @method_or_405(['GET'])
 def handshake(request: HttpRequest) -> JsonResponse:
     """Handshake with the client."""
-    # if not request.method == 'GET':
-    #     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
     csrf.get_token(request)
 
     logger.debug(f'Handshake: {str(get_ocr_model())}, {str(get_tsl_model())}')
@@ -332,9 +305,6 @@ def get_translations(
     if text_obj is None:
         return JsonResponse({'error': 'text not found'}, status=404)
 
-    if check_language_missing():
-        return JsonResponse({'error': 'No languages selected'}, status=512)
-
     translations = text_obj.to_trans.filter(
         lang_src=lang_src,
         lang_dst=lang_dst,
@@ -365,9 +335,6 @@ def set_manual_translation(
     text_obj = m.Text.objects.filter(text=text).first()
     if text_obj is None:
         return JsonResponse({'error': 'text not found'}, status=404)
-
-    if check_language_missing():
-        return JsonResponse({'error': 'No languages selected'}, status=512)
 
     manual_model = m.TSLModel.objects.filter(name='manual').first()
     params = {
