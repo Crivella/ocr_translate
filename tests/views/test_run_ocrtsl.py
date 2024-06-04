@@ -61,7 +61,7 @@ def test_run_ocrtsl_nonpost(client):
     response = client.get(url)
     assert response.status_code == 405
 
-def test_run_ocrtsl_post_noheader(client):
+def test_run_ocrtsl_post_noheader(client, mock_loaded):
     """Test run_ocrtsl with POST request without content/type."""
     url = reverse('ocr_translate:run_ocrtsl')
     response = client.post(url)

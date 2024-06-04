@@ -44,6 +44,9 @@ from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
 from .ocr_tsl.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
 from .ocr_tsl.tsl import get_tsl_model, load_tsl_model, unload_tsl_model
 from .queues import main_queue as q
+from .request_decorators import (get_backend_langs, get_backend_models,
+                                 get_data_deserializer, method_or_405,
+                                 post_data_deserializer)
 from .tries import load_trie_src
 
 logger = logging.getLogger('ocr.general')
@@ -72,10 +75,11 @@ def check_model_missing() -> bool:
         return True
     return False
 
+@method_or_405(['GET'])
 def handshake(request: HttpRequest) -> JsonResponse:
     """Handshake with the client."""
-    if not request.method == 'GET':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+    # if not request.method == 'GET':
+    #     return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
 
     csrf.get_token(request)
 
@@ -121,7 +125,9 @@ def handshake(request: HttpRequest) -> JsonResponse:
     return res
 
 @csrf_exempt
-def set_models(request: HttpRequest) -> JsonResponse:
+@method_or_405(['POST'])
+@post_data_deserializer(['box_model_id', 'ocr_model_id', 'tsl_model_id'], required=False)
+def set_models(request: HttpRequest, box_model_id, ocr_model_id, tsl_model_id) -> JsonResponse:
     """Handle a POST request to load models.
     Expected data:
     {
@@ -130,37 +136,25 @@ def set_models(request: HttpRequest) -> JsonResponse:
         'tsl_model_id': 'id',
     }
     """
-    if request.method == 'POST':
-        try:
-            data = post_data_converter(request)
-        except ValueError:
-            return JsonResponse({'error': 'invalid content type'}, status=400)
+    logger.info(f'LOAD MODELS: {box_model_id}, {ocr_model_id}, {tsl_model_id}')
 
-        logger.info(f'LOAD MODELS: {data}')
+    try:
+        if not box_model_id is None and not box_model_id == '':
+            load_box_model(box_model_id)
+        if not ocr_model_id is None and not ocr_model_id == '':
+            load_ocr_model(ocr_model_id)
+        if not tsl_model_id is None and not tsl_model_id == '':
+            load_tsl_model(tsl_model_id)
+    except Exception as exc:
+        logger.error(f'Failed to load models: {exc}')
+        return JsonResponse({'error': str(exc)}, status=400)
 
-        box_model_id = data.pop('box_model_id', None)
-        ocr_model_id = data.pop('ocr_model_id', None)
-        tsl_model_id = data.pop('tsl_model_id', None)
-
-        if len(data) > 0:
-            return JsonResponse({'error': f'invalid data: {data}'}, status=400)
-
-        try:
-            if not box_model_id is None and not box_model_id == '':
-                load_box_model(box_model_id)
-            if not ocr_model_id is None and not ocr_model_id == '':
-                load_ocr_model(ocr_model_id)
-            if not tsl_model_id is None and not tsl_model_id == '':
-                load_tsl_model(tsl_model_id)
-        except Exception as exc:
-            logger.error(f'Failed to load models: {exc}')
-            return JsonResponse({'error': str(exc)}, status=400)
-
-        return JsonResponse({})
-    return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
+    return JsonResponse({})
 
 @csrf_exempt
-def set_lang(request: HttpRequest) -> JsonResponse:
+@method_or_405(['POST'])
+@post_data_deserializer(['lang_src', 'lang_dst'], required=True)
+def set_lang(request: HttpRequest, lang_src, lang_dst) -> JsonResponse:
     """Handle a POST request to set languages.
     Expected data:
     {
@@ -168,23 +162,7 @@ def set_lang(request: HttpRequest) -> JsonResponse:
         'lang_dst': 'id',
     }
     """
-    if request.method != 'POST':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-    try:
-        data = post_data_converter(request)
-    except ValueError:
-        return JsonResponse({'error': 'invalid content type'}, status=400)
-    logger.info(f'SET LANG: {data}')
-
-    lang_src = data.pop('lang_src', None)
-    lang_dst = data.pop('lang_dst', None)
-    if lang_src is None:
-        return JsonResponse({'error': 'no lang_src'}, status=400)
-    if lang_dst is None:
-        return JsonResponse({'error': 'no lang_dst'}, status=400)
-    if len(data) > 0:
-        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
+    logger.info(f'SET LANG: {lang_src}, {lang_dst}')
 
     old_src = get_lang_src()
     old_dst = get_lang_dst()
@@ -222,35 +200,17 @@ def set_lang(request: HttpRequest) -> JsonResponse:
     return JsonResponse({})
 
 @csrf_exempt
-def run_tsl(request: HttpRequest) -> JsonResponse:
+@method_or_405(['POST'])
+@post_data_deserializer(['text'], required=True)
+@get_backend_langs(strict=True)
+@get_backend_models(strict=True)
+def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> JsonResponse:
     """Handle a POST request to run translation.
     Expected data:
     {
         'text': 'text',
     }
     """
-    if request.method != 'POST':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-    try:
-        data = post_data_converter(request)
-    except ValueError:
-        return JsonResponse({'error': 'invalid content type'}, status=400)
-
-    text = data.pop('text', None)
-    if text is None:
-        return JsonResponse({'error': 'no text'}, status=400)
-    if len(data) > 0:
-        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
-
-    if check_language_missing():
-        return JsonResponse({'error': 'No languages selected'}, status=512)
-    if check_model_missing():
-        return JsonResponse({'error': 'No models selected'}, status=513)
-
-    tsl_model = get_tsl_model()
-
-
     src_obj, _ = m.Text.objects.get_or_create(text=text)
     dst_obj = tsl_model.translate(src_obj, get_lang_src(), get_lang_dst())
     dst_obj = next(dst_obj)
@@ -259,32 +219,37 @@ def run_tsl(request: HttpRequest) -> JsonResponse:
         'text': dst_obj.text,
         })
 
-def run_tsl_get_xunityautotrans(request: HttpRequest) -> JsonResponse:
+@method_or_405(['GET'])
+@get_backend_langs(strict=True)
+@get_backend_models(strict=True)
+@get_data_deserializer(['text'], required=True)
+def run_tsl_get_xunityautotrans(
+    request: HttpRequest, tsl_model: m.TSLModel, text: str,
+    lang_src: m.Language, lang_dst: m.Language, **kwargs
+    ) -> JsonResponse:
     """Handle a GET request to run translation.
     Expected parameters:
     {
         'text': 'text',
     }
     """
-    if request.method != 'GET':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-    data = request.GET.dict()
-
-    text = data.pop('text', None)
-    if text is None:
-        return JsonResponse({'error': 'no text'}, status=404)
-
-    tsl_model = get_tsl_model()
-
     src_obj, _ = m.Text.objects.get_or_create(text=text)
-    dst_obj = tsl_model.translate(src_obj, get_lang_src(), get_lang_dst())
+    dst_obj = tsl_model.translate(src_obj, lang_src, lang_dst)
     dst_obj = next(dst_obj)
 
     return HttpResponse(dst_obj.text)
 
 @csrf_exempt
-def run_ocrtsl(request: HttpRequest) -> JsonResponse:
+@method_or_405(['POST'])
+@get_backend_langs(strict=True)
+@get_backend_models(strict=True)
+@post_data_deserializer(['contents', 'md5', 'force', 'options'], required=False)
+def run_ocrtsl(
+    request: HttpRequest,
+    lang_src: m.Language, lang_dst: m.Language,
+    box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel,
+    contents: str, md5: str, force: bool, options: dict,
+    ) -> JsonResponse:
     """Handle a POST request to run OCR and translation.
     Expected data:
     {
@@ -294,34 +259,15 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         'options': 'dict',
     }
     """
-    if request.method != 'POST':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-    try:
-        data = post_data_converter(request)
-    except ValueError:
-        return JsonResponse({'error': 'invalid content type'}, status=400)
-
-    if check_language_missing():
-        return JsonResponse({'error': 'No languages selected'}, status=512)
-    if check_model_missing():
-        return JsonResponse({'error': 'No models selected'}, status=513)
-
-    b64 = data.pop('contents', None)
-    md5 = data.pop('md5', None)
-    frc = data.pop('force', False)
-    opt = data.pop('options', {})
+    b64 = contents
+    frc = force
+    opt = options or {}
 
     opt = {
-        **opt.get(get_box_model().name if get_box_model() else None, {}),
-        **opt.get(get_ocr_model().name if get_ocr_model() else None, {}),
-        **opt.get(get_tsl_model().name if get_tsl_model() else None, {}),
+        **opt.get(box_model.name if box_model else None, {}),
+        **opt.get(ocr_model.name if ocr_model else None, {}),
+        **opt.get(tsl_model.name if tsl_model else None, {}),
     }
-
-    if md5 is None:
-        return JsonResponse({'error': 'no md5'}, status=400)
-    if len(data) > 0:
-        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
 
     if b64 is None:
         logger.info('No contents, trying to lazyload')
@@ -346,11 +292,6 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
         np.array(img)
 
         # Check if same request is already in queue. If yes attach listener to it
-        lang_src = get_lang_src()
-        lang_dst = get_lang_dst()
-        box_model = get_box_model()
-        ocr_model = get_ocr_model()
-        tsl_model = get_tsl_model()
         options, _ = m.OptionDict.objects.get_or_create(options=opt)
 
         id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id, options.id)
@@ -373,24 +314,20 @@ def run_ocrtsl(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-def get_translations(request: HttpRequest) -> JsonResponse:
+@method_or_405(['GET'])
+@get_backend_langs(strict=True)
+@get_data_deserializer(['text'], required=True)
+def get_translations(
+    request: HttpRequest,
+    lang_src: m.Language, lang_dst: m.Language,
+    text: str,
+    ) -> JsonResponse:
     """Handle a GET request to get translations.
     Expected parameters:
     {
         'text': 'text',
     }
     """
-    if request.method != 'GET':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-    params = request.GET.dict()
-    text = params.pop('text', None)
-
-    if len(params) > 0:
-        return JsonResponse({'error': f'invalid data: {params}'}, status=400)
-    if text is None:
-        return JsonResponse({'error': 'no text'}, status=400)
-
     text_obj = m.Text.objects.filter(text=text).first()
     if text_obj is None:
         return JsonResponse({'error': 'text not found'}, status=404)
@@ -399,8 +336,8 @@ def get_translations(request: HttpRequest) -> JsonResponse:
         return JsonResponse({'error': 'No languages selected'}, status=512)
 
     translations = text_obj.to_trans.filter(
-        lang_src=get_lang_src(),
-        lang_dst=get_lang_dst(),
+        lang_src=lang_src,
+        lang_dst=lang_dst,
         )
     return JsonResponse({
         'translations': [{
@@ -410,7 +347,14 @@ def get_translations(request: HttpRequest) -> JsonResponse:
         })
 
 @csrf_exempt
-def set_manual_translation(request: HttpRequest) -> JsonResponse:
+@method_or_405(['POST'])
+@get_backend_langs(strict=True)
+@post_data_deserializer(['text', 'translation'], required=True)
+def set_manual_translation(
+    request: HttpRequest,
+    lang_src: m.Language, lang_dst: m.Language,
+    text: str, translation: str,
+    ) -> JsonResponse:
     """Handle a POST request to apply a manual translation.
     Expected data:
     {
@@ -418,23 +362,6 @@ def set_manual_translation(request: HttpRequest) -> JsonResponse:
         'translation': 'translation',
     }
     """
-    if request.method != 'POST':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-    try:
-        data = post_data_converter(request)
-    except ValueError:
-        return JsonResponse({'error': 'invalid content type'}, status=400)
-
-    text = data.pop('text', None)
-    translation = data.pop('translation', None)
-    if text is None:
-        return JsonResponse({'error': 'no text'}, status=400)
-    if translation is None:
-        return JsonResponse({'error': 'no translation'}, status=400)
-    if len(data) > 0:
-        return JsonResponse({'error': f'invalid data: {data}'}, status=400)
-
     text_obj = m.Text.objects.filter(text=text).first()
     if text_obj is None:
         return JsonResponse({'error': 'text not found'}, status=404)
@@ -446,8 +373,8 @@ def set_manual_translation(request: HttpRequest) -> JsonResponse:
     params = {
         'model': manual_model,
         'text': text_obj,
-        'lang_src': get_lang_src(),
-        'lang_dst': get_lang_dst(),
+        'lang_src': lang_src,
+        'lang_dst': lang_dst,
         'options': m.OptionDict.objects.get(options={}),
     }
 
@@ -478,7 +405,7 @@ def get_default_options_from_cascade(
 
     Returns:
         Union[int, float, str, bool]: The default value of the option.
-    """    """"""
+    """
     res = default
     for obj in objects:
         if obj is None:
@@ -503,25 +430,23 @@ def get_default_options_from_cascade(
             raise TypeError(f'Cannot get default options from {type(obj)}')
     return res
 
-def get_active_options(request: HttpRequest) -> JsonResponse:
+@method_or_405(['GET'])
+@get_backend_models(strict=False)
+@get_data_deserializer([], required=False)
+def get_active_options(
+    request: HttpRequest,
+    box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel,
+    ) -> JsonResponse:
     """Handle a GET request to get active options."""
-    if request.method != 'GET':
-        return JsonResponse({'error': f'{request.method} not allowed'}, status=405)
-
-    params = request.GET.dict()
-    if len(params) > 0:
-        return JsonResponse({'error': f'invalid data: {params}'}, status=400)
-
     res = {}
     for typ,model in [
-        ('box_model', get_box_model()),
-        ('ocr_model', get_ocr_model()),
-        ('tsl_model', get_tsl_model()),
+        ('box_model', box_model),
+        ('ocr_model', ocr_model),
+        ('tsl_model', tsl_model),
         ]:
         ptr = res.setdefault(typ, {})
-        if model is None:
+        if model == '':
             continue
-            # return JsonResponse({'error': 'No models selected'}, status=400)
 
         for opt,val in model.ALLOWED_OPTIONS.items():
             val = val.copy()

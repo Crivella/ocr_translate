@@ -78,3 +78,15 @@ def test_set_models_post_valid(client, mock_loaders, post_kwargs, box_model, tsl
     assert box.BOX_MODEL_ID == box_model.name
     assert ocr.OBJ_MODEL_ID == ocr_model.name
     assert tsl.TSL_MODEL_ID == tsl_model.name
+
+def test_set_models_post_valid_notall(client, mock_loaders, post_kwargs, tsl_model, ocr_model):
+    """Test set_models with POST valid request."""
+    url = reverse('ocr_translate:set_models')
+    post_kwargs['data'].pop('box_model_id')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 200
+
+    assert box.BOX_MODEL_ID is None
+    assert ocr.OBJ_MODEL_ID == ocr_model.name
+    assert tsl.TSL_MODEL_ID == tsl_model.name

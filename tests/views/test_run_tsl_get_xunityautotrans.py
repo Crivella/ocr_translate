@@ -33,18 +33,30 @@ def test_run_tsl_xua_nonget(client):
     response = client.post(url)
     assert response.status_code == 405
 
-def test_run_tsl_xua_no_text(client):
+def test_run_tsl_xua_nolang(client):
+    """Test run_tsl_get_xunityautotrans with GET request without loaded models."""
+    url = reverse('ocr_translate:run_tsl_get_xunityautotrans')
+    response = client.get(url)
+    assert response.status_code == 512
+
+def test_run_tsl_xua_no_models(client, mock_loaded_lang_only):
+    """Test run_tsl_get_xunityautotrans with GET request without loaded models."""
+    url = reverse('ocr_translate:run_tsl_get_xunityautotrans')
+    response = client.get(url)
+    assert response.status_code == 513
+
+def test_run_tsl_xua_no_text(client, mock_loaded):
     """Test run_tsl_get_xunityautotrans with GET request without text."""
     url = reverse('ocr_translate:run_tsl_get_xunityautotrans')
     response = client.get(url)
-    assert response.status_code == 404
+    assert response.status_code == 400
 
 class MockReturn:
     """Mock return object of tsl_model.translate(...)."""
     text = 'translated_hello'
 
 @pytest.mark.parametrize('mock_called', [iter([MockReturn])], indirect=True)
-def test_run_tsl_xua_ok(client, monkeypatch, language, tsl_model, mock_called):
+def test_run_tsl_xua_ok(client, monkeypatch, mock_loaded, language, tsl_model, mock_called):
     """Test run_tsl_get_xunityautotrans with GET request."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(lang, 'LANG_DST', language)

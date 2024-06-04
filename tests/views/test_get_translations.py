@@ -38,25 +38,25 @@ def test_get_translations_nonget(client):
     assert response.status_code == 405
 
 @pytest.mark.parametrize('remove_key', ['text'])
-def test_get_translations_get_missing_required(client, get_kwargs, remove_key):
+def test_get_translations_get_missing_required(client, mock_loaded, get_kwargs, remove_key):
     """Test get_translations with GET request missing required attribute."""
     del get_kwargs[remove_key]
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
 
     assert response.status_code == 400
-    assert response.json() == {'error': 'no text'}
+    assert response.json() == {'error': 'text not found in GET data'}
 
-def test_get_translations_get_invalid_data(client, get_kwargs):
+def test_get_translations_get_invalid_data(client, mock_loaded, get_kwargs):
     """Test get_translations with GET request with non recognized attribute."""
     get_kwargs['invalid_field'] = 'test'
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
 
     assert response.status_code == 400
-    assert 'invalid data: ' in response.json()['error']
+    assert 'Unexpected keys: invalid_field' in response.json()['error']
 
-def test_get_translations_get_notfound(client, get_kwargs):
+def test_get_translations_get_notfound(client, mock_loaded, get_kwargs):
     """Test get_translations with GET request with non recognized attribute."""
     get_kwargs['text'] = 'other text'
     url = reverse('ocr_translate:get_trans')

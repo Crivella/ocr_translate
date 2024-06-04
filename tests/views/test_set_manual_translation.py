@@ -43,14 +43,14 @@ def test_set_manual_translation_nonpost(client):
     response = client.get(url)
     assert response.status_code == 405
 
-def test_set_manual_translation_post_noheader(client):
+def test_set_manual_translation_post_noheader(client, mock_loaded):
     """Test set_manual_translation with POST request without content/type."""
     url = reverse('ocr_translate:set_manual_translation')
     response = client.post(url)
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_missing_text(client, post_kwargs):
+def test_set_manual_translation_post_missing_text(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with missing text."""
     del post_kwargs['data']['text']
 
@@ -59,7 +59,7 @@ def test_set_manual_translation_post_missing_text(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_missing_translation(client, post_kwargs):
+def test_set_manual_translation_post_missing_translation(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with missing translation."""
     del post_kwargs['data']['translation']
 
@@ -68,7 +68,7 @@ def test_set_manual_translation_post_missing_translation(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_invalid_data(client, post_kwargs):
+def test_set_manual_translation_post_invalid_data(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with non recognized field."""
     post_kwargs['data']['invalid_field'] = 'test'
 
@@ -77,7 +77,7 @@ def test_set_manual_translation_post_invalid_data(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_text_not_found(client, post_kwargs):
+def test_set_manual_translation_post_text_not_found(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with text not found."""
     post_kwargs['data']['text'] = 'invalid'
 
