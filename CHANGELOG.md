@@ -2,6 +2,18 @@
 
 List of changes between versions
 
+## 0.6.0
+
+- Added plugin for `PaddleOCR` (https://github.com/PaddlePaddle/PaddleOCR) (Box and OCR) (seems to work very well with chinese).
+  - The fact that this will work on any system is not guaranteed (there can be underlying failures in the C++ code that the plugin uses).
+    (While the version cannot be changed in the bundled release, you can either use the docker image or play around
+    with the version of `paddlepaddle` to try and make it work).
+- Manual model is not implemented as an entrypoint anymore (will work also without recreating models).
+- OCR models can now use a `tokenizer` and a `processor` from different models.
+- New endpoint `run_tsl_xua` made to work with `XUnity.AutoTranslator` (https://github.com/bbepis/XUnity.AutoTranslator)
+- Improved API return codes
+- Improved the server script in the docker image
+
 ## 0.5.1
 
 - Implemented endpoint for manual translation
