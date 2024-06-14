@@ -280,6 +280,10 @@ def run_ocrtsl(
 
         res = msg.response()
 
+        if isinstance(res, Exception):
+            logger.error(f'Failed to run ocr: {res}')
+            return JsonResponse({'error': str(res)}, status=400)
+
 
     return JsonResponse({
         'result': res,
