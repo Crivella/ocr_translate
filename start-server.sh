@@ -40,6 +40,13 @@ if [ -n "${DJANGO_SUPERUSER_USERNAME}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD}" 
     (LOAD_ON_START=false AUTOCREATE_LANGUAGES=false AUTOCREATE_VALIDATED_MODELS=false python manage.py createsuperuser --no-input --email a@b.c)
 fi
 
+if [ "${AUTO_CREATE_LANGUAGES}" == "true" ] || [ "${AUTOCREATE_VALIDATED_MODELS}" == "true" ]; then
+    echo "Creating languages"
+    python manage.py shell -c 'import ocr_translate.ocr_tsl'
+fi
+export AUTO_CREATE_LANGUAGES="false"
+export AUTOCREATE_VALIDATED_MODELS="false"
+
 echo "Starting Gunicorn with #${NUM_WEB_WORKERS} workers."
 su runner -c "source /venv/bin/activate && gunicorn mysite.wsgi --user runner --bind 0.0.0.0:4010 --timeout 1200 --workers ${NUM_WEB_WORKERS}" &
 echo "Starting nginx."
