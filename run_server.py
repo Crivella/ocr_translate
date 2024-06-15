@@ -125,8 +125,10 @@ def main():
     superuser()
     init()
 
+    bind_address = os.environ.get('DJANGO_BIND_ADDRESS', '127.0.0.1')
+
     print('Starting server...')
-    call_command('runserver', '--noreload', '4000')
+    call_command('runserver', '--noreload', f'{bind_address}:4000')
 
 if __name__ == '__main__':
     main()

@@ -8,6 +8,7 @@ List of changes between versions
   - The fact that this will work on any system is not guaranteed (there can be underlying failures in the C++ code that the plugin uses).
     (While the version cannot be changed in the bundled release, you can either use the docker image or play around
     with the version of `paddlepaddle` to try and make it work).
+- Added possibility to specify extra `ALLOWED_HOSTS` and a server bind address via environment variables. (Fixes #30)
 - Manual model is not implemented as an entrypoint anymore (will work also without recreating models).
 - OCR models can now use a `tokenizer` and a `processor` from different models.
 - New endpoint `run_tsl_xua` made to work with `XUnity.AutoTranslator` (https://github.com/bbepis/XUnity.AutoTranslator)
