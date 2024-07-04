@@ -19,15 +19,28 @@
 """Initialize the server based on environment variables."""
 
 import os
+from typing import Callable
+
+from django.db.utils import OperationalError
 
 from .initializers import (auto_create_languages, auto_create_models,
                            init_most_used)
 
-if os.environ.get('AUTOCREATE_LANGUAGES', 'false').lower() == 'true':
-    auto_create_languages()
+FAIL = False
 
-if os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'false').lower() == 'true':
-    auto_create_models()
+def run_on_env(env_name: str, func: Callable):
+    """Run a function if the environment variable is set."""
+    global FAIL
+    if os.environ.get(env_name, 'false').lower() == 'true':
+        try:
+            func()
+        except OperationalError:
+            FAIL = True
+            print(f'WARNING: Ignoring environment variable `{env_name}` as the database is not ready/migrated.')
 
-if os.environ.get('LOAD_ON_START', 'false').lower() == 'true':
-    init_most_used()
+run_on_env('AUTOCREATE_LANGUAGES', auto_create_languages)
+run_on_env('AUTOCREATE_VALIDATED_MODELS', auto_create_models)
+run_on_env('LOAD_ON_START', init_most_used)
+
+if FAIL:
+    print('WARNING: Create/migrate the database by running `python manage.py migrate`')
