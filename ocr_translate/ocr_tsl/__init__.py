@@ -34,9 +34,10 @@ def run_on_env(env_name: str, func: Callable):
     if os.environ.get(env_name, 'false').lower() == 'true':
         try:
             func()
-        except OperationalError:
+        except OperationalError as exc:
             FAIL = True
             print(f'WARNING: Ignoring environment variable `{env_name}` as the database is not ready/migrated.')
+            print(f'WARNING: {exc}')
 
 run_on_env('AUTOCREATE_LANGUAGES', auto_create_languages)
 run_on_env('AUTOCREATE_VALIDATED_MODELS', auto_create_models)
