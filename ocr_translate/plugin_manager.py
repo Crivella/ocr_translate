@@ -18,7 +18,7 @@
 ###################################################################################
 """Utils to manage ocr_translate plugins."""
 
-# pylint: disable=redefined-outer-name,unspecified-encoding
+# pylint: disable=redefined-outer-name,unspecified-encoding,too-many-branches
 
 import json
 import logging
@@ -73,6 +73,12 @@ logger = logging.getLogger('ocr.general')
 # print('OS.NAME:', os.name)
 # subprocess.run(['pip', 'show', 'pip'], check=True)
 
+def find_site_packages(start_dir: Path) -> Path:
+    """Find the site-packages directory."""
+    for pth in start_dir.rglob('site-packages'):
+        return pth
+    return None
+
 def save_plugin_list():
     """Save the list of installed plugins."""
     with tempfile.NamedTemporaryFile() as tmp:
@@ -116,13 +122,34 @@ def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
         'pip', 'install', f'{name}=={version}',
         '--ignore-installed',
         '--no-deps',
-        # '--no-build-isolation',
-        f'--target={PLUGIN_SP[scope]}',
+        '--no-build-isolation',
+        f'--prefix={PLUGIN_DIR}',
         ]
     if extras:
         cmd += extras.split(' ')
     res = subprocess.run(cmd, check=True, capture_output=True)
     logger.debug(res.stdout.decode())
+
+    tmp_dir = find_site_packages(PLUGIN_DIR)
+    print(tmp_dir)
+    for pth in tmp_dir.iterdir():
+        if pth.name.endswith('__pycache__'):
+            continue
+        # shutil.move(d, PLUGIN_SP[scope])
+        dst = PLUGIN_SP[scope] / pth.name
+        if pth.is_file():
+            if dst.exists():
+                dst.unlink()
+            shutil.move(pth, dst)
+        elif pth.is_dir():
+            if dst.exists():
+                shutil.copytree(pth, PLUGIN_SP[scope] / pth.name, dirs_exist_ok=True)
+                shutil.rmtree(pth)
+            else:
+                shutil.move(pth, PLUGIN_SP[scope])
+        else:
+            raise ValueError(f'Unknown type: {pth}')
+
     with open(INSTALLED_FILE, 'w') as f:
         json.dump(INSTALLED, f, indent=2)
 

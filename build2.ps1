@@ -20,7 +20,7 @@ pyinstaller `
     --collect-all timeit `
     --collect-all cProfile `
     --collect-all PIL `
-    --collect-all opencv-contrib-python `
+    --collect-all distutils `
     --collect-all setuptools `
     --collect-all wave `
     --collect-all cgi `
