@@ -18,7 +18,6 @@
 ###################################################################################
 """Utils to manage ocr_translate plugins."""
 
-import importlib
 import json
 import os
 import site
@@ -29,17 +28,26 @@ from pathlib import Path
 
 python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
 
+GENERIC_SCOPE = 'generic'
+DEVICE = os.environ.get('DEVICE', 'cpu')
+SCOPES = [GENERIC_SCOPE, DEVICE]
+
 OCT_BASE_DIR = Path(os.environ.get('OCT_BASE_DIR', Path.home() / '.ocr_translate'))
 PLUGIN_DIR = OCT_BASE_DIR / 'plugins'
-PLUGIN_SP = PLUGIN_DIR / 'lib' / f'python{python_version}' / 'site-packages'
-PLUGIN_SP.mkdir(exist_ok=True, parents=True)
+PLUGIN_SP = {}
 
-sys.path.insert(0, PLUGIN_SP.as_posix())
+for scope in SCOPES:
+    d = PLUGIN_DIR / scope
+    d.mkdir(exist_ok=True, parents=True)
+    PLUGIN_SP[scope] = d
+    if scope in SCOPES:
+        sys.path.insert(0, d.as_posix())
 sys.path_importer_cache.clear()
 
 site.USER_BASE = PLUGIN_DIR.as_posix()
-site.USER_SITE = PLUGIN_SP.as_posix()
+site.USER_SITE = PLUGIN_SP[GENERIC_SCOPE].as_posix()
 
+PLUGIN_LIST_FILE = OCT_BASE_DIR / 'plugins.json'
 INSTALLED_FILE = PLUGIN_DIR / 'installed.json'
 
 INSTALLED = {}
@@ -48,27 +56,37 @@ if INSTALLED_FILE.exists():
         INSTALLED = json.load(f)
 DONE = {}
 
-def pip_install(package, version, exras='', force=False):
+print('OS.NAME:', os.name)
+subprocess.run(['pip', 'show', 'pip'], check=True)
+
+
+def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
     """Use pip to install a package."""
-    if package in INSTALLED:
-        if INSTALLED[package] == version:
+    if scope not in SCOPES:
+        return
+    vstring = f'{version}+{scope}'
+    if name in DONE:
+        if DONE[name] == vstring:
             return
-    if package in DONE:
-        if DONE[package] == version:
+        raise ValueError(f'Coneflict: {name}=={version} already installed as {DONE[name]}')
+    DONE[name] = vstring
+
+    if not force and name in INSTALLED:
+        if INSTALLED[name] == vstring:
             return
-        raise ValueError(f'Coneflict: {package}=={version} already installed as {DONE[package]}')
-    print(f'  Installing {package}=={version}')
+    INSTALLED[name] = vstring
+
+    print(f'  Installing {name}=={version}')
     cmd = [
-        'pip', 'install', f'{package}=={version}',
+        'pip', 'install', f'{name}=={version}',
         '--ignore-installed',
-        '--no-deps', '--no-build-isolation',
-        f'--prefix={PLUGIN_DIR}',
+        '--no-deps',
+        # '--no-build-isolation',
+        f'--target={PLUGIN_SP[scope]}',
         ]
-    if exras:
-        cmd += exras.split(' ')
+    if extras:
+        cmd += extras.split(' ')
     subprocess.run(cmd, check=True, capture_output=True)
-    INSTALLED[package] = version
-    DONE[package] = version
     with open(INSTALLED_FILE, 'w') as f:
         json.dump(INSTALLED, f, indent=2)
 
@@ -84,16 +102,15 @@ def get_plugin_data() -> list[dict]:
 def load_plugins_list() -> list[str]:
     """Get the list of available plugins."""
     plugins: list[str] = []
-    plugin_file = OCT_BASE_DIR / 'plugins.json'
-    if plugin_file.exists():
-        with open(plugin_file) as f:
+    if PLUGIN_LIST_FILE.exists():
+        with open(PLUGIN_LIST_FILE) as f:
             plugins = json.load(f)
 
     for plugin in plugins:
         install_plugin(plugin)
     return plugins
 
-def install_plugin(name, force=False):
+def install_plugin(name):
     """Ensure the plugin is installed."""
     data = get_plugin_data()
     for plugin in data:
@@ -107,16 +124,7 @@ def install_plugin(name, force=False):
     description = data['description']
     deps = data.get('dependencies', [])
 
-    try:
-        importlib.import_module(pkg)
-        if not force:
-            return
-    except ImportError:
-        pass
-
     for dep in deps[::-1]:
-        dep, extras = (dep.split(';') + [''])[:2]
-        dep_name, dep_version = dep.split('==')
-        pip_install(dep_name, dep_version, extras)
+        pip_install(**dep)
 
     pip_install(pkg, version)
