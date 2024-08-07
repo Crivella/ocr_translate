@@ -31,6 +31,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from . import plugin_manager
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -108,6 +110,7 @@ ALLOWED_HOSTS += os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(';')
 
 
 # Application definition
+PLUGINS = plugin_manager.load_plugins_list()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -117,13 +120,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ocr_translate',
-    'ocr_translate_tesseract',
-    'ocr_translate_easyocr',
-    'ocr_translate_paddle',
-    # 'ocr_translate_google',
-    'ocr_translate_hugging_face',
-    'ocr_translate_ollama',
-]
+] + PLUGINS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -45,17 +45,24 @@ def env_default():
 
 def dir_check():
     """Check if required directories exist and create them if needed."""
-    home = Path.home()  / '.ocr_translate'
+    if not 'OCT_BASE_DIR' in os.environ:
+        base = Path.home()  / '.ocr_translate'
+        print(f'OCT_BASE_DIR not set:  Using "{base}" as base dir for ocr_translate')
+        os.environ['OCT_BASE_DIR'] = base.as_posix()
+    else:
+        base = Path(os.environ['OCT_BASE_DIR'])
+    base.mkdir(exist_ok=True, parents=True)
+
     if not 'TRANSFORMERS_CACHE' in os.environ:
-        print(f'TRANSFORMERS_CACHE not set:  Using "{home}" as transformers cache')
-        os.environ['TRANSFORMERS_CACHE'] = str(home)
-        home.mkdir(exist_ok=True, parents=True)
+        print(f'TRANSFORMERS_CACHE not set:  Using "{base}" as transformers cache')
+        os.environ['TRANSFORMERS_CACHE'] = base.as_posix()
     else:
         Path(os.environ['TRANSFORMERS_CACHE']).mkdir(exist_ok=True, parents=True)
+
     if not 'DATABASE_NAME' in os.environ:
-        print(f'DATABASE_NAME not set:  Using "{home / "db.sqlite3"}" as database')
-        os.environ['DATABASE_NAME'] = str(home / 'db.sqlite3')
-        home.mkdir(exist_ok=True, parents=True)
+        print(f'DATABASE_NAME not set:  Using "{base / "db.sqlite3"}" as database')
+        os.environ['DATABASE_NAME'] = (base / 'db.sqlite3').as_posix()
+        base.mkdir(exist_ok=True, parents=True)
     elif (db_name := os.environ['DATABASE_NAME']).endswith('.sqlite3'):
         Path(db_name).parent.mkdir(exist_ok=True, parents=True)
 
