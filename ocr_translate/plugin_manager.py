@@ -87,7 +87,7 @@ def save_installed():
         with open(tmp.name, 'w') as f:
             json.dump(INSTALLED, f, indent=2)
 
-        shutil.copy2(tmp.name, PLUGIN_LIST_FILE)
+        shutil.copy2(tmp.name, INSTALLED_FILE)
 
 def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
     """Use pip to install a package."""

@@ -32,4 +32,6 @@ urlpatterns = [
     path('run_ocrtsl/', views.run_ocrtsl, name='run_ocrtsl'),
     path('set_manual_translation/', views.set_manual_translation, name='set_manual_translation'),
     path('get_active_options/', views.get_active_options, name='get_active_options'),
+    path('get_plugin_data/', views.get_plugin_data, name='get_plugin_data'),
+    path('manage_plugins/', views.manage_plugins, name='manage_plugins'),
 ]

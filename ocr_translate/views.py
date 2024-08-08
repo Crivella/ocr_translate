@@ -32,6 +32,7 @@ from PIL import Image
 
 from . import __version__array__
 from . import models as m
+from . import plugin_manager as pmng
 from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
 from .ocr_tsl.cached_lists import (get_all_lang_dst, get_all_lang_src,
                                    get_allowed_box_models,
@@ -433,3 +434,37 @@ def get_active_options(
             val['type'] = val['type'].__name__
 
     return JsonResponse({'options': res})
+
+@method_or_405(['GET'])
+def get_plugin_data(request: HttpRequest) -> JsonResponse:
+    """Handle a GET request to get plugins."""
+    data = pmng.get_all_plugin_data()
+    resp = {}
+    for plugin in data:
+        name = plugin['name']
+        description = plugin['description']
+        homepage = plugin.get('homepage', None)
+        version = plugin['version']
+        warning = plugin.get('warning', None)
+        installed = name in pmng.PLUGINS
+        resp[name] = {
+            'description': description,
+            'version': version,
+            'installed': installed,
+            'homepage': homepage,
+            'warning': warning,
+            }
+    return JsonResponse(resp)
+
+@csrf_exempt
+@method_or_405(['POST'])
+@post_data_deserializer(['plugins'], required=True)
+def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonResponse:
+    """Handle a POST request to install a plugin."""
+    logger.debug(f'Manage plugins: {plugins}')
+    for plugin, present in plugins.items():
+        if present:
+            pmng.install_plugin(plugin)
+        else:
+            pmng.uninstall_plugin(plugin)
+    return JsonResponse({})
