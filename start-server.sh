@@ -19,32 +19,28 @@ function migrate {
 export EASYOCR_MODULE_PATH="${TRANSFORMERS_CACHE}/.easyocr"
 export HF_TRANSORMERS_CACHE="${TRANSFORMERS_CACHE}"
 
-echo "Make sure /models folder is writable is readable and writable"
+echo "Make sure /models folder is readable and writable"
 chown -R runner:runner /models
 
-if [ ${DATABASE_ENGINE} == 'django.db.backends.sqlite3' ]; then
-    if [[ ! -e ${DATABASE_NAME} ]]; then
-        migrate
-    fi
-fi
+# Make sure DB is migrated to the latest version
+migrate
 echo "Make sure database is readable and writable"
 chown -R runner:runner /data
-
-# If starting from an uninitialized database, run migrations
-if [[ ! `python manage.py inspectdb` ]]; then
-    migrate
-fi
 # Create superuser if DJANGO_SUPERUSER_USERNAME and DJANGO_SUPERUSER_PASSWORD are set
 if [ -n "${DJANGO_SUPERUSER_USERNAME}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD}" ] ; then
     echo "Creating superuser ${DJANGO_SUPERUSER_USERNAME}"
-    (LOAD_ON_START=false AUTOCREATE_LANGUAGES=false AUTOCREATE_VALIDATED_MODELS=false python manage.py createsuperuser --no-input --email a@b.c)
+    LOAD_ON_START=false \
+    AUTOCREATE_LANGUAGES=false \
+    AUTOCREATE_VALIDATED_MODELS=false \
+    OCT_DISABLE_PLUGINS=true \
+    python manage.py createsuperuser --no-input --email a@b.c
 fi
 
-if [ "${AUTO_CREATE_LANGUAGES}" == "true" ] || [ "${AUTOCREATE_VALIDATED_MODELS}" == "true" ]; then
+if [ "${AUTOCREATE_LANGUAGES}" == "true" ] || [ "${AUTOCREATE_VALIDATED_MODELS}" == "true" ]; then
     echo "Creating languages"
     python manage.py shell -c 'import ocr_translate.ocr_tsl'
 fi
-export AUTO_CREATE_LANGUAGES="false"
+export AUTOCREATE_LANGUAGES="false"
 export AUTOCREATE_VALIDATED_MODELS="false"
 
 echo "Starting Gunicorn with #${NUM_WEB_WORKERS} workers."
