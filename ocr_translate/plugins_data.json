@@ -12,12 +12,6 @@
         "scope": "generic"
       },
       {
-        "name": "opencv-python-headless",
-        "version": "4.8.0.76",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "numpy",
         "version": "1.24.4",
         "extras": "",
@@ -406,12 +400,6 @@
       {
         "name": "numpy",
         "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "opencv-python-headless",
-        "version": "4.8.0.76",
         "extras": "",
         "scope": "generic"
       },
@@ -1044,12 +1032,6 @@
         "scope": "generic"
       },
       {
-        "name": "opencv-python",
-        "version": "4.6.0.66",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "numpy",
         "version": "1.24.4",
         "extras": "",
@@ -1206,12 +1188,6 @@
         "scope": "generic"
       },
       {
-        "name": "opencv-contrib-python",
-        "version": "4.6.0.66",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "numpy",
         "version": "1.24.4",
         "extras": "",
@@ -1232,12 +1208,6 @@
       {
         "name": "numpy",
         "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "opencv-python",
-        "version": "4.6.0.66",
         "extras": "",
         "scope": "generic"
       },
@@ -1310,12 +1280,6 @@
       {
         "name": "numpy",
         "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "opencv-python-headless",
-        "version": "4.8.0.76",
         "extras": "",
         "scope": "generic"
       },

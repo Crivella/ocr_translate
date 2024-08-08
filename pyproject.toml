@@ -34,6 +34,7 @@ dependencies = [
     "numpy~=1.24.1",
     "Django~=4.2.3",
     "Pillow~=10.3.0",
+    "opencv-python-headless~=4.8.0.76"
 ]
 
 [project.urls]
