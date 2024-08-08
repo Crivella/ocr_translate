@@ -173,6 +173,11 @@ if DATABASE_ENGINE == 'django.db.backends.mysql':
     # https://stackoverflow.com/questions/2108824/mysql-incorrect-string-value-error-when-save-unicode-string-in-django
     OPTIONS['charset'] = 'utf8mb4'
 
+if DATABASE_ENGINE == 'django.db.backends.sqlite3':
+    ptr = {}
+    DATABASE['OPTIONS'] = ptr
+    ptr['init_command'] = 'PRAGMA journal_mode=wal;'
+
 DATABASES = {
     'default': DATABASE
 }
