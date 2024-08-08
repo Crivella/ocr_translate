@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
+# This should be ran inside a virtualenv where only `django-ocr_translate` has been installed with
+# `pip install django-ocr_translate[release]`
+
 export DJANGO_SETTINGS_MODULE=mysite.settings
+export OCT_DISABLE_PLUGINS=1
 
 pyinstaller \
     --onedir \
@@ -18,6 +22,7 @@ pyinstaller \
     --collect-all timeit \
     --collect-all cProfile \
     --collect-all PIL \
+    --collect-all cv2 \
     --collect-all setuptools \
     --collect-all wave \
     --collect-all cgi \

@@ -101,6 +101,8 @@ def get_plugin_data() -> list[dict]:
 
 def load_plugins_list() -> list[str]:
     """Get the list of available plugins."""
+    if os.environ.get('OCT_DISABLE_PLUGINS', False):
+        return []
     plugins: list[str] = []
     if PLUGIN_LIST_FILE.exists():
         with open(PLUGIN_LIST_FILE) as f:

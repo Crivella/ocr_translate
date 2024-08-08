@@ -1,4 +1,8 @@
+# This should be ran inside a virtualenv where only `django-ocr_translate` has been installed with
+# `pip install django-ocr_translate[release]`
+
 $env:DJANGO_SETTINGS_MODULE="mysite.settings"
+$env:OCT_DISABLE_PLUGINS="1"
 
 pyinstaller `
     --onedir `
