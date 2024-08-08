@@ -31,7 +31,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
-from . import plugin_manager
+from ocr_translate import plugin_manager
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -110,8 +110,6 @@ ALLOWED_HOSTS += os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(';')
 
 
 # Application definition
-PLUGINS = plugin_manager.load_plugins_list()
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -120,7 +118,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ocr_translate',
-] + PLUGINS
+] + plugin_manager.PLUGINS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -4,6 +4,7 @@
     "package": "ocr_translate-hugging_face",
     "description": "Plugins to enable usage of HuggingFace Models in ocr_translate",
     "version": "0.2.1",
+    "homepage": "https://github.com/Crivella/ocr_translate-hugging_face",
     "dependencies": [
       {
         "name": "fugashi",
@@ -384,6 +385,7 @@
     "package": "ocr_translate-easyocr",
     "description": "Plugins to enable usage of EasyOCR in ocr_translate",
     "version": "0.3.0",
+    "homepage": "https://github.com/Crivella/ocr_translate-easyocr",
     "dependencies": [
       {
         "name": "easyocr",
@@ -716,6 +718,7 @@
     "package": "ocr_translate-tesseract",
     "description": "Plugins to enable usage of Tesseract in ocr_translate",
     "version": "0.2.0",
+    "homepage": "https://github.com/Crivella/ocr_translate-tesseract",
     "dependencies": [
       {
         "name": "pytesseract",
@@ -742,6 +745,7 @@
     "package": "ocr_translate-paddle",
     "description": "This is a plugin for the ocr_translate. Plugins to enable usage of PaddleOCR in ocr_translate",
     "version": "0.1.2",
+    "homepage": "https://github.com/Crivella/ocr_translate-paddle",
     "dependencies": [
       {
         "name": "paddleocr",
@@ -1878,6 +1882,7 @@
     "package": "ocr_translate-ollama",
     "description": "This is a plugin for ocr_translate that implements translations through ollama using Large Language Models (LLM)s.",
     "version": "0.1.4",
+    "homepage": "https://github.com/Crivella/ocr_translate-ollama",
     "dependencies": [
       {
         "name": "requests",
@@ -1893,6 +1898,7 @@
     "description": "Plugins to enable usage of GoogleTranslate in ocr_translate using `googletrans`",
     "warning": "This plugin requires an active internet connection to work, and text to be translated will be sent to Google's servers for translation.",
     "version": "0.2.1",
+    "homepage": "https://github.com/Crivella/ocr_translate-google",
     "dependencies": [
       {
         "name": "googletrans",

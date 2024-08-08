@@ -18,23 +18,29 @@
 ###################################################################################
 """Utils to manage ocr_translate plugins."""
 
+# pylint: disable=redefined-outer-name,unspecified-encoding
+
 import json
+import logging
 import os
+import shutil
 import site
 import subprocess
 import sys
+import tempfile
 from importlib import resources
 from pathlib import Path
 
-python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+from django.apps import apps
+from django.conf import settings
 
 GENERIC_SCOPE = 'generic'
 DEVICE = os.environ.get('DEVICE', 'cpu')
 SCOPES = [GENERIC_SCOPE, DEVICE]
 
-OCT_BASE_DIR = Path(os.environ.get('OCT_BASE_DIR', Path.home() / '.ocr_translate'))
-PLUGIN_DIR = OCT_BASE_DIR / 'plugins'
-PLUGIN_SP = {}
+OCT_BASE_DIR: Path = Path(os.environ.get('OCT_BASE_DIR', Path.home() / '.ocr_translate'))
+PLUGIN_DIR: Path = OCT_BASE_DIR / 'plugins'
+PLUGIN_SP: dict[str, Path] = {}
 
 for scope in SCOPES:
     d = PLUGIN_DIR / scope
@@ -47,18 +53,41 @@ sys.path_importer_cache.clear()
 site.USER_BASE = PLUGIN_DIR.as_posix()
 site.USER_SITE = PLUGIN_SP[GENERIC_SCOPE].as_posix()
 
-PLUGIN_LIST_FILE = OCT_BASE_DIR / 'plugins.json'
-INSTALLED_FILE = PLUGIN_DIR / 'installed.json'
+PLUGIN_LIST_FILE: Path = OCT_BASE_DIR / 'plugins.json'
+INSTALLED_FILE: Path = PLUGIN_DIR / 'installed.json'
 
-INSTALLED = {}
+INSTALLED: dict[str, dict] = {}
 if INSTALLED_FILE.exists():
     with open(INSTALLED_FILE) as f:
         INSTALLED = json.load(f)
-DONE = {}
+DONE: dict[str, str] = {}
 
-print('OS.NAME:', os.name)
-subprocess.run(['pip', 'show', 'pip'], check=True)
+PLUGINS: list[str] = []
+if not os.environ.get('OCT_DISABLE_PLUGINS', False):
+    if PLUGIN_LIST_FILE.exists():
+        with open(PLUGIN_LIST_FILE) as f:
+            PLUGINS = json.load(f)
 
+logger = logging.getLogger('ocr.general')
+
+# print('OS.NAME:', os.name)
+# subprocess.run(['pip', 'show', 'pip'], check=True)
+
+def save_plugin_list():
+    """Save the list of installed plugins."""
+    with tempfile.NamedTemporaryFile() as tmp:
+        with open(tmp.name, 'w') as f:
+            json.dump(PLUGINS, f, indent=2)
+
+        shutil.copy2(tmp.name, PLUGIN_LIST_FILE)
+
+def save_installed():
+    """Save the installed packages."""
+    with tempfile.NamedTemporaryFile() as tmp:
+        with open(tmp.name, 'w') as f:
+            json.dump(INSTALLED, f, indent=2)
+
+        shutil.copy2(tmp.name, PLUGIN_LIST_FILE)
 
 def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
     """Use pip to install a package."""
@@ -72,11 +101,17 @@ def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
     DONE[name] = vstring
 
     if not force and name in INSTALLED:
-        if INSTALLED[name] == vstring:
+        if INSTALLED[name]['version'] == vstring:
             return
-    INSTALLED[name] = vstring
 
-    print(f'  Installing {name}=={version}')
+    ptr = {}
+    INSTALLED[name] = ptr
+    ptr['version'] = vstring
+    ptr['files'] = []
+    ptr['dirs'] = []
+
+    # print(f'  Installing {name}=={version}')
+    logger.info(f'Installing {name}=={version}')
     cmd = [
         'pip', 'install', f'{name}=={version}',
         '--ignore-installed',
@@ -86,11 +121,12 @@ def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
         ]
     if extras:
         cmd += extras.split(' ')
-    subprocess.run(cmd, check=True, capture_output=True)
+    res = subprocess.run(cmd, check=True, capture_output=True)
+    logger.debug(res.stdout.decode())
     with open(INSTALLED_FILE, 'w') as f:
         json.dump(INSTALLED, f, indent=2)
 
-def get_plugin_data() -> list[dict]:
+def get_all_plugin_data() -> list[dict]:
     """Get the plugin data."""
     data_file = resources.files('ocr_translate') / 'plugins_data.json'
     if not data_file.exists():
@@ -99,22 +135,19 @@ def get_plugin_data() -> list[dict]:
         data = json.load(f)
     return data
 
-def load_plugins_list() -> list[str]:
-    """Get the list of available plugins."""
-    if os.environ.get('OCT_DISABLE_PLUGINS', False):
-        return []
-    plugins: list[str] = []
-    if PLUGIN_LIST_FILE.exists():
-        with open(PLUGIN_LIST_FILE) as f:
-            plugins = json.load(f)
-
-    for plugin in plugins:
-        install_plugin(plugin)
-    return plugins
+def get_plugin_data(name: str) -> dict:
+    """Get the data for a specific plugin."""
+    data = get_all_plugin_data()
+    for plugin in data:
+        if plugin['name'] == name:
+            return plugin
+    return {}
 
 def install_plugin(name):
     """Ensure the plugin is installed."""
-    data = get_plugin_data()
+    if name in PLUGINS:
+        return
+    data = get_all_plugin_data()
     for plugin in data:
         if plugin['name'] == name:
             break
@@ -123,10 +156,59 @@ def install_plugin(name):
     data = plugin
     pkg = data['package']
     version = data['version']
-    description = data['description']
+    # description = data['description']
     deps = data.get('dependencies', [])
 
+    logger.info(f'Installing plugin {pkg}=={version} with dependencies')
     for dep in deps[::-1]:
         pip_install(**dep)
 
     pip_install(pkg, version)
+
+    PLUGINS.append(name)
+    save_plugin_list()
+    settings.INSTALLED_APPS.append(name)
+    apps.app_configs = {}
+    apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
+    apps.clear_cache()
+    apps.populate(settings.INSTALLED_APPS)
+
+def uninstall_package(name):
+    """Uninstall a package."""
+    if name not in INSTALLED:
+        return
+    logger.info(f'Uninstalling package {name}')
+    # version, scope = INSTALLED.pop(name).split('+')
+    # with open(INSTALLED_FILE, 'w') as f:
+    #     json.dump(INSTALLED, f, indent=2)
+
+def uninstall_plugin(name):
+    """Uninstall the plugin."""
+    if name not in PLUGINS:
+        return
+    data = get_plugin_data(name)
+    pkg = data['package']
+    logger.info(f'Uninstalling plugin {name} and non-shared dependencies')
+    # logger.debug(f'INSTALLED: {INSTALLED}')
+    if pkg not in INSTALLED:
+        return
+
+    data = get_all_plugin_data()
+    other_deps = set()
+    plugin_deps = set()
+    torm_deps = set()
+    for plugin in data:
+        deps = set(_['name'] for _ in plugin.get('dependencies', []))
+        if plugin['name'] == name:
+            plugin_deps |= deps
+        else:
+            other_deps |= deps
+    torm_deps = plugin_deps - other_deps
+
+    for dep in torm_deps:
+        uninstall_package(dep)
+
+    PLUGINS.remove(name)
+    save_plugin_list()
+
+    apps.app_configs.pop(name, None)
