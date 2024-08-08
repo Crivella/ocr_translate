@@ -27,7 +27,6 @@ import shutil
 import site
 import subprocess
 import sys
-import tempfile
 from importlib import resources
 from pathlib import Path
 
@@ -70,8 +69,11 @@ if not os.environ.get('OCT_DISABLE_PLUGINS', False):
 
 logger = logging.getLogger('ocr.general')
 
+# sys.OpenCV_LOADER_DEBUG = True
+# print('PLUGIN_SP:', PLUGIN_SP)
 # print('OS.NAME:', os.name)
 # subprocess.run(['pip', 'show', 'pip'], check=True)
+
 
 def find_site_packages(start_dir: Path) -> Path:
     """Find the site-packages directory."""
@@ -81,19 +83,14 @@ def find_site_packages(start_dir: Path) -> Path:
 
 def save_plugin_list():
     """Save the list of installed plugins."""
-    with tempfile.NamedTemporaryFile() as tmp:
-        with open(tmp.name, 'w') as f:
-            json.dump(PLUGINS, f, indent=2)
+    with open(PLUGIN_LIST_FILE, 'w') as f:
+        json.dump(PLUGINS, f, indent=2)
 
-        shutil.copy2(tmp.name, PLUGIN_LIST_FILE)
 
 def save_installed():
     """Save the installed packages."""
-    with tempfile.NamedTemporaryFile() as tmp:
-        with open(tmp.name, 'w') as f:
-            json.dump(INSTALLED, f, indent=2)
-
-        shutil.copy2(tmp.name, INSTALLED_FILE)
+    with open(INSTALLED_FILE, 'w') as f:
+        json.dump(INSTALLED, f, indent=2)
 
 def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
     """Use pip to install a package."""
@@ -138,10 +135,12 @@ def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
         # shutil.move(d, PLUGIN_SP[scope])
         dst = PLUGIN_SP[scope] / pth.name
         if pth.is_file():
+            ptr['files'].append(pth.name)
             if dst.exists():
                 dst.unlink()
             shutil.move(pth, dst)
         elif pth.is_dir():
+            ptr['dirs'].append(pth.name)
             if dst.exists():
                 shutil.copytree(pth, PLUGIN_SP[scope] / pth.name, dirs_exist_ok=True)
                 shutil.rmtree(pth)
@@ -150,8 +149,7 @@ def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
         else:
             raise ValueError(f'Unknown type: {pth}')
 
-    with open(INSTALLED_FILE, 'w') as f:
-        json.dump(INSTALLED, f, indent=2)
+    save_installed()
 
 def get_all_plugin_data() -> list[dict]:
     """Get the plugin data."""
@@ -169,6 +167,13 @@ def get_plugin_data(name: str) -> dict:
         if plugin['name'] == name:
             return plugin
     return {}
+
+def reload_plugins():
+    """Reload the plugins."""
+    apps.app_configs = {}
+    apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
+    apps.clear_cache()
+    apps.populate(settings.INSTALLED_APPS)
 
 def install_plugin(name):
     """Ensure the plugin is installed."""
@@ -195,16 +200,22 @@ def install_plugin(name):
     PLUGINS.append(name)
     save_plugin_list()
     settings.INSTALLED_APPS.append(name)
-    apps.app_configs = {}
-    apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
-    apps.clear_cache()
-    apps.populate(settings.INSTALLED_APPS)
+    reload_plugins()
 
 def uninstall_package(name):
     """Uninstall a package."""
     if name not in INSTALLED:
         return
     logger.info(f'Uninstalling package {name}')
+    ptr = INSTALLED.pop(name)
+    _, scope = ptr['version'].split('+')
+    for f in ptr['files']:
+        (PLUGIN_SP[scope] / f).unlink()
+    for pth in ptr['pthirs']:
+        shutil.rmtree(PLUGIN_SP[scope] / pth)
+
+    save_installed()
+
     # version, scope = INSTALLED.pop(name).split('+')
     # with open(INSTALLED_FILE, 'w') as f:
     #     json.dump(INSTALLED, f, indent=2)
@@ -238,4 +249,5 @@ def uninstall_plugin(name):
     PLUGINS.remove(name)
     save_plugin_list()
 
-    apps.app_configs.pop(name, None)
+    settings.INSTALLED_APPS.remove(name)
+    reload_plugins()
