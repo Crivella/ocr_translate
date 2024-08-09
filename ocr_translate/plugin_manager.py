@@ -240,6 +240,14 @@ class PluginManager:
 
     def install_plugin(self, name: str):
         """Ensure the plugin is installed."""
+        # from importlib.metadata import entry_points
+        # print(entry_points())
+        # before = set()
+        # for gpk in entry_points().keys():
+        #     if not gpk.startswith('ocr_translate.'):
+        #         continue
+        #     for ep in entry_points(group=gpk):
+        #         before.add((gpk, ep.name))
         self._install_plugin(name)
         if name not in self.plugins:
             self.plugins.append(name)
@@ -247,6 +255,15 @@ class PluginManager:
         if name not in settings.INSTALLED_APPS:
             settings.INSTALLED_APPS.append(name)
         reload_django_apps()
+        # after = set()
+        # for gpk in entry_points().keys():
+        #     if not gpk.startswith('ocr_translate.'):
+        #         continue
+        #     for ep in entry_points(group=gpk):
+        #         after.add((gpk, ep.name))
+        # diff = after - before
+        # logger.debug('EP_BEFORE: %s', before)
+        # logger.debug('DIFF: %s', diff)
 
     def uninstall_package(self, name: str):
         """Uninstall a package."""
@@ -280,16 +297,12 @@ class PluginManager:
         plugin_deps = set()
         torm_deps = set()
         for plugin in self.plugins_data:
-            deps = set(f"{_['name']}" for _ in plugin.get('dependencies', []))
+            deps = set(f"{_['scope']}::{_['name']}" for _ in plugin.get('dependencies', []))
             if plugin['name'] == name:
                 plugin_deps |= deps
             else:
                 other_deps |= deps
         torm_deps = plugin_deps - other_deps
-
-        print('PLUGIN_DEPS:', plugin_deps)
-        print('OTHER_DEPS:', other_deps)
-        print('TORM_DEPS:', torm_deps)
 
         for dep in torm_deps:
             self.uninstall_package(dep)
