@@ -89,8 +89,7 @@ def test_message_ne_different(message):
 def test_message_resolve_exception(message):
     """Test exception handling in the message resolve method."""
     assert not message.is_resolved
-    with pytest.raises(Exception):
-        message.resolve()
+    message.resolve()
     res = message.response()
     assert isinstance(res, Exception)
     assert res.args == ('Test exception',)
