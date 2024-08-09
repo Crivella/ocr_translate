@@ -84,6 +84,8 @@ class BaseModel(models.Model):
     language_format = models.CharField(max_length=32, null=True)
     iso1_map = models.JSONField(null=True, blank=True)
 
+    active = models.BooleanField(default=True)
+
     default_options = models.ForeignKey(
         OptionDict, on_delete=models.SET_NULL, related_name='used_by_%(class)s', null=True
         )
