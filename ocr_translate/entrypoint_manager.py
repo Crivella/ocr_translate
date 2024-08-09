@@ -31,14 +31,6 @@ from .ocr_tsl.tsl import get_tsl_model, unload_tsl_model
 
 logger = logging.getLogger('ocr.general')
 
-def get_ep_groups() -> list[str]:
-    """Get groups of entrypoint related to app"""
-    return [_ for _ in entry_points().keys() if _.startswith('ocr_translate.')]
-
-def get_all_entrypoints() -> set[tuple[str, str]]:
-    """Get all entrypoints for the app"""
-    return set((group, ep.name) for group in get_ep_groups() for ep in entry_points(group=group))
-
 def get_group_entrypoints(group: str) -> set[EntryPoint]:
     """Get all entrypoints for a group"""
     return set(ep for ep in entry_points(group=group))
