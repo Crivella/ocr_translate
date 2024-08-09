@@ -158,7 +158,7 @@ def test_run_ocrtsl_post_valid_work_fail_modelnotloaded(client, monkeypatch, moc
 
     assert response.status_code == 513
 
-def test_run_ocrtsl_post_valid_work_success(client, monkeypatch, mock_loaded, post_kwargs):
+def test_run_ocrtsl_post_valid_work_success(client, monkeypatch, queues_no_reuse, mock_loaded, post_kwargs):
     """Test run_ocrtsl with POST request with valid data. With contents -> work + success"""
     def mock_ocrtsl_work(*args, **kwargs):
         """Mock ocrtsl work pipeline."""
@@ -177,3 +177,22 @@ def test_run_ocrtsl_post_valid_work_success(client, monkeypatch, mock_loaded, po
     assert result[0]['ocr'] == 'test_ocr'
     assert result[0]['tsl'] == 'test_tsl'
     assert result[0]['box'] == [1,2,3,4]
+
+def test_run_ocrtsl_post_message_raise(client, monkeypatch, queues_no_reuse, mock_loaded, post_kwargs):
+    """Test run_ocrtsl with POST request with valid data. With contents -> raise in message handler"""
+    exc_msg = 'Test exception'
+    class NewException(Exception):
+        """New exception."""
+    def mock_ocrtsl_work(*args, **kwargs):
+        """Mock ocrtsl work pipeline."""
+        raise NewException(exc_msg)
+    monkeypatch.setattr(views, 'ocr_tsl_pipeline_work', mock_ocrtsl_work)
+
+    url = reverse('ocr_translate:run_ocrtsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 400
+    content = response.json()
+
+    assert isinstance(content, dict)
+    assert content['error'] == exc_msg
