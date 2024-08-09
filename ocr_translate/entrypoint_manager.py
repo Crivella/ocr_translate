@@ -40,20 +40,10 @@ def get_group_entrypoints(group: str) -> set[EntryPoint]:
     """Get all entrypoints for a group"""
     return set(ep for ep in entry_points(group=group))
 
-GROUPS = [
-    'ocr_translate.box_data',
-    'ocr_translate.ocr_data',
-    'ocr_translate.tsl_data',
-]
-cls_dct = {
-    'ocr_translate.box_data': m.OCRBoxModel,
-    'ocr_translate.ocr_data': m.OCRModel,
-    'ocr_translate.tsl_data': m.TSLModel,
-}
-ini_dct = {
-    'ocr_translate.box_data': ini.add_box_model,
-    'ocr_translate.ocr_data': ini.add_ocr_model,
-    'ocr_translate.tsl_data': ini.add_tsl_model
+GROUPS = {
+    'ocr_translate.box_data': (m.OCRBoxModel, ini.add_box_model),
+    'ocr_translate.ocr_data': (m.OCRModel, ini.add_ocr_model),
+    'ocr_translate.tsl_data': (m.TSLModel, ini.add_tsl_model),
 }
 
 @contextlib.contextmanager
@@ -70,11 +60,11 @@ def ep_manager():
         after[grp] = get_group_entrypoints(grp)
 
     flag = False
-    for grp in GROUPS:
-        cls = cls_dct[grp]
-        create_func = ini_dct[grp]
+    for grp, data in GROUPS.items():
+        cls, create_func = data
         added = after[grp] - before[grp]
         for ept in added:
+            logger.info(f'New entrypoint {ept.name} found')
             data = ept.load()
             model_id = data['name']
             try:
@@ -86,6 +76,7 @@ def ep_manager():
 
         removed = before[grp] - after[grp]
         for ept in removed:
+            logger.info(f'Entrypoint {ept.name} removed')
             data = ept.load()
             model_id = data['name']
             try:
