@@ -75,86 +75,98 @@ def auto_create_languages():
 
 def load_ept_data(namespace):
     """Load all entrypoints from a namespace into a list"""
-    res = []
-
-    for ept in entry_points(group=namespace):
-        # Copy required for pop on dct
-        res.append(ept.load().copy())
-
-    return res
+    return[_.load() for _ in entry_points(group=namespace)]
 
 # Pop and set after so that running this after a migration should modify the existing model (with less
 # attributes) instead of creating a new one
+def add_box_model(ep_dict: dict) -> m.OCRBoxModel:
+    """Create OCRBoxModel object from dict."""
+    ep_dict = ep_dict.copy()
+    logger.debug(f'Creating box model: {ep_dict}')
+    lang = ep_dict.pop('lang')
+    lcode = ep_dict.pop('lang_code')
+    entrypoint = ep_dict.pop('entrypoint')
+    iso1_map = ep_dict.pop('iso1_map', {})
+    def_opt = ep_dict.pop('default_options', {})
+    opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
+    model, _ = m.OCRBoxModel.objects.get_or_create(**ep_dict)
+    model.default_options = opt_obj
+    model.entrypoint = entrypoint
+    model.language_format = lcode
+    model.iso1_map = iso1_map
+    model.languages.clear()
+    for l in lang:
+        model.languages.add(m.Language.objects.get(iso1=l))
+    model.save()
+    return model
+
 def auto_create_box():
     """Create OCRBoxModel objects from entrypoints."""
     for box in load_ept_data('ocr_translate.box_data'):
-        logger.debug(f'Creating box model: {box}')
-        lang = box.pop('lang')
-        lcode = box.pop('lang_code')
-        entrypoint = box.pop('entrypoint')
-        iso1_map = box.pop('iso1_map', {})
-        def_opt = box.pop('default_options', {})
-        opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
-        model, _ = m.OCRBoxModel.objects.get_or_create(**box)
-        model.default_options = opt_obj
-        model.entrypoint = entrypoint
-        model.language_format = lcode
-        model.iso1_map = iso1_map
-        model.languages.clear()
-        for l in lang:
-            model.languages.add(m.Language.objects.get(iso1=l))
-        model.save()
+        add_box_model(box)
+
+def add_ocr_model(ep_dict: dict) -> m.OCRModel:
+    """Create OCRModel object from dict."""
+    ep_dict = ep_dict.copy()
+    logger.debug(f'Creating ocr model: {ep_dict}')
+    lang = ep_dict.pop('lang')
+    lcode = ep_dict.pop('lang_code')
+    ocr_mode = ep_dict.pop('ocr_mode', m.OCRModel.MERGED)
+    entrypoint = ep_dict.pop('entrypoint')
+    iso1_map = ep_dict.pop('iso1_map', {})
+    def_opt = ep_dict.pop('default_options', {})
+    opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
+    model, _ = m.OCRModel.objects.get_or_create(**ep_dict)
+    model.default_options = opt_obj
+    model.language_format = lcode
+    model.ocr_mode = ocr_mode
+    model.iso1_map = iso1_map
+    model.entrypoint = entrypoint
+    model.languages.clear()
+    for l in lang:
+        model.languages.add(m.Language.objects.get(iso1=l))
+    model.save()
+    return model
 
 def auto_create_ocr():
     """Create OCRModel objects from entrypoints."""
     for ocr in load_ept_data('ocr_translate.ocr_data'):
-        logger.debug(f'Creating ocr model: {ocr}')
-        lang = ocr.pop('lang')
-        lcode = ocr.pop('lang_code')
-        ocr_mode = ocr.pop('ocr_mode', m.OCRModel.MERGED)
-        entrypoint = ocr.pop('entrypoint')
-        iso1_map = ocr.pop('iso1_map', {})
-        def_opt = ocr.pop('default_options', {})
-        opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
-        model, _ = m.OCRModel.objects.get_or_create(**ocr)
-        model.default_options = opt_obj
-        model.language_format = lcode
-        model.ocr_mode = ocr_mode
-        model.iso1_map = iso1_map
-        model.entrypoint = entrypoint
-        model.languages.clear()
-        for l in lang:
-            model.languages.add(m.Language.objects.get(iso1=l))
-        model.save()
+        add_ocr_model(ocr)
+
+def add_tsl_model(ep_dict: dict) -> m.TSLModel:
+    """Create TSLModel object from dict."""
+    ep_dict = ep_dict.copy()
+    logger.debug(f'Creating tsl model: {ep_dict}')
+    src = ep_dict.pop('lang_src', [])
+    dst = ep_dict.pop('lang_dst', [])
+    lcode = ep_dict.pop('lang_code', None)
+    entrypoint = ep_dict.pop('entrypoint', None)
+    iso1_map = ep_dict.pop('iso1_map', {})
+    def_opt = ep_dict.pop('default_options', {})
+    opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
+    model, _ = m.TSLModel.objects.get_or_create(**ep_dict)
+    model.default_options = opt_obj
+    model.language_format = lcode
+    model.iso1_map = iso1_map
+    model.entrypoint = entrypoint
+    model.src_languages.clear()
+    for l in src:
+        logger.debug(f'Adding src language: {l}')
+        kwargs = {lcode: l}
+        model.src_languages.add(*m.Language.objects.filter(**kwargs))
+
+    model.dst_languages.clear()
+    for l in dst:
+        logger.debug(f'Adding dst language: {l}')
+        kwargs = {lcode: l}
+        model.dst_languages.add(*m.Language.objects.filter(**kwargs))
+    model.save()
+    return model
 
 def auto_create_tsl():
     """Create TSLModel objects from entrypoints."""
     for tsl in load_ept_data('ocr_translate.tsl_data'):
-        logger.debug(f'Creating tsl model: {tsl}')
-        src = tsl.pop('lang_src', [])
-        dst = tsl.pop('lang_dst', [])
-        lcode = tsl.pop('lang_code', None)
-        entrypoint = tsl.pop('entrypoint', None)
-        iso1_map = tsl.pop('iso1_map', {})
-        def_opt = tsl.pop('default_options', {})
-        opt_obj, _ = m.OptionDict.objects.get_or_create(options=def_opt)
-        model, _ = m.TSLModel.objects.get_or_create(**tsl)
-        model.default_options = opt_obj
-        model.language_format = lcode
-        model.iso1_map = iso1_map
-        model.entrypoint = entrypoint
-        model.src_languages.clear()
-        for l in src:
-            logger.debug(f'Adding src language: {l}')
-            kwargs = {lcode: l}
-            model.src_languages.add(*m.Language.objects.filter(**kwargs))
-
-        model.dst_languages.clear()
-        for l in dst:
-            logger.debug(f'Adding dst language: {l}')
-            kwargs = {lcode: l}
-            model.dst_languages.add(*m.Language.objects.filter(**kwargs))
-        model.save()
+        add_tsl_model(tsl)
 
 def auto_create_models():
     """Create OCR and TSL models from json file. Also create default OptionDict"""
