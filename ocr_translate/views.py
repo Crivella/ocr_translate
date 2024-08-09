@@ -32,6 +32,7 @@ from PIL import Image
 
 from . import __version__array__
 from . import models as m
+from .entrypoint_manager import ep_manager
 from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
 from .ocr_tsl.cached_lists import (get_all_lang_dst, get_all_lang_src,
                                    get_allowed_box_models,
@@ -457,9 +458,10 @@ def get_plugin_data(request: HttpRequest) -> JsonResponse:
 def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonResponse:
     """Handle a POST request to install a plugin."""
     logger.debug(f'Manage plugins: {plugins}')
-    for plugin, present in plugins.items():
-        if present:
-            PMNG.install_plugin(plugin)
-        else:
-            PMNG.uninstall_plugin(plugin)
+    with ep_manager():
+        for plugin, present in plugins.items():
+            if present:
+                PMNG.install_plugin(plugin)
+            else:
+                PMNG.uninstall_plugin(plugin)
     return JsonResponse({})
