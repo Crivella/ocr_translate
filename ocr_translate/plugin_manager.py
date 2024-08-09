@@ -34,38 +34,7 @@ from django.apps import apps
 from django.conf import settings
 
 GENERIC_SCOPE = 'generic'
-DEVICE = os.environ.get('DEVICE', 'cpu')
-SCOPES = [GENERIC_SCOPE, DEVICE]
-
-OCT_BASE_DIR: Path = Path(os.environ.get('OCT_BASE_DIR', Path.home() / '.ocr_translate'))
-PLUGIN_DIR: Path = OCT_BASE_DIR / 'plugins'
-PLUGIN_SP: dict[str, Path] = {}
-
-for scope in SCOPES:
-    d = PLUGIN_DIR / scope
-    d.mkdir(exist_ok=True, parents=True)
-    PLUGIN_SP[scope] = d
-    if scope in SCOPES:
-        sys.path.insert(0, d.as_posix())
-sys.path_importer_cache.clear()
-
-site.USER_BASE = PLUGIN_DIR.as_posix()
-site.USER_SITE = PLUGIN_SP[GENERIC_SCOPE].as_posix()
-
-PLUGIN_LIST_FILE: Path = OCT_BASE_DIR / 'plugins.json'
-INSTALLED_FILE: Path = PLUGIN_DIR / 'installed.json'
-
-INSTALLED: dict[str, dict] = {}
-if INSTALLED_FILE.exists():
-    with open(INSTALLED_FILE) as f:
-        INSTALLED = json.load(f)
-DONE: dict[str, str] = {}
-
-PLUGINS: list[str] = []
-if not os.environ.get('OCT_DISABLE_PLUGINS', False):
-    if PLUGIN_LIST_FILE.exists():
-        with open(PLUGIN_LIST_FILE) as f:
-            PLUGINS = json.load(f)
+DEFAULT_OCT_BASE_DIR: Path = Path.home() / '.ocr_translate'
 
 logger = logging.getLogger('ocr.general')
 
@@ -74,180 +43,260 @@ logger = logging.getLogger('ocr.general')
 # print('OS.NAME:', os.name)
 # subprocess.run(['pip', 'show', 'pip'], check=True)
 
-
 def find_site_packages(start_dir: Path) -> Path:
     """Find the site-packages directory."""
     for pth in start_dir.rglob('site-packages'):
         return pth
     return None
 
-def save_plugin_list():
-    """Save the list of installed plugins."""
-    with open(PLUGIN_LIST_FILE, 'w') as f:
-        json.dump(PLUGINS, f, indent=2)
-
-
-def save_installed():
-    """Save the installed packages."""
-    with open(INSTALLED_FILE, 'w') as f:
-        json.dump(INSTALLED, f, indent=2)
-
-def pip_install(name, version, extras='', scope=GENERIC_SCOPE, force=False):
-    """Use pip to install a package."""
-    if scope not in SCOPES:
-        return
-    vstring = f'{version}+{scope}'
-    if name in DONE:
-        if DONE[name] == vstring:
-            return
-        raise ValueError(f'Coneflict: {name}=={version} already installed as {DONE[name]}')
-    DONE[name] = vstring
-
-    if not force and name in INSTALLED:
-        if INSTALLED[name]['version'] == vstring:
-            return
-
-    ptr = {}
-    INSTALLED[name] = ptr
-    ptr['version'] = vstring
-    ptr['files'] = []
-    ptr['dirs'] = []
-
-    # print(f'  Installing {name}=={version}')
-    logger.info(f'Installing {name}=={version}')
-    cmd = [
-        'pip', 'install', f'{name}=={version}',
-        '--ignore-installed',
-        '--no-deps',
-        '--no-build-isolation',
-        f'--prefix={PLUGIN_DIR}',
-        ]
-    if extras:
-        cmd += extras.split(' ')
-    res = subprocess.run(cmd, check=True, capture_output=True)
-    logger.debug(res.stdout.decode())
-
-    tmp_dir = find_site_packages(PLUGIN_DIR)
-    print(tmp_dir)
-    for pth in tmp_dir.iterdir():
-        if pth.name.endswith('__pycache__'):
-            continue
-        # shutil.move(d, PLUGIN_SP[scope])
-        dst = PLUGIN_SP[scope] / pth.name
-        if pth.is_file():
-            ptr['files'].append(pth.name)
-            if dst.exists():
-                dst.unlink()
-            shutil.move(pth, dst)
-        elif pth.is_dir():
-            ptr['dirs'].append(pth.name)
-            if dst.exists():
-                shutil.copytree(pth, PLUGIN_SP[scope] / pth.name, dirs_exist_ok=True)
-                shutil.rmtree(pth)
-            else:
-                shutil.move(pth, PLUGIN_SP[scope])
-        else:
-            raise ValueError(f'Unknown type: {pth}')
-
-    save_installed()
-
-def get_all_plugin_data() -> list[dict]:
-    """Get the plugin data."""
-    data_file = resources.files('ocr_translate') / 'plugins_data.json'
-    if not data_file.exists():
-        return []
-    with open(data_file) as f:
-        data = json.load(f)
-    return data
-
-def get_plugin_data(name: str) -> dict:
-    """Get the data for a specific plugin."""
-    data = get_all_plugin_data()
-    for plugin in data:
-        if plugin['name'] == name:
-            return plugin
-    return {}
-
-def reload_plugins():
+def reload_django_apps():
     """Reload the plugins."""
     apps.app_configs = {}
     apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
     apps.clear_cache()
     apps.populate(settings.INSTALLED_APPS)
 
-def install_plugin(name):
-    """Ensure the plugin is installed."""
-    if name in PLUGINS:
-        return
-    data = get_all_plugin_data()
-    for plugin in data:
-        if plugin['name'] == name:
-            break
-    else:
-        raise ValueError(f'Plugin {name} not found')
-    data = plugin
-    pkg = data['package']
-    version = data['version']
-    # description = data['description']
-    deps = data.get('dependencies', [])
+def _pip_install(package: str, prefix: str, extras: list[str] = None):
+    """Install a package with pip."""
+    if extras is None:
+        extras = []
+    logger.info(f'Installing {package}')
+    cmd = [
+        'pip', 'install', package,
+        '--ignore-installed',
+        '--no-deps',
+        '--no-build-isolation',
+        f'--prefix={prefix}',
+        ] + extras
+    res = subprocess.run(cmd, check=True, capture_output=True)
+    logger.debug(res.stdout.decode())
 
-    logger.info(f'Installing plugin {pkg}=={version} with dependencies')
-    for dep in deps[::-1]:
-        pip_install(**dep)
+class PluginManager:
+    """Manage the plugins."""
+    SINGLETON = None
 
-    pip_install(pkg, version)
+    device: str = None
+    scopes: list[str] = None
 
-    PLUGINS.append(name)
-    save_plugin_list()
-    settings.INSTALLED_APPS.append(name)
-    reload_plugins()
+    base_dir: Path = None
+    plugin_dir: Path = None
+    PLUGIN_SP: dict[str, Path] = {}
 
-def uninstall_package(name):
-    """Uninstall a package."""
-    if name not in INSTALLED:
-        return
-    logger.info(f'Uninstalling package {name}')
-    ptr = INSTALLED.pop(name)
-    _, scope = ptr['version'].split('+')
-    for f in ptr['files']:
-        (PLUGIN_SP[scope] / f).unlink()
-    for pth in ptr['pthirs']:
-        shutil.rmtree(PLUGIN_SP[scope] / pth)
+    plugin_list_file: Path = None
+    installed_file: Path = None
 
-    save_installed()
+    @classmethod
+    def get_manager(cls):
+        """Return the singleton instance of the plugin manager."""
+        if not PluginManager.SINGLETON:
+            PluginManager.SINGLETON = PluginManager()
+        return PluginManager.SINGLETON
 
-    # version, scope = INSTALLED.pop(name).split('+')
-    # with open(INSTALLED_FILE, 'w') as f:
-    #     json.dump(INSTALLED, f, indent=2)
+    def __init__(self):
+        """Initialize the plugin manager."""
+        self.device = os.environ.get('DEVICE', 'cpu')
+        self.scopes = [GENERIC_SCOPE, self.device]
+        self.base_dir = Path(os.environ.get('OCT_BASE_DIR', DEFAULT_OCT_BASE_DIR))
+        self.plugin_dir = self.base_dir / 'plugins'
 
-def uninstall_plugin(name):
-    """Uninstall the plugin."""
-    if name not in PLUGINS:
-        return
-    data = get_plugin_data(name)
-    pkg = data['package']
-    logger.info(f'Uninstalling plugin {name} and non-shared dependencies')
-    # logger.debug(f'INSTALLED: {INSTALLED}')
-    if pkg not in INSTALLED:
-        return
+        self.plugin_list_file = self.base_dir / 'plugins.json'
+        self.installed_file = self.plugin_dir / 'installed.json'
 
-    data = get_all_plugin_data()
-    other_deps = set()
-    plugin_deps = set()
-    torm_deps = set()
-    for plugin in data:
-        deps = set(_['name'] for _ in plugin.get('dependencies', []))
-        if plugin['name'] == name:
-            plugin_deps |= deps
-        else:
-            other_deps |= deps
-    torm_deps = plugin_deps - other_deps
+        self._plugins = None
+        self._plugin_data = None
+        self._installed = None
 
-    for dep in torm_deps:
-        uninstall_package(dep)
+        self.initialize_scopes()
 
-    PLUGINS.remove(name)
-    save_plugin_list()
+    @property
+    def plugins_data(self) -> list[dict]:
+        """Get/cache the plugin data."""
+        if self._plugin_data is None:
+            data_file = resources.files('ocr_translate') / 'plugins_data.json'
+            if not data_file.exists():
+                self._plugin_data = []
+            else:
+                with open(data_file) as f:
+                    self._plugin_data = json.load(f)
+        return self._plugin_data
 
-    settings.INSTALLED_APPS.remove(name)
-    reload_plugins()
+    def get_plugin_data(self, name: str) -> dict:
+        """Get the data for a specific plugin."""
+        for plugin in self.plugins_data:
+            if plugin['name'] == name:
+                return plugin
+        return {}
+
+    def initialize_scopes(self):
+        """Configure the scopes."""
+        for scope in self.scopes:
+            pth = self.plugin_dir / scope
+            pth.mkdir(exist_ok=True, parents=True)
+            self.PLUGIN_SP[scope] = pth
+            sys.path.insert(0, pth.as_posix())
+        sys.path_importer_cache.clear()
+
+        site.USER_BASE = self.plugin_dir.as_posix()
+        site.USER_SITE = self.PLUGIN_SP[GENERIC_SCOPE].as_posix()
+
+    @property
+    def plugins(self) -> list[str]:
+        """Get/cache the list of installed plugins."""
+        if self._plugins is None:
+            self._plugins = []
+            if not os.environ.get('OCT_DISABLE_PLUGINS', False) and  self.plugin_list_file.exists():
+                with open(self.plugin_list_file) as f:
+                    self._plugins = json.load(f)
+        return self._plugins
+
+    @property
+    def installed_pkgs(self) -> dict:
+        """Get/cache the installed packages."""
+        if self._installed is None:
+            self._installed = {}
+            if self.installed_file.exists():
+                with open(self.installed_file) as f:
+                    self._installed = json.load(f)
+
+        return self._installed
+
+    def save_plugin_list(self):
+        """Save the list of installed plugins."""
+        with open(self.plugin_list_file, 'w') as f:
+            json.dump(self.plugins, f, indent=2)
+
+    def save_installed(self):
+        """Save the installed packages."""
+        with open(self.installed_file, 'w') as f:
+            json.dump(self.installed_pkgs, f, indent=2)
+
+    def pip_install(self, name, version, extras: list| str = None, scope=GENERIC_SCOPE, force=False):
+        """Use pip to install a package."""
+        if scope not in self.scopes:
+            logger.debug(f'Skipping {name}=={version} for scope {scope}')
+            return
+        if extras is None:
+            extras = []
+        elif isinstance(extras, str):
+            extras = list(filter(None, extras.split(' ')))
+        scoped_name = f'{scope}::{name}'
+        # if name in DONE:
+        #     if DONE[name] == vstring:
+        #         return
+        #     raise ValueError(f'Coneflict: {name}=={version} already installed as {DONE[name]}')
+        # DONE[name] = vstring
+
+        if not force and scoped_name in self.installed_pkgs:
+            if self.installed_pkgs[scoped_name]['version'] == version:
+                return
+
+        ptr = {}
+        self.installed_pkgs[scoped_name] = ptr
+        ptr['version'] = version
+        ptr['files'] = []
+        ptr['dirs'] = []
+
+        _pip_install(f'{name}=={version}', self.plugin_dir, extras)
+
+        # print(f'  Installing {name}=={version}')
+
+        tmp_dir = find_site_packages(self.plugin_dir)
+        logger.debug(f'Package installed by pip in {tmp_dir}')
+        for src in tmp_dir.iterdir():
+            if src.name.endswith('__pycache__'):
+                continue
+            # shutil.move(d, PLUGIN_SP[scope])
+            dst = self.PLUGIN_SP[scope] / src.name
+            if src.is_file():
+                ptr['files'].append(src.name)
+                if dst.exists():
+                    dst.unlink()
+                shutil.move(src, dst)
+            elif src.is_dir():
+                ptr['dirs'].append(src.name)
+                if dst.exists():
+                    shutil.copytree(src, dst, dirs_exist_ok=True)
+                    shutil.rmtree(src)
+                else:
+                    shutil.move(src, dst)
+            else:
+                raise NotImplementedError(f'Unknown type: {src}')
+
+        self.save_installed()
+
+    def _install_plugin(self, name: str):
+        """Run the `install` part of the plugin."""
+        if not (data := self.get_plugin_data(name)):
+            raise ValueError(f'Plugin {name} not found')
+        pkg = data['package']
+        version = data['version']
+        deps = data.get('dependencies', [])
+
+        logger.info(f'Installing plugin {pkg}=={version} with dependencies')
+        for dep in deps[::-1]:
+            self.pip_install(**dep)
+
+        self.pip_install(pkg, version)
+
+    def install_plugin(self, name: str):
+        """Ensure the plugin is installed."""
+        self._install_plugin(name)
+        if name not in self.plugins:
+            self.plugins.append(name)
+            self.save_plugin_list()
+        if name not in settings.INSTALLED_APPS:
+            settings.INSTALLED_APPS.append(name)
+        reload_django_apps()
+
+    def uninstall_package(self, name: str):
+        """Uninstall a package."""
+        if name not in self.installed_pkgs:
+            return
+        logger.info(f'Uninstalling package {name}')
+        ptr = self.installed_pkgs.pop(name)
+        scope, _ = name.split('::')
+        scope_dir = self.PLUGIN_SP[scope]
+        for pth in ptr['files']:
+            (scope_dir / pth).unlink()
+        for pth in ptr['dirs']:
+            shutil.rmtree(scope_dir / pth)
+
+        self.save_installed()
+
+    def uninstall_plugin(self, name: str):
+        """Uninstall the plugin."""
+        if name not in self.plugins:
+            return
+        data = self.get_plugin_data(name)
+        pkg = data['package']
+        scope = data.get('scope', GENERIC_SCOPE)
+        scoped_name = f'{scope}::{pkg}'
+        logger.info(f'Uninstalling plugin {scoped_name} and non-shared dependencies')
+        # logger.debug(f'INSTALLED: {INSTALLED}')
+        if scoped_name not in self.installed_pkgs:
+            raise ValueError(f'Plugin {name} not installed')
+
+        other_deps = set()
+        plugin_deps = set()
+        torm_deps = set()
+        for plugin in self.plugins_data:
+            deps = set(f"{_['name']}" for _ in plugin.get('dependencies', []))
+            if plugin['name'] == name:
+                plugin_deps |= deps
+            else:
+                other_deps |= deps
+        torm_deps = plugin_deps - other_deps
+
+        print('PLUGIN_DEPS:', plugin_deps)
+        print('OTHER_DEPS:', other_deps)
+        print('TORM_DEPS:', torm_deps)
+
+        for dep in torm_deps:
+            self.uninstall_package(dep)
+        self.uninstall_package(scoped_name)
+
+        self.plugins.remove(name)
+        self.save_plugin_list()
+
+        settings.INSTALLED_APPS.remove(name)
+        reload_django_apps()

@@ -32,7 +32,6 @@ from PIL import Image
 
 from . import __version__array__
 from . import models as m
-from . import plugin_manager as pmng
 from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
 from .ocr_tsl.cached_lists import (get_all_lang_dst, get_all_lang_src,
                                    get_allowed_box_models,
@@ -43,6 +42,7 @@ from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
                            load_lang_src)
 from .ocr_tsl.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
 from .ocr_tsl.tsl import get_tsl_model, load_tsl_model, unload_tsl_model
+from .plugin_manager import PluginManager
 from .queues import main_queue as q
 from .request_decorators import (get_backend_langs, get_backend_models,
                                  get_data_deserializer, method_or_405,
@@ -51,6 +51,7 @@ from .tries import load_trie_src
 
 logger = logging.getLogger('ocr.general')
 
+PMNG = PluginManager.get_manager()
 
 @method_or_405(['GET'])
 def handshake(request: HttpRequest) -> JsonResponse:
@@ -438,22 +439,16 @@ def get_active_options(
 @method_or_405(['GET'])
 def get_plugin_data(request: HttpRequest) -> JsonResponse:
     """Handle a GET request to get plugins."""
-    data = pmng.get_all_plugin_data()
     resp = {}
-    for plugin in data:
-        name = plugin['name']
-        description = plugin['description']
-        homepage = plugin.get('homepage', None)
-        version = plugin['version']
-        warning = plugin.get('warning', None)
-        installed = name in pmng.PLUGINS
-        resp[name] = {
-            'description': description,
-            'version': version,
-            'installed': installed,
-            'homepage': homepage,
-            'warning': warning,
-            }
+    tpl = {
+        'homepage': None,
+        'warning': None,
+    }
+    for plugin in PMNG.plugins_data:
+        ptr = {**tpl, **plugin}
+        name = ptr.pop('name')
+        ptr['installed'] = name in PMNG.plugins
+        resp[name] = ptr
     return JsonResponse(resp)
 
 @csrf_exempt
@@ -464,7 +459,7 @@ def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonRespon
     logger.debug(f'Manage plugins: {plugins}')
     for plugin, present in plugins.items():
         if present:
-            pmng.install_plugin(plugin)
+            PMNG.install_plugin(plugin)
         else:
-            pmng.uninstall_plugin(plugin)
+            PMNG.uninstall_plugin(plugin)
     return JsonResponse({})
