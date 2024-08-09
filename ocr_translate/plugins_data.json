@@ -13,12 +13,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "protobuf",
         "version": "3.20.3",
         "extras": "",
@@ -143,12 +137,6 @@
         "version": "0.17.1",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
       },
       {
         "name": "torch",
@@ -295,12 +283,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "packaging",
         "version": "24.0",
         "extras": "",
@@ -394,42 +376,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "pyclipper",
         "version": "1.3.0.post5",
         "extras": "",
@@ -466,12 +412,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "lazy_loader",
         "version": "0.3",
         "extras": "",
@@ -480,12 +420,6 @@
       {
         "name": "networkx",
         "version": "3.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -502,20 +436,8 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "tifffile",
         "version": "2024.2.12",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -526,20 +448,8 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "shapely",
         "version": "2.0.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -614,12 +524,6 @@
         "version": "0.17.1",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
       },
       {
         "name": "torch",
@@ -820,20 +724,8 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "opt-einsum",
         "version": "3.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -910,12 +802,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "matplotlib",
         "version": "3.8.3",
         "extras": "",
@@ -924,12 +810,6 @@
       {
         "name": "contourpy",
         "version": "1.2.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -948,12 +828,6 @@
       {
         "name": "kiwisolver",
         "version": "1.4.5",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -982,36 +856,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "scikit-image",
         "version": "0.22.0",
         "extras": "",
@@ -1020,12 +864,6 @@
       {
         "name": "imageio",
         "version": "2.34.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1042,12 +880,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "packaging",
         "version": "24.0",
         "extras": "",
@@ -1060,20 +892,8 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "tifffile",
         "version": "2024.2.12",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1084,20 +904,8 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "shapely",
         "version": "2.0.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1116,60 +924,6 @@
       {
         "name": "lxml",
         "version": "5.1.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1212,42 +966,6 @@
       {
         "name": "fonttools",
         "version": "4.50.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1384,12 +1102,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "lazy_loader",
         "version": "0.3",
         "extras": "",
@@ -1398,12 +1110,6 @@
       {
         "name": "networkx",
         "version": "3.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1420,32 +1126,14 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "tifffile",
         "version": "2024.2.12",
         "extras": "",
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "shapely",
         "version": "2.0.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1624,12 +1312,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "cycler",
         "version": "0.12.1",
         "extras": "",
@@ -1644,12 +1326,6 @@
       {
         "name": "kiwisolver",
         "version": "1.4.5",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
@@ -1678,12 +1354,6 @@
         "scope": "generic"
       },
       {
-        "name": "numpy",
-        "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "packaging",
         "version": "24.0",
         "extras": "",
@@ -1692,12 +1362,6 @@
       {
         "name": "pandas",
         "version": "2.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "numpy",
-        "version": "1.24.4",
         "extras": "",
         "scope": "generic"
       },
