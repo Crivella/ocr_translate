@@ -151,12 +151,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "torch",
         "version": "2.2.1",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
@@ -436,12 +430,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "pyclipper",
         "version": "1.3.0.post5",
         "extras": "",
@@ -484,12 +472,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "lazy_loader",
         "version": "0.3",
         "extras": "",
@@ -510,12 +492,6 @@
       {
         "name": "packaging",
         "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pillow",
-        "version": "10.3.0",
         "extras": "",
         "scope": "generic"
       },
@@ -646,12 +622,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "torch",
         "version": "2.2.1",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
@@ -734,7 +704,7 @@
       },
       {
         "name": "pillow",
-        "version": "10.3.0",
+        "version": "10.4.0",
         "extras": "",
         "scope": "generic"
       }
@@ -868,12 +838,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "protobuf",
         "version": "3.20.3",
         "extras": "",
@@ -952,12 +916,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "matplotlib",
         "version": "3.8.3",
         "extras": "",
@@ -1002,12 +960,6 @@
       {
         "name": "packaging",
         "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pillow",
-        "version": "10.3.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1060,12 +1012,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "scikit-image",
         "version": "0.22.0",
         "extras": "",
@@ -1080,12 +1026,6 @@
       {
         "name": "numpy",
         "version": "1.24.4",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pillow",
-        "version": "10.3.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1110,12 +1050,6 @@
       {
         "name": "packaging",
         "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pillow",
-        "version": "10.3.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1342,12 +1276,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "premailer",
         "version": "3.10.0",
         "extras": "",
@@ -1462,12 +1390,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "lazy_loader",
         "version": "0.3",
         "extras": "",
@@ -1488,12 +1410,6 @@
       {
         "name": "packaging",
         "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pillow",
-        "version": "10.3.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1744,12 +1660,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "pyparsing",
         "version": "3.1.2",
         "extras": "",
@@ -1812,12 +1722,6 @@
       {
         "name": "tzdata",
         "version": "2024.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pillow",
-        "version": "10.3.0",
         "extras": "",
         "scope": "generic"
       },
