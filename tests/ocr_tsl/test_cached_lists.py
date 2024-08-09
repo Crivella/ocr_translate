@@ -92,6 +92,39 @@ def test_refresh_model_cache_all(monkeypatch, language, box_model, ocr_model, ts
     assert set(cl.ALLOWED_OCR_MODELS) == {ocr_model}
     assert set(cl.ALLOWED_TSL_MODELS) == {tsl_model}
 
+def test_refresh_model_cache_all_inactive_box(monkeypatch, language, box_model, ocr_model, tsl_model):
+    """Test that the model cache is refreshed."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(lang, 'LANG_DST', language)
+    box_model.active = False
+    box_model.save()
+    cl.refresh_model_cache()
+    assert set(cl.ALLOWED_BOX_MODELS) == set()
+    assert set(cl.ALLOWED_OCR_MODELS) == {ocr_model}
+    assert set(cl.ALLOWED_TSL_MODELS) == {tsl_model}
+
+def test_refresh_model_cache_all_inactive_ocr(monkeypatch, language, box_model, ocr_model, tsl_model):
+    """Test that the model cache is refreshed."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(lang, 'LANG_DST', language)
+    ocr_model.active = False
+    ocr_model.save()
+    cl.refresh_model_cache()
+    assert set(cl.ALLOWED_BOX_MODELS) == {box_model}
+    assert set(cl.ALLOWED_OCR_MODELS) == set()
+    assert set(cl.ALLOWED_TSL_MODELS) == {tsl_model}
+
+def test_refresh_model_cache_all_inactive_tsl(monkeypatch, language, box_model, ocr_model, tsl_model):
+    """Test that the model cache is refreshed."""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(lang, 'LANG_DST', language)
+    tsl_model.active = False
+    tsl_model.save()
+    cl.refresh_model_cache()
+    assert set(cl.ALLOWED_BOX_MODELS) == {box_model}
+    assert set(cl.ALLOWED_OCR_MODELS) == {ocr_model}
+    assert set(cl.ALLOWED_TSL_MODELS) == set()
+
 def test_refresh_model_cache_all_none(language, box_model, ocr_model, tsl_model):
     """Test that the model cache is refreshed."""
     cl.refresh_model_cache()
@@ -160,7 +193,28 @@ def test_post_save_lang_signal(monkeypatch, mock_called, language):
     language.save()
     assert hasattr(mock_called, 'called')
 
-def test_refresh_model_cache_signalk(monkeypatch, mock_called):
+def test_post_save_box_signal(monkeypatch, mock_called, box_model):
+    """Test that the model cache is refreshed on post_save signal from OCRBoxModel."""
+    monkeypatch.setattr(cl, 'refresh_model_cache', mock_called)
+    assert not hasattr(mock_called, 'called')
+    box_model.save()
+    assert hasattr(mock_called, 'called')
+
+def test_post_save_ocr_signal(monkeypatch, mock_called, ocr_model):
+    """Test that the model cache is refreshed on post_save signal from OCRModel."""
+    monkeypatch.setattr(cl, 'refresh_model_cache', mock_called)
+    assert not hasattr(mock_called, 'called')
+    ocr_model.save()
+    assert hasattr(mock_called, 'called')
+
+def test_post_save_tsl_signal(monkeypatch, mock_called, tsl_model):
+    """Test that the model cache is refreshed on post_save signal from TSLModel."""
+    monkeypatch.setattr(cl, 'refresh_model_cache', mock_called)
+    assert not hasattr(mock_called, 'called')
+    tsl_model.save()
+    assert hasattr(mock_called, 'called')
+
+def test_refresh_model_cache_signal(monkeypatch, mock_called):
     """Test that the model cache is refreshed on refresh_model_cache_signal."""
     monkeypatch.setattr(cl, 'refresh_model_cache', mock_called)
     assert not hasattr(mock_called, 'called')

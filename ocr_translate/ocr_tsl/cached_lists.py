@@ -48,14 +48,14 @@ def refresh_model_cache():
     if not lang_src is None:
         ALLOWED_BOX_MODELS = m.OCRBoxModel.objects.annotate(
             count=Count('box_runs')
-            ).filter(languages=lang_src).order_by('-count').all()
+            ).filter(languages=lang_src, active=True).order_by('-count').all()
         ALLOWED_OCR_MODELS = m.OCRModel.objects.annotate(
             count=Count('ocr_runs')
-            ).filter(languages=lang_src).order_by('-count').all()
+            ).filter(languages=lang_src, active=True).order_by('-count').all()
         if not lang_dst is None:
             ALLOWED_TSL_MODELS = m.TSLModel.objects.annotate(
                 count=Count('tsl_runs')
-                ).filter(src_languages=lang_src, dst_languages=lang_dst).order_by('-count').all()
+                ).filter(src_languages=lang_src, dst_languages=lang_dst, active=True).order_by('-count').all()
 
 def refresh_lang_cache():
     """Refresh the languages cached entry."""
@@ -100,6 +100,9 @@ def refres_lang_callback(sender, instance, **kwargs): # pylint: disable=unused-a
     refresh_lang_cache()
 
 @receiver(refresh_model_cache_signal)
+@receiver(post_save, sender=m.OCRBoxModel)
+@receiver(post_save, sender=m.OCRModel)
+@receiver(post_save, sender=m.TSLModel)
 def refresh_models_callback(sender, **kwargs): # pylint: disable=unused-argument
     """Callback to refresh the cached model list when a language is added/modified."""
     refresh_model_cache()
