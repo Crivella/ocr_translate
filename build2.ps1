@@ -5,7 +5,7 @@ $env:DJANGO_SETTINGS_MODULE="mysite.settings"
 $env:OCT_DISABLE_PLUGINS="1"
 
 pyinstaller `
-    --y `
+    -y `
     --onedir `
     --name run_server `
     --icon icon.ico `
@@ -28,4 +28,5 @@ pyinstaller `
     --collect-all wave `
     --collect-all cgi `
     --collect-all imghdr `
+    --collect-all numpy `
     run_server.py
