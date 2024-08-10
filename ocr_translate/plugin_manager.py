@@ -23,6 +23,7 @@
 import json
 import logging
 import os
+import platform
 import shutil
 import site
 import subprocess
@@ -105,6 +106,7 @@ class PluginManager:
         self._plugins = None
         self._plugin_data = None
         self._installed = None
+        self.system = platform.system().lower()
 
         self.initialize_scopes()
 
@@ -170,21 +172,28 @@ class PluginManager:
         with open(self.installed_file, 'w') as f:
             json.dump(self.installed_pkgs, f, indent=2)
 
-    def pip_install(self, name, version, extras: list| str = None, scope=GENERIC_SCOPE, force=False):
+    def pip_install(
+            self,
+            name: str,
+            version: str,
+            extras: list| str = None,
+            scope: str = GENERIC_SCOPE,
+            system: str = '',
+            force: bool = False
+            ):
         """Use pip to install a package."""
         if scope not in self.scopes:
             logger.debug(f'Skipping {name}=={version} for scope {scope}')
             return
+        if system and system.lower() != self.system:
+            logger.debug(f'Skipping {name}=={version} for system {system}')
+            return
+
         if extras is None:
             extras = []
         elif isinstance(extras, str):
             extras = list(filter(None, extras.split(' ')))
         scoped_name = f'{scope}::{name}'
-        # if name in DONE:
-        #     if DONE[name] == vstring:
-        #         return
-        #     raise ValueError(f'Coneflict: {name}=={version} already installed as {DONE[name]}')
-        # DONE[name] = vstring
 
         if not force and scoped_name in self.installed_pkgs:
             if self.installed_pkgs[scoped_name]['version'] == version:
@@ -196,9 +205,14 @@ class PluginManager:
         ptr['files'] = []
         ptr['dirs'] = []
 
-        _pip_install(f'{name}=={version}', self.plugin_dir, extras)
+        safe_name = name.replace('-', '_min_')
+        env_override = f'OCT_PKG_{safe_name.upper()}_VERSION'
+        if env_override in os.environ:
+            v = os.environ[env_override]
+            logger.info(f'Package {name} version overridden from {version} to {v} via {env_override}')
+            version = v
 
-        # print(f'  Installing {name}=={version}')
+        _pip_install(f'{name}=={version}', self.plugin_dir, extras)
 
         tmp_dir = find_site_packages(self.plugin_dir)
         logger.debug(f'Package installed by pip in {tmp_dir}')

@@ -631,7 +631,15 @@
         "name": "paddlepaddle",
         "version": "2.5.2",
         "extras": "",
-        "scope": "generic"
+        "scope": "generic",
+        "system": "linux"
+      },
+      {
+        "name": "paddlepaddle",
+        "version": "2.6.1",
+        "extras": "",
+        "scope": "generic",
+        "system": "windows"
       },
       {
         "name": "astor",
