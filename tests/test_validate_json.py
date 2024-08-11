@@ -32,13 +32,15 @@ def test_loadable():
     """Test that all json files are valide and loadable."""
     all_jsons = resources.files('ocr_translate').glob('**/*.json')
     for pth in all_jsons:
-        with pth.open() as f:
+        print('-'*80)
+        print(pth)
+        with pth.open(encoding='utf-8') as f:
             json.load(f)
 
 def test_plugin_data_conflicts():
     """Test the absence of dependencies conflicts in `plugins_data.json`"""
     data_file = resources.files('ocr_translate') / 'plugins_data.json'
-    with data_file.open() as f:
+    with data_file.open(encoding='utf-8') as f:
         data = json.load(f)
 
     done = {}
@@ -47,7 +49,8 @@ def test_plugin_data_conflicts():
             name = dep['name']
             version = dep['version']
             scope = dep.get('scope', 'generic')
-            key = (name, scope)
+            system = dep.get('system', 'all')
+            key = (name, scope, system)
             assert name not in MAIN_DEPS, f'Dependency {name} should not be overriden'
             if key in done:
                 assert done[key] == version, f'Conflict in {name} {scope} version: {done[key]} != {version}'

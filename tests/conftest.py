@@ -75,7 +75,8 @@ def box_model_dict():
         'entrypoint': 'test_entrypoint.box',
         'iso1_map': {
             'ja': 'jap',
-        }
+        },
+        'active': True
     }
 
 @pytest.fixture()
@@ -84,7 +85,8 @@ def ocr_model_dict():
     return {
         'name': 'test_ocr_model/id',
         'language_format': 'iso1',
-        'entrypoint': 'test_entrypoint.ocr'
+        'entrypoint': 'test_entrypoint.ocr',
+        'active': True
     }
 
 @pytest.fixture()
@@ -94,7 +96,8 @@ def ocr_model_dict_single():
         'name': 'test_ocr_model/id',
         'language_format': 'iso1',
         'entrypoint': 'test_entrypoint.ocr',
-        'ocr_mode': 'single'
+        'ocr_mode': 'single',
+        'active': True
     }
 
 @pytest.fixture()
@@ -103,7 +106,8 @@ def tsl_model_dict():
     return {
         'name': 'test_tsl_model/id',
         'language_format': 'iso1',
-        'entrypoint': 'test_entrypoint.tsl'
+        'entrypoint': 'test_entrypoint.tsl',
+        'active': True
     }
 
 @pytest.fixture()
