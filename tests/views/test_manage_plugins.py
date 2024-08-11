@@ -61,7 +61,7 @@ def test_manage_plugins_noaction(monkeypatch, mock_called, client, post_kwargs):
 
 def test_manage_plugins_install(monkeypatch, mock_called, client, post_kwargs):
     """Test manage_plugins with POST request: install a plugin."""
-    pmng = PluginManager.get_manager()
+    pmng = PluginManager()
     monkeypatch.setattr(pmng, 'install_plugin', mock_called)
 
     plugin_name = 'present'
@@ -75,7 +75,7 @@ def test_manage_plugins_install(monkeypatch, mock_called, client, post_kwargs):
 
 def test_manage_plugins_uninstall(monkeypatch, mock_called, client, post_kwargs):
     """Test manage_plugins with POST request: uninstall a plugin."""
-    pmng = PluginManager.get_manager()
+    pmng = PluginManager()
     monkeypatch.setattr(pmng, 'uninstall_plugin', mock_called)
 
     plugin_name = 'absent'

@@ -74,7 +74,7 @@ def _pip_install(package: str, prefix: str, extras: list[str] = None):
 
 class PluginManager:
     """Manage the plugins."""
-    SINGLETON = None
+    _SINGLETON = None
 
     device: str = None
     scopes: list[str] = None
@@ -86,12 +86,10 @@ class PluginManager:
     plugin_list_file: Path = None
     installed_file: Path = None
 
-    @classmethod
-    def get_manager(cls):
-        """Return the singleton instance of the plugin manager."""
-        if not PluginManager.SINGLETON:
-            PluginManager.SINGLETON = PluginManager()
-        return PluginManager.SINGLETON
+    def __new__(cls, *args, **kwargs):
+        if not cls._SINGLETON:
+            cls._SINGLETON = super().__new__(cls)
+        return cls._SINGLETON
 
     def __init__(self):
         """Initialize the plugin manager."""
@@ -172,7 +170,7 @@ class PluginManager:
         with open(self.installed_file, 'w') as f:
             json.dump(self.installed_pkgs, f, indent=2)
 
-    def pip_install(
+    def install_package(
             self,
             name: str,
             version: str,
@@ -248,9 +246,9 @@ class PluginManager:
 
         logger.info(f'Installing plugin {pkg}=={version} with dependencies')
         for dep in deps[::-1]:
-            self.pip_install(**dep)
+            self.install_package(**dep)
 
-        self.pip_install(pkg, version)
+        self.install_package(pkg, version)
 
     def install_plugin(self, name: str):
         """Ensure the plugin is installed."""
@@ -294,7 +292,11 @@ class PluginManager:
         plugin_deps = set()
         torm_deps = set()
         for plugin in self.plugins_data:
-            deps = set(f"{_['scope']}::{_['name']}" for _ in plugin.get('dependencies', []))
+            if plugin['name'] not in self.plugins:
+                continue
+            deps = set()
+            for dep in plugin.get('dependencies', []):
+                deps.add(f"{dep.get('scope', GENERIC_SCOPE)}::{dep['name']}")
             if plugin['name'] == name:
                 plugin_deps |= deps
             else:

@@ -52,7 +52,7 @@ from .tries import load_trie_src
 
 logger = logging.getLogger('ocr.general')
 
-PMNG = PluginManager.get_manager()
+PMNG = PluginManager()
 
 @method_or_405(['GET'])
 def handshake(request: HttpRequest) -> JsonResponse:
@@ -444,6 +444,7 @@ def get_plugin_data(request: HttpRequest) -> JsonResponse:
     tpl = {
         'homepage': None,
         'warning': None,
+        'description': None,
     }
     for plugin in PMNG.plugins_data:
         ptr = {**tpl, **plugin}
