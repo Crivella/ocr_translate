@@ -46,6 +46,16 @@ def tmp_base_dir(tmp_path, monkeypatch):
     return tmp_path
 
 @pytest.fixture()
+def disabled(monkeypatch):
+    """Disable plugins."""
+    monkeypatch.setenv('OCT_DISABLE_PLUGINS', '1')
+
+@pytest.fixture()
+def django_debug(monkeypatch):
+    """Set the Django debug environment variable."""
+    monkeypatch.setenv('DJANGO_DEBUG', 'true')
+
+@pytest.fixture()
 def device(monkeypatch):
     """Set the device environment variable."""
     value = '123abc'
@@ -150,6 +160,30 @@ def test_manager_singleton():
     pmng2 = pm.PluginManager()
     assert pmng1 is pmng2
 
+def test_ensurepip_disabled(monkeypatch, disabled, mock_called):
+    """Test plugin manager ensure_pip function with disabled form env."""
+    monkeypatch.setattr(pm.subprocess, 'run', mock_called)
+    pm.PluginManager()
+    assert not hasattr(mock_called, 'called')
+
+def test_ensurepip_success(monkeypatch, mock_called):
+    """Test plugin manager ensure_pip function mocked success."""
+    monkeypatch.setattr(pm.subprocess, 'run', mock_called)
+    pm.PluginManager()
+    assert mock_called.called
+
+def test_ensurepip_fail(monkeypatch, mock_called):
+    """Test plugin manager ensure_pip function mocked failure. Test that running subprocess.run on a non-existent
+    file raises FileNotFoundError."""
+    import functools
+    import subprocess
+    app = functools.partial(subprocess.run, ['thisfileshouldnotexist'])
+    def mock_run(*args, **kwargs):
+        app(*args[1:], **kwargs)
+    monkeypatch.setattr(pm.subprocess, 'run', mock_run)
+    with pytest.raises(FileNotFoundError):
+        pm.PluginManager()
+
 def test_init_env_device(device):
     """Test plugin manager init with environment variables."""
     pmng = pm.PluginManager()
@@ -183,10 +217,29 @@ def test_init_scopes(monkeypatch, device, tmp_base_dir):
     assert site.USER_BASE == pmng.plugin_dir.as_posix()
     assert site.USER_SITE == pmng.PLUGIN_SP[pm.GENERIC_SCOPE].as_posix()
 
+def test_init_site_packages_removal(tmp_base_dir):
+    """Test plugin manager init site packages removal."""
+    sp1 = tmp_base_dir / 'plugins' / 'site-packages'
+    sp2 = tmp_base_dir / 'plugins' / 'test1' / 'site-packages'
+    sp3 = tmp_base_dir / 'plugins' / 'test1' / 'test2' / 'site-packages'
+    sp1.mkdir(parents=True, exist_ok=True)
+    sp2.mkdir(parents=True, exist_ok=True)
+    sp3.mkdir(parents=True, exist_ok=True)
+    pm.PluginManager()
+    assert not sp1.exists()
+    assert not sp2.exists()
+    assert not sp3.exists()
+
 def test_plugin_data():
     """Test plugin manager loading plugin data  with real file."""
     pmng = pm.PluginManager()
     assert isinstance(pmng.plugins_data, list)
+
+def test_plugin_data_disabled(disabled):
+    """Test plugin manager loading plugin data  with real file."""
+    pmng = pm.PluginManager()
+    assert isinstance(pmng.plugins_data, list)
+    assert pmng._plugin_data is None
 
 def test_plugin_data_nofile(monkeypatch, tmp_base_dir):
     """Test plugin manager loading plugin data with non-existent file."""
@@ -233,21 +286,13 @@ def test_plugin_file_mock(monkeypatch, mock_plugin_file, mock_called):
     pmng.plugins  # pylint: disable=pointless-statement
     assert not hasattr(mock_called, 'called')
 
-def test_plugin_file_mock_envdisabled(monkeypatch):
+def test_installed_pkgs_envdisabled(disabled):
     """Test plugin manager loading installed plugin list disabled by env var."""
-    class MockFile:
-        called = False
-        def exists(self):
-            MockFile.called = True
-            return True
-
     pmng = pm.PluginManager()
-    monkeypatch.setenv('OCT_DISABLE_PLUGINS', '1')
-    monkeypatch.setattr(pmng, 'plugin_list_file', MockFile())
-    assert pmng.plugins == []
-    assert not MockFile.called
+    assert pmng.installed_pkgs == {}
+    assert pmng._installed is None
 
-def test_installed_filea_mock(monkeypatch, mock_installed_file, mock_called):
+def test_installed_file_mock(monkeypatch, mock_installed_file, mock_called):
     """Test plugin manager loading installed pkgs list."""
     pmng = pm.PluginManager()
     assert isinstance(pmng.installed_pkgs, dict)
@@ -259,6 +304,13 @@ def test_installed_filea_mock(monkeypatch, mock_installed_file, mock_called):
     pmng.installed_pkgs  # pylint: disable=pointless-statement
     assert not hasattr(mock_called, 'called')
 
+def test_save_plugin_list_disabled(monkeypatch, disabled, mock_called):
+    """Test plugin manager saving installed plugin list with disabled plugins."""
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm.json, 'dump', mock_called)
+    pmng.save_plugin_list()
+    assert not hasattr(mock_called, 'called')
+
 def test_save_plugin_list(monkeypatch, mock_plugin_file, mock_called):
     """Test plugin manager saving installed plugin list."""
     pmng = pm.PluginManager()
@@ -268,6 +320,13 @@ def test_save_plugin_list(monkeypatch, mock_plugin_file, mock_called):
     assert mock_called.called
     assert mock_called.args[0] == mock_plugin_file
     assert Path(mock_called.args[1].name) == pmng.plugin_list_file
+
+def test_save_installed_disabled(monkeypatch, disabled, mock_called):
+    """Test plugin manager saving installed pkgs list with disabled plugins."""
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm.json, 'dump', mock_called)
+    pmng.save_installed()
+    assert not hasattr(mock_called, 'called')
 
 def test_save_installed(monkeypatch, mock_installed_file, mock_called):
     """Test plugin manager saving installed pkgs list."""
@@ -402,21 +461,237 @@ def test_uninstall_plugin_remove_shared(monkeypatch, mock_plugin_data, mock_log_
     assert pmng.plugins == [name2]
     assert pm.settings.INSTALLED_APPS == [name2]
 
-# def test_install_package():
-#     """Test plugin manager installing a package."""
-#     assert False
-#     pmng = pm.PluginManager()
-#     name = 'test'
-#     pmng.install_package(name)
-#     assert name in pmng.installed_pkgs
+def test_install_package_unkown_scope(monkeypatch, mock_called):
+    """Test plugin manager installing a package with unknown scope."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    scope = 'unknown'
+    pmng.install_package(name, version, scope=scope)
+    assert not hasattr(mock_called, 'called')
 
-# def test_uninstall_package():
-#     """Test plugin manager uninstalling a package."""
-#     assert False
-#     pmng = pm.PluginManager()
-#     name = 'test'
-#     pmng.uninstall_package(name)
-#     assert name not in pmng.installed_pkgs
+def test_find_site_packages_none():
+    """Test plugin manager finding site packages not existing."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    # sp_dir = pmng.plugin_dir / 'test123' / 'site-packages'
+    assert pm.find_site_packages(pmng.plugin_dir) is None
+
+def test_find_site_packages_exists():
+    """Test plugin manager finding site packages existing."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    sp_dir = pmng.plugin_dir / 'test123' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    assert pm.find_site_packages(pmng.plugin_dir) == sp_dir
+
+def test_install_package_unkown_system(monkeypatch, mock_called):
+    """Test plugin manager installing a package with unknown system."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    system = 'unknown'
+    pmng.install_package(name, version, system=system)
+    assert not hasattr(mock_called, 'called')
+
+def test_install_package_nospdir(monkeypatch, mock_called):
+    """Test plugin manager installing a package without any file created."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    scope = pm.GENERIC_SCOPE
+    with pytest.raises(FileNotFoundError):
+        pmng.install_package(name, version, scope=scope)
+
+def test_install_package_install_file_dirs(monkeypatch, mock_called):
+    """Test plugin manager installing a package with file created."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    scope = pm.GENERIC_SCOPE
+    scoped_name = f'{scope}::{name}'
+    filename = 'test_file'
+    dirname = 'test_dir'
+
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    (sp_dir / 'test_file').touch()
+    (sp_dir / 'test_dir').mkdir()
+
+    pmng.install_package(name, version, scope=scope)
+    assert hasattr(mock_called, 'called')
+    assert scoped_name in pmng.installed_pkgs
+
+    assert (pmng.PLUGIN_SP[scope] / filename).exists()
+    assert (pmng.PLUGIN_SP[scope] / dirname).exists()
+    assert pmng.installed_pkgs[scoped_name]['files'] == [filename]
+    assert pmng.installed_pkgs[scoped_name]['dirs'] == [dirname]
+
+
+def test_install_package_install_file_overwrite(monkeypatch, mock_called):
+    """Test plugin manager installing a package with overwriting existing file."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    scope = pm.GENERIC_SCOPE
+    scoped_name = f'{scope}::{name}'
+    filename = 'test_file'
+    dst_file = pmng.PLUGIN_SP[scope] / filename
+
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    with (sp_dir / 'test_file').open('w') as f:
+        f.write('test_new')
+    with dst_file.open('w') as f:
+        f.write('test_old')
+
+    pmng.install_package(name, version, scope=scope)
+    assert hasattr(mock_called, 'called')
+    assert scoped_name in pmng.installed_pkgs
+
+    assert dst_file.exists()
+    assert dst_file.read_text() == 'test_new'
+    assert pmng.installed_pkgs[scoped_name]['files'] == [filename]
+
+
+def test_install_package_install_dir_merge(monkeypatch, mock_called):
+    """Test plugin manager installing a package with dir merging."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    scope = pm.GENERIC_SCOPE
+    scoped_name = f'{scope}::{name}'
+    dirname = 'test_dir'
+    file_old = 'test_file_old'
+    file_new = 'test_file_new'
+
+    dst = pmng.PLUGIN_SP[scope]
+
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    (sp_dir / dirname).mkdir(parents=True, exist_ok=True)
+    (dst / dirname).mkdir(parents=True, exist_ok=True)
+    (sp_dir / dirname / file_old).touch()
+    (dst / dirname / file_new).touch()
+
+    pmng.install_package(name, version, scope=scope)
+    assert hasattr(mock_called, 'called')
+    assert scoped_name in pmng.installed_pkgs
+
+    assert (dst / dirname / file_old).exists()
+    assert (dst / dirname / file_new).exists()
+
+def test_install_package_install_twice(monkeypatch, mock_called):
+    """Test plugin manager installing an already installed package."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    scope = pm.GENERIC_SCOPE
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    pmng.install_package(name, version, scope=scope)
+    assert mock_called.called
+    assert f'{scope}::{name}' in pmng.installed_pkgs
+
+    # Test that on second call the install action is skipped
+    del mock_called.called
+    pmng.install_package(name, version, scope=scope)
+    assert not hasattr(mock_called, 'called')
+
+def test_install_package_list_extras(monkeypatch, mock_called):
+    """Test plugin manager installing with `list` extras."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    extras = ['extra1', 'extra2']
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    pmng.install_package(name, version, extras=extras)
+    assert mock_called.called
+    assert mock_called.args[2] == extras
+
+def test_install_package_str_extras(monkeypatch, mock_called):
+    """Test plugin manager installing with `str` extras."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    extras = 'extra1 extra2'
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    pmng.install_package(name, version, extras=extras)
+    assert mock_called.called
+    assert mock_called.args[2] == extras.split(' ')
+
+def test_install_package_env_override_version(monkeypatch, mock_called):
+    """Test plugin manager installing overriding using envvar: version."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    override_version = '2.0'
+
+    monkeypatch.setenv(f'OCT_PKG_{pm.get_safe_name(name).upper()}_VERSION', override_version)
+
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    pmng.install_package(name, version)
+
+    assert mock_called.called
+    assert mock_called.args[0] == f'{name}=={override_version}'
+
+def test_install_package_env_override_extras(monkeypatch, mock_called):
+    """Test plugin manager installing overriding using envvar: extras."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    override_extras = 'abc 123'
+
+    monkeypatch.setenv(f'OCT_PKG_{pm.get_safe_name(name).upper()}_EXTRAS', override_extras)
+
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    pmng.install_package(name, version)
+
+    assert mock_called.called
+    assert mock_called.args[2] == override_extras.split(' ')
+
+def test_install_package_env_override_scope(monkeypatch, device, mock_called):
+    """Test plugin manager installing overriding using envvar: scope."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    override_scope = device
+
+    monkeypatch.setenv(f'OCT_PKG_{pm.get_safe_name(name).upper()}_SCOPE', override_scope)
+
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    pmng.install_package(name, version, scope=pm.GENERIC_SCOPE)
+
+    assert mock_called.called
+    assert f'{override_scope}::{name}' in pmng.installed_pkgs
 
 def test_uninstall_package_notinstalled(monkeypatch, mock_called):
     """Test plugin manager uninstalling a package that is not installed."""

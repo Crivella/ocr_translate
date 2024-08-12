@@ -20,6 +20,7 @@
 
 # pylint: disable=redefined-outer-name,unspecified-encoding,too-many-branches
 
+import functools
 import json
 import logging
 import os
@@ -57,6 +58,43 @@ def reload_django_apps():
     apps.clear_cache()
     apps.populate(settings.INSTALLED_APPS)
 
+def get_safe_name(name: str) -> str:
+    """Get a safe name for the plugin."""
+    return name.replace('-', '_min_')
+
+def install_overrides_decorator(func):
+    """Decorator to install a package."""
+    arg_names = ['version', 'extras', 'scope', 'system', 'force']
+
+    @functools.wraps(func)
+    def wrapped(*args, **kwargs):
+        args = list(args)
+        cls = args.pop(0)
+        if args:
+            name = args.pop(0)
+        elif 'name' in kwargs:
+            name = kwargs.pop('name')
+        else:
+            raise ValueError('Name required')
+
+        new_args = {'name': name}
+        for val,key in zip(args, arg_names):
+            new_args[key] = val
+        for key, val in kwargs.items():
+            if key in new_args:
+                raise  TypeError(f'Got multiple values for argument {key}')
+            new_args[key] = val
+
+        safe_name = get_safe_name(name).upper()
+        for key in arg_names:
+            over_name = f'OCT_PKG_{safe_name}_{key.upper()}'
+            if over_name in os.environ:
+                new_args[key] = os.environ[over_name]
+
+        return func(cls, **new_args)
+
+    return wrapped
+
 def _pip_install(package: str, prefix: str, extras: list[str] = None):
     """Install a package with pip."""
     if extras is None:
@@ -88,7 +126,7 @@ class PluginManager:
 
     def __new__(cls, *args, **kwargs):
         if not cls._SINGLETON:
-            cls._SINGLETON = super().__new__(cls)
+            cls._SINGLETON = super().__new__(cls, *args, **kwargs)
         return cls._SINGLETON
 
     def __init__(self):
@@ -101,16 +139,31 @@ class PluginManager:
         self.plugin_list_file = self.base_dir / 'plugins.json'
         self.installed_file = self.plugin_dir / 'installed.json'
 
+        self.disabled = os.environ.get('OCT_DISABLE_PLUGINS', False)
+
         self._plugins = None
         self._plugin_data = None
         self._installed = None
         self.system = platform.system().lower()
 
+        self.ensure_pip()
         self.initialize_scopes()
+
+        # Ensure no previous empty or wrong site-packages dirs are present
+        while (tmp_dir := find_site_packages(self.plugin_dir)) is not None:
+            shutil.rmtree(tmp_dir)
+
+    def ensure_pip(self):
+        """Ensure pip is installed."""
+        if self.disabled:
+            return
+        subprocess.run(['pip', '-V'], check=True)
 
     @property
     def plugins_data(self) -> list[dict]:
         """Get/cache the plugin data."""
+        if self.disabled:
+            return []
         if self._plugin_data is None:
             data_file = resources.files('ocr_translate') / 'plugins_data.json'
             if not data_file.exists():
@@ -142,9 +195,11 @@ class PluginManager:
     @property
     def plugins(self) -> list[str]:
         """Get/cache the list of installed plugins."""
+        if self.disabled:
+            return []
         if self._plugins is None:
             self._plugins = []
-            if not os.environ.get('OCT_DISABLE_PLUGINS', False) and  self.plugin_list_file.exists():
+            if self.plugin_list_file.exists():
                 with open(self.plugin_list_file) as f:
                     self._plugins = json.load(f)
         return self._plugins
@@ -152,6 +207,8 @@ class PluginManager:
     @property
     def installed_pkgs(self) -> dict:
         """Get/cache the installed packages."""
+        if self.disabled:
+            return {}
         if self._installed is None:
             self._installed = {}
             if self.installed_file.exists():
@@ -162,14 +219,19 @@ class PluginManager:
 
     def save_plugin_list(self):
         """Save the list of installed plugins."""
+        if self.disabled:
+            return
         with open(self.plugin_list_file, 'w') as f:
             json.dump(self.plugins, f, indent=2)
 
     def save_installed(self):
         """Save the installed packages."""
+        if self.disabled:
+            return
         with open(self.installed_file, 'w') as f:
             json.dump(self.installed_pkgs, f, indent=2)
 
+    @install_overrides_decorator
     def install_package(
             self,
             name: str,
@@ -181,6 +243,7 @@ class PluginManager:
             ):
         """Use pip to install a package."""
         if scope not in self.scopes:
+            # logging.debug(f'Skipping {name}=={version} for scope {scope}')
             logger.debug(f'Skipping {name}=={version} for scope {scope}')
             return
         if system and system.lower() != self.system:
@@ -203,16 +266,18 @@ class PluginManager:
         ptr['files'] = []
         ptr['dirs'] = []
 
-        safe_name = name.replace('-', '_min_')
-        env_override = f'OCT_PKG_{safe_name.upper()}_VERSION'
-        if env_override in os.environ:
-            v = os.environ[env_override]
-            logger.info(f'Package {name} version overridden from {version} to {v} via {env_override}')
-            version = v
+        # safe_name = self.get_safe_name(name)
+        # env_override = f'OCT_PKG_{safe_name.upper()}_VERSION'
+        # if env_override in os.environ:
+        #     v = os.environ[env_override]
+        #     logger.info(f'Package {name} version overridden from {version} to {v} via {env_override}')
+        #     version = v
 
         _pip_install(f'{name}=={version}', self.plugin_dir, extras)
 
         tmp_dir = find_site_packages(self.plugin_dir)
+        if tmp_dir is None:
+            raise FileNotFoundError(f'Could not find site-packages in {self.plugin_dir}')
         logger.debug(f'Package installed by pip in {tmp_dir}')
         for src in tmp_dir.iterdir():
             if src.name.endswith('__pycache__'):
@@ -233,6 +298,9 @@ class PluginManager:
                     shutil.move(src, dst)
             else:
                 raise NotImplementedError(f'Unknown type: {src}')
+
+        # Make sure only one site-packages dir exists after installing a package
+        shutil.rmtree(tmp_dir)
 
         self.save_installed()
 
