@@ -158,7 +158,7 @@ class PluginManager:
         if self.disabled:
             return
         try:
-            subprocess.run(['pip', '-V'], check=True)
+            subprocess.run(['pip', '-V'], capture_output=True, check=True)
         except FileNotFoundError as exc:
             msg = ' ---- '.join([
                 '!!!!!'
@@ -250,7 +250,7 @@ class PluginManager:
             system: str = '',
             force: bool = False
             ):
-        """Use pip to install a package."""
+        """Install a package."""
         if scope not in self.scopes:
             # logging.debug(f'Skipping {name}=={version} for scope {scope}')
             logger.debug(f'Skipping {name}=={version} for scope {scope}')
@@ -287,7 +287,7 @@ class PluginManager:
         tmp_dir = find_site_packages(self.plugin_dir)
         if tmp_dir is None:
             raise FileNotFoundError(f'Could not find site-packages in {self.plugin_dir}')
-        logger.debug(f'Package installed by pip in {tmp_dir}')
+        logger.debug(f'Package installed in {tmp_dir}')
         for src in tmp_dir.iterdir():
             if src.name.endswith('__pycache__'):
                 continue
