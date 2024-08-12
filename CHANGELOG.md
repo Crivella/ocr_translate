@@ -19,8 +19,12 @@ I have not found a way to incorporate pip in the frozen executable, or make it a
 - Added a plugin manager to install/uninstall plugins on demand
   - The installed plugins can be controlled via the new version of the firefox extension or directly using the
     `manage_plugins/` endpoint.
+  - The plugin data is stored in a JSON file inside the project [plugins_Data.json](blob/v0.6.0/ocr_translate/plugins_data.json)
   - Version/Scope/Extras of a package to be installed can be controlled via environment variables
-    ```OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]``` (see the parte on PaddleOCR below for an example).
+
+        OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]
+
+    (see the parte on PaddleOCR below for an example).
     If the package name contains a `-` it should be replaced with `_min_` in the package name
 - Added plugin for `ollama` (https://github.com/ollama/ollama) for translation using LLMs
   - Note ollama needs to be run/installed separately and the plugin will just make calls to the server.
