@@ -4,16 +4,33 @@ List of changes between versions
 
 ## 0.6.0
 
+### IMPORTANT
+
+From version 0.6 onward python or at the very least pip need to be installed on the system.
+I have not found a way to incorporate pip in the frozen executable, or make it autoinstall in a way that would not require creating another installer/executable, so I decided to have people install python themselves.
+
+- Windows: https://www.python.org/downloads/windows/
+  - **NOTE**: make sure to check the box that says "Add Python to PATH" so that pip can be found by the server script without having to make any assumptions
+
+- Linux: Use your package manager (e.g. `sudo apt install python3 python3-pip`)
+
+### Changes
+
+- Added a plugin manager to install/uninstall plugins on demand
+  - The installed plugins can be controlled via the new version of the firefox extension or directly using the
+    `manage_plugins/` endpoint.
+  - Version/Scope/Extras of a package to be installed can be controlled via environment variables
+    ```OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]``` (see the parte on PaddleOCR below for an example).
+    If the package name contains a `-` it should be replaced with `_min_` in the package name
 - Added plugin for `ollama` (https://github.com/ollama/ollama) for translation using LLMs
   - Note ollama needs to be run/installed separately and the plugin will just make calls to the server.
   - Use the `OLLAMA_ENDPOINT` environment variable to specify the endpoint of the ollama server
     ([see the plugin page for more details](https://github.com/Crivella/ocr_translate-ollama))
 - Added plugin for `PaddleOCR` (https://github.com/PaddlePaddle/PaddleOCR) (Box and OCR) (seems to work very well
   with chinese).
-  - The fact that this will work on any system is not guaranteed (there can be underlying failures in the C++ code that
-    the plugin uses).
-    While the version cannot be changed in the bundled release, you can either use the docker image or play around
-    with the version of `paddlepaddle` to try and make it work.
+  - The default versions installed by the `plugin_manager` (`2.5.2` on linux and `2.6.1`) might not work for every
+    system as there can be underlying failures in the C++ code that the plugin uses.
+    The version installed can be controlled using the environment variable `OCT_PKG_PADDLEPADDLE_VERSION`.
 - Added possibility to specify extra `ALLOWED_HOSTS` and a server bind address via environment variables. (Fixes #30)
 - Manual model is not implemented as an entrypoint anymore (will work also without recreating models).
 - OCR models can now use a `tokenizer` and a `processor` from different models.

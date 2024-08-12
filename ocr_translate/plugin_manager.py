@@ -157,7 +157,16 @@ class PluginManager:
         """Ensure pip is installed."""
         if self.disabled:
             return
-        subprocess.run(['pip', '-V'], check=True)
+        try:
+            subprocess.run(['pip', '-V'], check=True)
+        except FileNotFoundError as exc:
+            msg = ' ---- '.join([
+                '!!!!!'
+                'pip not found, please install a version of python https://www.python.org/downloads/'
+                'Make sure to check the `Add python.exe to PATH` checkbox during installation.'
+            ])
+            logger.error(msg)
+            raise FileNotFoundError(msg) from exc
 
     @property
     def plugins_data(self) -> list[dict]:

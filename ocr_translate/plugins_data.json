@@ -591,6 +591,7 @@
     "name": "ocr_translate_tesseract",
     "package": "ocr_translate-tesseract",
     "description": "Plugins to enable usage of Tesseract in ocr_translate",
+    "warning": "This plugin requires Tesseract to be installed on your system (or already included in Docker release).",
     "version": "0.2.0",
     "homepage": "https://github.com/Crivella/ocr_translate-tesseract",
     "dependencies": [
@@ -1457,6 +1458,7 @@
     "name": "ocr_translate_ollama",
     "package": "ocr_translate-ollama",
     "description": "This is a plugin for ocr_translate that implements translations through ollama using Large Language Models (LLM)s.",
+    "warning": "This plugin requires a running ollama server that is not include with the project. See the homepage for more details",
     "version": "0.1.4",
     "homepage": "https://github.com/Crivella/ocr_translate-ollama",
     "dependencies": [
