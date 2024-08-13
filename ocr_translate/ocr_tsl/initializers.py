@@ -73,6 +73,8 @@ def auto_create_languages():
         #     setattr(l, k, v)
         l.save()
 
+    m.OptionDict.objects.get_or_create(options={})
+
 def load_ept_data(namespace):
     """Load all entrypoints from a namespace into a list"""
     return[_.load() for _ in entry_points(group=namespace)]
@@ -100,11 +102,6 @@ def add_box_model(ep_dict: dict) -> m.OCRBoxModel:
     model.save()
     return model
 
-def auto_create_box():
-    """Create OCRBoxModel objects from entrypoints."""
-    for box in load_ept_data('ocr_translate.box_data'):
-        add_box_model(box)
-
 def add_ocr_model(ep_dict: dict) -> m.OCRModel:
     """Create OCRModel object from dict."""
     ep_dict = ep_dict.copy()
@@ -127,11 +124,6 @@ def add_ocr_model(ep_dict: dict) -> m.OCRModel:
         model.languages.add(m.Language.objects.get(iso1=l))
     model.save()
     return model
-
-def auto_create_ocr():
-    """Create OCRModel objects from entrypoints."""
-    for ocr in load_ept_data('ocr_translate.ocr_data'):
-        add_ocr_model(ocr)
 
 def add_tsl_model(ep_dict: dict) -> m.TSLModel:
     """Create TSLModel object from dict."""
@@ -162,17 +154,3 @@ def add_tsl_model(ep_dict: dict) -> m.TSLModel:
         model.dst_languages.add(*m.Language.objects.filter(**kwargs))
     model.save()
     return model
-
-def auto_create_tsl():
-    """Create TSLModel objects from entrypoints."""
-    for tsl in load_ept_data('ocr_translate.tsl_data'):
-        add_tsl_model(tsl)
-
-def auto_create_models():
-    """Create OCR and TSL models from json file. Also create default OptionDict"""
-    logger.info('Creating default models')
-    auto_create_box()
-    auto_create_ocr()
-    auto_create_tsl()
-
-    m.OptionDict.objects.get_or_create(options={})

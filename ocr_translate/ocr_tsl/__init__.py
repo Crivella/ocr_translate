@@ -23,8 +23,7 @@ from typing import Callable
 
 from django.db.utils import OperationalError
 
-from .initializers import (auto_create_languages, auto_create_models,
-                           init_most_used)
+from .initializers import auto_create_languages, init_most_used
 
 FAIL = False
 
@@ -40,7 +39,6 @@ def run_on_env(env_name: str, func: Callable):
             print(f'WARNING: {exc}')
 
 run_on_env('AUTOCREATE_LANGUAGES', auto_create_languages)
-run_on_env('AUTOCREATE_VALIDATED_MODELS', auto_create_models)
 run_on_env('LOAD_ON_START', init_most_used)
 
 if FAIL:

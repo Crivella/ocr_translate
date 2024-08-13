@@ -84,7 +84,7 @@ Run the server using for example one of the following options:
 - [Nginx](https://www.nginx.com/) + [Gunicorn](https://gunicorn.org/):
   - Check the [Dockerfile](Dockerfile), as this is what the provided image makes use of.
 
-At least for the first time, it is suggested to run the server with the [Environment variables](#environment-variables) `AUTOCREATE_LANGUAGES` and `AUTOCREATE_VALIDATED_MODELS` set to `"true"` to automatically load the validated languages and models provided by the project.
+At least for the first time, it is suggested to run the server with the [Environment variables](#environment-variables) `AUTOCREATE_LANGUAGES` set to `"true"` to automatically load the validated languages provided by the project.
 
 Notes:
 
