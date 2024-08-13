@@ -31,6 +31,7 @@ import subprocess
 import sys
 from importlib import resources
 from pathlib import Path
+from threading import Lock
 
 from django.apps import apps
 from django.conf import settings
@@ -39,11 +40,6 @@ GENERIC_SCOPE = 'generic'
 DEFAULT_OCT_BASE_DIR: Path = Path.home() / '.ocr_translate'
 
 logger = logging.getLogger('ocr.general')
-
-# sys.OpenCV_LOADER_DEBUG = True
-# print('PLUGIN_SP:', PLUGIN_SP)
-# print('OS.NAME:', os.name)
-# subprocess.run(['pip', 'show', 'pip'], check=True)
 
 def find_site_packages(start_dir: Path) -> Path:
     """Find the site-packages directory."""
@@ -71,6 +67,8 @@ def install_overrides_decorator(func):
         args = list(args)
         cls = args.pop(0)
         if args:
+            if 'name' in kwargs:
+                raise TypeError('Got multiple values for argument name')
             name = args.pop(0)
         elif 'name' in kwargs:
             name = kwargs.pop('name')
@@ -110,7 +108,7 @@ def _pip_install(package: str, prefix: str, extras: list[str] = None):
     res = subprocess.run(cmd, check=True, capture_output=True)
     logger.debug(res.stdout.decode())
 
-class PluginManager:
+class PluginManager:  # pylint: disable=too-many-instance-attributes
     """Manage the plugins."""
     _SINGLETON = None
 
@@ -140,6 +138,9 @@ class PluginManager:
         self.installed_file = self.plugin_dir / 'installed.json'
 
         self.disabled = os.environ.get('OCT_DISABLE_PLUGINS', False)
+
+        self.lock_plugin = Lock()
+        self.lock_pkg = Lock()
 
         self._plugins = None
         self._plugin_data = None
@@ -251,67 +252,59 @@ class PluginManager:
             force: bool = False
             ):
         """Install a package."""
-        if scope not in self.scopes:
-            # logging.debug(f'Skipping {name}=={version} for scope {scope}')
-            logger.debug(f'Skipping {name}=={version} for scope {scope}')
-            return
-        if system and system.lower() != self.system:
-            logger.debug(f'Skipping {name}=={version} for system {system}')
-            return
-
-        if extras is None:
-            extras = []
-        elif isinstance(extras, str):
-            extras = list(filter(None, extras.split(' ')))
-        scoped_name = f'{scope}::{name}'
-
-        if not force and scoped_name in self.installed_pkgs:
-            if self.installed_pkgs[scoped_name]['version'] == version:
+        with self.lock_pkg:
+            if scope not in self.scopes:
+                # logging.debug(f'Skipping {name}=={version} for scope {scope}')
+                logger.debug(f'Skipping {name}=={version} for scope {scope}')
+                return
+            if system and system.lower() != self.system:
+                logger.debug(f'Skipping {name}=={version} for system {system}')
                 return
 
-        ptr = {}
-        self.installed_pkgs[scoped_name] = ptr
-        ptr['version'] = version
-        ptr['files'] = []
-        ptr['dirs'] = []
+            if extras is None:
+                extras = []
+            elif isinstance(extras, str):
+                extras = list(filter(None, extras.split(' ')))
+            scoped_name = f'{scope}::{name}'
 
-        # safe_name = self.get_safe_name(name)
-        # env_override = f'OCT_PKG_{safe_name.upper()}_VERSION'
-        # if env_override in os.environ:
-        #     v = os.environ[env_override]
-        #     logger.info(f'Package {name} version overridden from {version} to {v} via {env_override}')
-        #     version = v
+            if not force and scoped_name in self.installed_pkgs:
+                if self.installed_pkgs[scoped_name]['version'] == version:
+                    return
 
-        _pip_install(f'{name}=={version}', self.plugin_dir, extras)
+            ptr = {}
+            self.installed_pkgs[scoped_name] = ptr
+            ptr['version'] = version
+            ptr['files'] = []
+            ptr['dirs'] = []
 
-        tmp_dir = find_site_packages(self.plugin_dir)
-        if tmp_dir is None:
-            raise FileNotFoundError(f'Could not find site-packages in {self.plugin_dir}')
-        logger.debug(f'Package installed in {tmp_dir}')
-        for src in tmp_dir.iterdir():
-            if src.name.endswith('__pycache__'):
-                continue
-            # shutil.move(d, PLUGIN_SP[scope])
-            dst = self.PLUGIN_SP[scope] / src.name
-            if src.is_file():
-                ptr['files'].append(src.name)
-                if dst.exists():
-                    dst.unlink()
-                shutil.move(src, dst)
-            elif src.is_dir():
-                ptr['dirs'].append(src.name)
-                if dst.exists():
-                    shutil.copytree(src, dst, dirs_exist_ok=True)
-                    shutil.rmtree(src)
-                else:
+            _pip_install(f'{name}=={version}', self.plugin_dir, extras)
+
+            tmp_dir = find_site_packages(self.plugin_dir)
+            if tmp_dir is None:
+                raise FileNotFoundError(f'Could not find site-packages in {self.plugin_dir}')
+            logger.debug(f'Package installed in {tmp_dir}')
+            for src in tmp_dir.iterdir():
+                if src.name.endswith('__pycache__'):
+                    continue
+                # shutil.move(d, PLUGIN_SP[scope])
+                dst = self.PLUGIN_SP[scope] / src.name
+                if src.is_file():
+                    ptr['files'].append(src.name)
+                    if dst.exists():
+                        dst.unlink()
                     shutil.move(src, dst)
-            else:
-                raise NotImplementedError(f'Unknown type: {src}')
+                elif src.is_dir():
+                    ptr['dirs'].append(src.name)
+                    if dst.exists():
+                        shutil.copytree(src, dst, dirs_exist_ok=True)
+                        shutil.rmtree(src)
+                    else:
+                        shutil.move(src, dst)
 
-        # Make sure only one site-packages dir exists after installing a package
-        shutil.rmtree(tmp_dir)
+            # Make sure only one site-packages dir exists after installing a package
+            shutil.rmtree(tmp_dir)
 
-        self.save_installed()
+            self.save_installed()
 
     def _install_plugin(self, name: str):
         """Run the `install` part of the plugin."""
@@ -329,63 +322,66 @@ class PluginManager:
 
     def install_plugin(self, name: str):
         """Ensure the plugin is installed."""
-        self._install_plugin(name)
-        if name not in self.plugins:
-            self.plugins.append(name)
-            self.save_plugin_list()
-        if name not in settings.INSTALLED_APPS:
-            settings.INSTALLED_APPS.append(name)
-        reload_django_apps()
+        with self.lock_plugin:
+            self._install_plugin(name)
+            if name not in self.plugins:
+                self.plugins.append(name)
+                self.save_plugin_list()
+            if name not in settings.INSTALLED_APPS:
+                settings.INSTALLED_APPS.append(name)
+            reload_django_apps()
 
     def uninstall_package(self, name: str):
         """Uninstall a package."""
-        if name not in self.installed_pkgs:
-            return
-        logger.info(f'Uninstalling package {name}')
-        ptr = self.installed_pkgs.pop(name)
-        scope, _ = name.split('::')
-        scope_dir = self.PLUGIN_SP[scope]
-        for pth in ptr['files']:
-            (scope_dir / pth).unlink()
-        for pth in ptr['dirs']:
-            shutil.rmtree(scope_dir / pth)
+        with self.lock_pkg:
+            if name not in self.installed_pkgs:
+                return
+            logger.info(f'Uninstalling package {name}')
+            ptr = self.installed_pkgs.pop(name)
+            scope, _ = name.split('::')
+            scope_dir = self.PLUGIN_SP[scope]
+            for pth in ptr['files']:
+                (scope_dir / pth).unlink()
+            for pth in ptr['dirs']:
+                shutil.rmtree(scope_dir / pth)
 
-        self.save_installed()
+            self.save_installed()
 
     def uninstall_plugin(self, name: str):
         """Uninstall the plugin."""
-        if name not in self.plugins:
-            return
-        data = self.get_plugin_data(name)
-        pkg = data['package']
-        scope = data.get('scope', GENERIC_SCOPE)
-        scoped_name = f'{scope}::{pkg}'
-        logger.info(f'Uninstalling plugin {scoped_name} and non-shared dependencies')
-        # logger.debug(f'INSTALLED: {INSTALLED}')
-        if scoped_name not in self.installed_pkgs:
-            raise ValueError(f'Plugin {name} not installed')
+        with self.lock_plugin:
+            if name not in self.plugins:
+                return
+            data = self.get_plugin_data(name)
+            pkg = data['package']
+            scope = data.get('scope', GENERIC_SCOPE)
+            scoped_name = f'{scope}::{pkg}'
+            logger.info(f'Uninstalling plugin {scoped_name} and non-shared dependencies')
+            # logger.debug(f'INSTALLED: {INSTALLED}')
+            if scoped_name not in self.installed_pkgs:
+                raise ValueError(f'Plugin {name} not installed')
 
-        other_deps = set()
-        plugin_deps = set()
-        torm_deps = set()
-        for plugin in self.plugins_data:
-            if plugin['name'] not in self.plugins:
-                continue
-            deps = set()
-            for dep in plugin.get('dependencies', []):
-                deps.add(f"{dep.get('scope', GENERIC_SCOPE)}::{dep['name']}")
-            if plugin['name'] == name:
-                plugin_deps |= deps
-            else:
-                other_deps |= deps
-        torm_deps = plugin_deps - other_deps
+            other_deps = set()
+            plugin_deps = set()
+            torm_deps = set()
+            for plugin in self.plugins_data:
+                if plugin['name'] not in self.plugins:
+                    continue
+                deps = set()
+                for dep in plugin.get('dependencies', []):
+                    deps.add(f"{dep.get('scope', GENERIC_SCOPE)}::{dep['name']}")
+                if plugin['name'] == name:
+                    plugin_deps |= deps
+                else:
+                    other_deps |= deps
+            torm_deps = plugin_deps - other_deps
 
-        for dep in torm_deps:
-            self.uninstall_package(dep)
-        self.uninstall_package(scoped_name)
+            for dep in torm_deps:
+                self.uninstall_package(dep)
+            self.uninstall_package(scoped_name)
 
-        self.plugins.remove(name)
-        self.save_plugin_list()
+            self.plugins.remove(name)
+            self.save_plugin_list()
 
-        settings.INSTALLED_APPS.remove(name)
-        reload_django_apps()
+            settings.INSTALLED_APPS.remove(name)
+            reload_django_apps()

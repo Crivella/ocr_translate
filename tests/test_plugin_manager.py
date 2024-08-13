@@ -21,6 +21,8 @@
 # pylint: disable=missing-class-docstring,protected-access,missing-function-docstring,import-outside-toplevel
 
 import json
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -154,6 +156,127 @@ def mock_django_configs(monkeypatch):
     monkeypatch.setattr(pm.settings, 'INSTALLED_APPS', [])
     monkeypatch.setattr(pm.apps, 'populate', lambda x: None)
 
+def test_get_safe_name():
+    """Test that safe name returns a valid python variable name."""
+    assert pm.get_safe_name('-') == '_min_'
+    assert pm.get_safe_name('--') == '_min__min_'
+
+@pytest.mark.parametrize('mock_called', ['safe_name'], indirect=True)
+def test_overrides_decorator_noname(monkeypatch, mock_called):
+    """Test that overrides decorator raises if no name is given."""
+    monkeypatch.setattr(pm, 'get_safe_name', mock_called)
+    @pm.install_overrides_decorator
+    def test_func(*args, **kwargs):
+        return args, kwargs
+
+    with pytest.raises(ValueError):
+        test_func('cls')
+
+@pytest.mark.parametrize('mock_called', ['safe_name'], indirect=True)
+def test_overrides_decorator_name_args(monkeypatch, mock_called):
+    """Test that overrides decorator 2nd argument is a string passed to safe name."""
+    monkeypatch.setattr(pm, 'get_safe_name', mock_called)
+    @pm.install_overrides_decorator
+    def test_func(*args, **kwargs):
+        return args
+
+    assert test_func('cls', 'name') == ('cls',)
+    assert mock_called.args == ('name',)
+
+def test_overrides_decorator_name_double():
+    """Test that overrides decorator 2nd argument cant also be present in kwargs."""
+    @pm.install_overrides_decorator
+    def test_func(*args, **kwargs):
+        return args
+
+    with pytest.raises(TypeError):
+        test_func('cls', 'name', name='123')
+
+def test_overrides_decorator_other_double():
+    """Test that overrides decorator 3nd and forth argument cant also be present in kwargs."""
+    @pm.install_overrides_decorator
+    def test_func(*args, **kwargs):
+        return args
+
+    args = ['cls', 'name', ]
+    arg_names = ['version', 'extras', 'scope', 'system', 'force']
+    for name in arg_names:
+        args.append(name)
+        with pytest.raises(TypeError):
+            test_func(*args, **{name: '123'})
+
+@pytest.mark.parametrize('mock_called', ['safe_name'], indirect=True)
+def test_overrides_decorator_name_kwargs(monkeypatch, mock_called):
+    """Test that overrides decorator 2nd argument is a string passed to safe name."""
+    monkeypatch.setattr(pm, 'get_safe_name', mock_called)
+    @pm.install_overrides_decorator
+    def test_func(*args, **kwargs):
+        return args, kwargs
+
+    args, kwargs = test_func('cls', name='name')
+
+    assert args == ('cls',)
+    assert kwargs == {'name': 'name'}
+
+def test_overrides_decorator_only_kwargs():
+    """Test that overrides decorator only passes kwargs downstream beside class."""
+    @pm.install_overrides_decorator
+    def test_func(*args, **kwargs):
+        return args
+
+    assert test_func('cls', 'name', 3, somekw=1) == ('cls',)
+
+def test_pip_install_extras_none(monkeypatch):
+    """Test pip install with no extras."""
+    class MockCalled:
+        called = False
+        args = []
+        def __call__(self, *args, **kwargs):
+            MockCalled.called = True
+            MockCalled.args = args
+            return self
+        @property
+        def stdout(self):
+            return b'test'
+    monkeypatch.setattr(pm.subprocess, 'run', MockCalled())
+    pm._pip_install('test', '.')
+    assert MockCalled.called
+    assert MockCalled.args[0][-1] == '--prefix=.'
+
+def test_pip_install_extras_empty(monkeypatch):
+    """Test pip install with no extras."""
+    class MockCalled:
+        called = False
+        args = []
+        def __call__(self, *args, **kwargs):
+            MockCalled.called = True
+            MockCalled.args = args
+            return self
+        @property
+        def stdout(self):
+            return b'test'
+    monkeypatch.setattr(pm.subprocess, 'run', MockCalled())
+    pm._pip_install('test', '.', [])
+    assert MockCalled.called
+    assert MockCalled.args[0][-1] == '--prefix=.'
+
+def test_pip_install_extras(monkeypatch):
+    """Test pip install with no extras."""
+    class MockCalled:
+        called = False
+        args = []
+        def __call__(self, *args, **kwargs):
+            MockCalled.called = True
+            MockCalled.args = args
+            return self
+        @property
+        def stdout(self):
+            return b'test'
+    monkeypatch.setattr(pm.subprocess, 'run', MockCalled())
+    pm._pip_install('test', '.', ['123'])
+    assert MockCalled.called
+    assert MockCalled.args[0][-1] == '123'
+
 def test_manager_singleton():
     """Test that the manager is a singleton."""
     pmng1 = pm.PluginManager()
@@ -286,6 +409,13 @@ def test_plugin_file_mock(monkeypatch, mock_plugin_file, mock_called):
     pmng.plugins  # pylint: disable=pointless-statement
     assert not hasattr(mock_called, 'called')
 
+def test_plugin_file_mock_disabled(monkeypatch, disabled, mock_plugin_file, mock_called):
+    """Test plugin manager loading installed plugin list."""
+    monkeypatch.setattr(pm.json, 'load', mock_called)
+    pmng = pm.PluginManager()
+    assert pmng.plugins == []
+    assert not hasattr(mock_called, 'called')
+
 def test_installed_pkgs_envdisabled(disabled):
     """Test plugin manager loading installed plugin list disabled by env var."""
     pmng = pm.PluginManager()
@@ -395,6 +525,29 @@ def test_install_plugin_new_and_existing(monkeypatch, mock_plugin_data, mock_cal
     pmng.install_plugin(name)
     assert not hasattr(mock_called, 'called')
 
+def test_install_plugin_thread_lock(monkeypatch, mock_plugin_data):
+    """Test plugin manager installing a plugin with thread lock."""
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pmng, '_install_plugin', lambda *a: time.sleep(0.25))
+    name = mock_plugin_data[0]['name']
+
+    ran = [1,0,0,0,0]
+    def install(i):
+        nonlocal ran
+        pmng.install_plugin(name)
+        ran[i+1] = 1
+        assert ran[i] == 1
+
+    threads = []
+    for i in range(4):
+        t = threading.Thread(target=install, args=(i,))
+        t.start()
+        time.sleep(0.005)
+        threads.append(t)
+
+    for t in threads:
+        t.join()
+
 def test_uninstall_plugin_notinstalled_plist(monkeypatch, mock_plugin_data, mock_called):
     """Test plugin manager removing plugins not present in plugin list."""
     name = mock_plugin_data[0]['name']
@@ -461,6 +614,40 @@ def test_uninstall_plugin_remove_shared(monkeypatch, mock_plugin_data, mock_log_
     assert pmng.plugins == [name2]
     assert pm.settings.INSTALLED_APPS == [name2]
 
+def test_uninstall_plugin_thread_lock(monkeypatch, mock_plugin_data, mock_called):
+    """Test plugin manager removing a plugin with thread lock."""
+    name = mock_plugin_data[0]['name']
+    pkg = mock_plugin_data[0]['package']
+
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pmng, '_plugins', [name])
+    monkeypatch.setattr(pm.settings, 'INSTALLED_APPS', [name])
+    monkeypatch.setattr(pmng, '_plugins', [name])
+    monkeypatch.setattr(pmng, '_installed', {f'{pm.GENERIC_SCOPE}::{pkg}' : {}})
+    monkeypatch.setattr(pmng, 'uninstall_package', lambda x: time.sleep(0.25))
+
+    ran = [1,0,0,0,0]
+    def uninstall(i):
+        nonlocal ran
+        pmng.uninstall_plugin(name)
+        ran[i+1] = 1
+        assert ran[i] == 1
+
+    threads = []
+    for i in range(4):
+        t = threading.Thread(target=uninstall, args=(i,))
+        t.start()
+        if i == 1:
+            monkeypatch.setattr(pmng, 'get_plugin_data', mock_called)
+        time.sleep(0.005)
+        threads.append(t)
+
+    for t in threads:
+        t.join()
+
+    assert name not in pmng.plugins
+    assert not hasattr(mock_called, 'called')
+
 def test_install_package_unkown_scope(monkeypatch, mock_called):
     """Test plugin manager installing a package with unknown scope."""
     # django.setup()
@@ -523,8 +710,9 @@ def test_install_package_install_file_dirs(monkeypatch, mock_called):
 
     sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
     sp_dir.mkdir(parents=True, exist_ok=True)
-    (sp_dir / 'test_file').touch()
-    (sp_dir / 'test_dir').mkdir()
+    (sp_dir / filename).touch()
+    (sp_dir / dirname).mkdir()
+    (sp_dir / '__pycache__').mkdir()  # Test that __pycache__ is ignored
 
     pmng.install_package(name, version, scope=scope)
     assert hasattr(mock_called, 'called')
@@ -677,7 +865,6 @@ def test_install_package_env_override_extras(monkeypatch, mock_called):
 
 def test_install_package_env_override_scope(monkeypatch, device, mock_called):
     """Test plugin manager installing overriding using envvar: scope."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -730,3 +917,64 @@ def test_uninstall_package_installed(monkeypatch, mock_installed_file, mock_call
     for pth in dirs:
         assert not (sp_dir / pth).exists()
     assert mock_called.called
+
+def test_install_package_thread_lock(monkeypatch):
+    """Test plugin manager installing a package with thread lock."""
+    monkeypatch.setattr(pm, '_pip_install', lambda *a: time.sleep(0.25))
+
+    pmng = pm.PluginManager()
+    name = 'test'
+    version = '1.0'
+    scope = pm.GENERIC_SCOPE
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+
+    ran = [1,0,0,0,0]
+    def install(i):
+        nonlocal ran
+        pmng.install_package(name, version, scope=scope)
+        ran[i+1] = 1
+        assert ran[i] == 1
+
+    threads = []
+    for i in range(4):
+        t = threading.Thread(target=install, args=(i,))
+        t.start()
+        time.sleep(0.005)
+        threads.append(t)
+
+    for t in threads:
+        t.join()
+
+def test_uninstall_package_thread_lock(monkeypatch, mock_installed_file):
+    """Test plugin manager uninstalling a package with thread lock."""
+    class MockDict(dict):
+        called = False
+        def pop(self, *args):
+            MockDict.called = True
+            time.sleep(0.25)
+
+    scope = pm.GENERIC_SCOPE
+    name = f'{scope}::pkg4'
+    pmng = pm.PluginManager()
+
+    ran = [1,0,0,0,0]
+    def uninstall(i):
+        nonlocal ran
+        pmng.uninstall_package(f'{scope}::{name}')
+        ran[i+1] = 1
+        assert ran[i] == 1
+
+    threads = []
+    for i in range(4):
+        t = threading.Thread(target=uninstall, args=(i,))
+        t.start()
+        if i == 1:
+            monkeypatch.setattr(pmng, '_installed', MockDict())
+        time.sleep(0.005)
+        threads.append(t)
+
+    for t in threads:
+        t.join()
+    assert name not in pmng.installed_pkgs
+    assert not MockDict.called
