@@ -350,3 +350,66 @@ paths:
                               value: ""
                       ocr_model: *options_model_dict
                       tsl_model: *options_model_dict
+  /get_plugin_data:
+    get:
+      summary: Get the data of the available plugins
+      description: Get a dict of available plugins and their data, including if they are installed or not.
+      responses:
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: A JSON dictionary with the plugin data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plugins:
+                    type: object
+                    properties:
+                      <plugin_name>:
+                        type: object
+                        required:
+                          - name
+                          - installed
+                          - version
+                        properties:
+                          name:
+                            type: string
+                          version:
+                            type: string
+                          description:
+                            type: string
+                          homepage:
+                            type: string
+                          warning:
+                            type: string
+                          installed:
+                            type: boolean
+  /manage_plugins:
+    post:
+      summary: Manage plugins.
+      description: Manage the plugins, by installing/uninstalling them.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                <plugin_name>:
+                  type: boolean
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: Success.
