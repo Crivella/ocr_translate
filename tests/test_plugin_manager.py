@@ -19,6 +19,7 @@
 """Test plugin manager."""
 
 # pylint: disable=missing-class-docstring,protected-access,missing-function-docstring,import-outside-toplevel
+# pylint: disable=too-many-lines
 
 import json
 import threading
@@ -925,6 +926,20 @@ def test_uninstall_package_installed(monkeypatch, mock_installed_file, mock_call
     for pth in dirs:
         assert not (sp_dir / pth).exists()
     assert mock_called.called
+
+def test_uninstall_package_different_scope(monkeypatch, mock_called):
+    """Test plugin manager uninstalling a package ."""
+    scope = 'random_scope'
+    name = f'{scope}::pkg4'
+    pmng = pm.PluginManager()
+
+    pmng._installed = {}
+    pmng._installed[name] = {}
+    monkeypatch.setattr(pmng, 'save_installed', mock_called)
+
+    pmng.uninstall_package(name)
+    assert not hasattr(mock_called, 'called')
+    assert name in pmng.installed_pkgs
 
 def test_install_package_thread_lock(monkeypatch):
     """Test plugin manager installing a package with thread lock."""

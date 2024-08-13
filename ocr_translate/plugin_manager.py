@@ -345,8 +345,11 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
             if name not in self.installed_pkgs:
                 return
             logger.info(f'Uninstalling package {name}')
-            ptr = self.installed_pkgs.pop(name)
             scope, _ = name.split('::')
+            if scope not in self.scopes:
+                logger.debug(f'Skipping {name} for scope {scope}')
+                return
+            ptr = self.installed_pkgs.pop(name)
             scope_dir = self.PLUGIN_SP[scope]
             for pth in ptr['files']:
                 (scope_dir / pth).unlink()
