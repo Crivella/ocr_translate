@@ -56,7 +56,9 @@ def init_most_used():
 
 def auto_create_languages():
     """Create Language objects from json file."""
-    langs = json.load(resources.files('ocr_translate.ocr_tsl').joinpath('languages.json').open(encoding='utf-8'))
+    lang_file = resources.files('ocr_translate.ocr_tsl').joinpath('languages.json')
+    with lang_file.open(encoding='utf-8') as f:
+        langs = json.load(f)
 
     for lang in langs:
         logger.debug(f'Creating language: {lang}')

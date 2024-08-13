@@ -18,13 +18,17 @@
 ###################################################################################
 """Test environment initialization."""
 
+# pylint: disable=redefined-outer-name
+
 import importlib
 
 import pytest
 
 from ocr_translate import models as m
 from ocr_translate import ocr_tsl, tries
-from ocr_translate.ocr_tsl import box, lang, ocr, tsl
+from ocr_translate.ocr_tsl import box
+from ocr_translate.ocr_tsl import initializers as ini
+from ocr_translate.ocr_tsl import lang, ocr, tsl
 
 pytestmark = pytest.mark.django_db
 
@@ -175,9 +179,9 @@ def test_load_ept_data(monkeypatch):
 
         return Ept(), Ept()
 
-    monkeypatch.setattr(ocr_tsl.initializers, 'entry_points', mock_entrypoints)
+    monkeypatch.setattr(ini, 'entry_points', mock_entrypoints)
 
-    ept1, ept2 = ocr_tsl.initializers.load_ept_data('123') # pylint: disable=unbalanced-tuple-unpacking
+    ept1, ept2 = ini.load_ept_data('123') # pylint: disable=unbalanced-tuple-unpacking
     assert ept1['i am'] == 'an entrypoint'
     assert ept2['i am'] == 'an entrypoint'
     ept1.pop('i am')
@@ -185,20 +189,26 @@ def test_load_ept_data(monkeypatch):
     assert 'i am' not in ept1
     assert 'i am' in ept2
 
-
-def test_auto_create_models_nolang(monkeypatch, mock_load_ept):
+def test_create_models_nolang(monkeypatch, mock_load_ept):
     """Test auto_create_models without creating languages before"""
-    monkeypatch.setattr(ocr_tsl.initializers, 'load_ept_data', mock_load_ept)
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept)
     with pytest.raises(m.Language.DoesNotExist):
-        ocr_tsl.auto_create_models()
+        for ocr in ini.load_ept_data('ocr_translate.ocr_data'):
+            ini.add_ocr_model(ocr)
 
 def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     """Test creating dummy models"""
     # Needed after no more entrypoint are defined here
 
-    monkeypatch.setattr(ocr_tsl.initializers, 'load_ept_data', mock_load_ept)
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept)
     ocr_tsl.auto_create_languages()
-    ocr_tsl.auto_create_models()
+
+    for box in ini.load_ept_data('ocr_translate.box_data'):
+        ini.add_box_model(box)
+    for ocr in ini.load_ept_data('ocr_translate.ocr_data'):
+        ini.add_ocr_model(ocr)
+    for tsl in ini.load_ept_data('ocr_translate.tsl_data'):
+        ini.add_tsl_model(tsl)
 
     assert m.OCRBoxModel.objects.count() > 0
     assert m.OCRModel.objects.count() > 0
@@ -210,7 +220,7 @@ def test_env_init_most_used(monkeypatch):
         """Mock init_most_used."""
         mock_init_most_used.called = True
 
-    monkeypatch.setattr(ocr_tsl.initializers, 'init_most_used', mock_init_most_used)
+    monkeypatch.setattr(ini, 'init_most_used', mock_init_most_used)
     monkeypatch.setenv('LOAD_ON_START', 'true')
 
     importlib.reload(ocr_tsl)
@@ -222,7 +232,7 @@ def test_env_init_most_used_false(monkeypatch):
         """Mock init_most_used."""
         mock_init_most_used.called = True
 
-    monkeypatch.setattr(ocr_tsl.initializers, 'init_most_used', mock_init_most_used)
+    monkeypatch.setattr(ini, 'init_most_used', mock_init_most_used)
     monkeypatch.setenv('LOAD_ON_START', 'false')
 
     importlib.reload(ocr_tsl)
@@ -234,7 +244,7 @@ def test_env_auto_create_languges(monkeypatch):
         """Mock auto_create_languages."""
         mock_auto_create_languages.called = True
 
-    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_languages', mock_auto_create_languages)
+    monkeypatch.setattr(ini, 'auto_create_languages', mock_auto_create_languages)
     monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'true')
 
     importlib.reload(ocr_tsl)
@@ -246,35 +256,11 @@ def test_env_auto_create_languges_false(monkeypatch):
         """Mock auto_create_languages."""
         mock_auto_create_languages.called = True
 
-    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_languages', mock_auto_create_languages)
+    monkeypatch.setattr(ini, 'auto_create_languages', mock_auto_create_languages)
     monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'false')
 
     importlib.reload(ocr_tsl)
     assert not hasattr(mock_auto_create_languages, 'called')
-
-def test_env_auto_create_models(monkeypatch):
-    """Test that auto_create_models is called when AUTOCREATE_VALIDATED_MODELS is 'true'."""
-    def mock_auto_create_models():
-        """Mock auto_create_models."""
-        mock_auto_create_models.called = True
-
-    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_models', mock_auto_create_models)
-    monkeypatch.setenv('AUTOCREATE_VALIDATED_MODELS', 'true')
-
-    importlib.reload(ocr_tsl)
-    assert mock_auto_create_models.called
-
-def test_env_auto_create_models_false(monkeypatch):
-    """Test that auto_create_models is not called when AUTOCREATE_VALIDATED_MODELS is not 'true'."""
-    def mock_auto_create_models():
-        """Mock auto_create_models."""
-        mock_auto_create_models.called = True
-
-    monkeypatch.setattr(ocr_tsl.initializers, 'auto_create_models', mock_auto_create_models)
-    monkeypatch.setenv('AUTOCREATE_VALIDATED_MODELS', 'false')
-
-    importlib.reload(ocr_tsl)
-    assert not hasattr(mock_auto_create_models, 'called')
 
 def test_no_load_trie():
     """Test that the trie is not loaded when LOAD_TRIE is 'false'."""
