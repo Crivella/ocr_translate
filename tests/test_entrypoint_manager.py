@@ -45,50 +45,30 @@ def mock_cls(request):
             """Mock DoesNotExist"""
 
         def __init__(self):
-            self.prev123 = None
+            self.prev68187471 = None
 
         def __getattr__(self, name):
             """Mock getattr"""
-            if name == 'prev123':
+            if name == 'prev68187471':
                 return object.__getattribute__(self, name)
             MockCls.get_counter[name] += 1
-            self.prev123 = name
+            self.prev68187471 = name
             return self  # pylint: disable=inconsistent-return-statements
 
         def __setattr__(self, name, value):
             """Mock setattr"""
-            if name == 'prev123':
+            if name == 'prev68187471':
                 object.__setattr__(self, name, value)
             MockCls.set_counter[name] += 1
             # super().__setattr__(name, value)
 
         def __call__(self, *args, **kwargs):
             """Mock call"""
-            if self.prev123 == 'get':
+            if self.prev68187471 == 'get':
                 if hasattr(request, 'param') and request.param == 'raise':
                     raise MockCls.DoesNotExist()
-            MockCls.call_counter[self.prev123] += 1
+            MockCls.call_counter[self.prev68187471] += 1
             return self
-
-        # def get(self):
-        #     """Mock get"""
-        #     MockCls.call_counter['get'] += 1
-        #     return self
-
-        # @property
-        # def active(self):
-        #     """Mock active"""
-        #     MockCls.call_counter['get_active'] += 1
-        #     return 1
-        # @active.setter
-        # def active(self, value):
-        #     """Mock active setter"""
-        #     MockCls.call_counter['set_active'] += 1
-
-        # def save(self):
-        #     """Mock save"""
-        #     MockCls.call_counter['save'] += 1
-        #     return self
 
     return MockCls
 
@@ -108,11 +88,11 @@ def mock_models(monkeypatch, mock_cls):
 def mock_ini(monkeypatch, mock_cls):
     """Mock models"""
     box = mock_cls()
-    box.prev123 = 'box'
+    box.prev68187471 = 'box'
     ocr = mock_cls()
-    ocr.prev123 = 'ocr'
+    ocr.prev68187471 = 'ocr'
     tsl = mock_cls()
-    tsl.prev123 = 'tsl'
+    tsl.prev68187471 = 'tsl'
     monkeypatch.setattr(ini, 'add_box_model', box)
     monkeypatch.setattr(ini, 'add_ocr_model', ocr)
     monkeypatch.setattr(ini, 'add_tsl_model', tsl)
