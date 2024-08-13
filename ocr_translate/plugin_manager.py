@@ -105,7 +105,13 @@ def _pip_install(package: str, prefix: str, extras: list[str] = None):
         '--no-build-isolation',
         f'--prefix={prefix}',
         ] + extras
-    res = subprocess.run(cmd, check=True, capture_output=True)
+    try:
+        res = subprocess.run(cmd, check=True, capture_output=True)
+    except subprocess.CalledProcessError as exc:
+        logger.error(f'Error installing {package}')
+        logger.error(exc.stdout.decode())
+        logger.error(exc.stderr.decode())
+        raise exc
     logger.debug(res.stdout.decode())
 
 class PluginManager:  # pylint: disable=too-many-instance-attributes
@@ -192,6 +198,8 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
 
     def initialize_scopes(self):
         """Configure the scopes."""
+        if self.disabled:
+            return
         for scope in self.scopes:
             pth = self.plugin_dir / scope
             pth.mkdir(exist_ok=True, parents=True)

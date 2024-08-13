@@ -322,6 +322,14 @@ def test_init_plugin_dir_creation(tmp_base_dir):
     pm.PluginManager()
     assert tmp_base_dir.joinpath('plugins').exists()
 
+def test_init_scopes_disabled(monkeypatch, disabled, tmp_base_dir):
+    """Test plugin manager init scopes."""
+    monkeypatch.setattr(pm.site, 'USER_BASE', None)
+    monkeypatch.setattr(pm.site, 'USER_SITE', None)
+    pmng = pm.PluginManager()
+    assert pm.GENERIC_SCOPE in pmng.scopes
+    assert not (tmp_base_dir / 'plugins' / pm.GENERIC_SCOPE).exists()
+
 def test_init_scopes(monkeypatch, device, tmp_base_dir):
     """Test plugin manager init scopes."""
     monkeypatch.setattr(pm.site, 'USER_BASE', None)
