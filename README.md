@@ -76,6 +76,8 @@ By default the Django development server will be used. You can install [gunicorn
 
 and the script will use it instead.
 
+${\color{red}{\bf !!!!}}$ Gunicorn will work on UNIX system only ([see missing module fcntl](https://stackoverflow.com/questions/62788628/modulenotfounderror-no-module-named-fcntl))
+
 ### Notes
 
 - Gunicorn workers will each spawn a separate instance of the loaded models, each taking its own space in the memory. This can quickly fill up the memory especially if running on GPU. Ideally set this to 1.

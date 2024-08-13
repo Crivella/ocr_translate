@@ -33,6 +33,7 @@ def run_on_env(env_name: str, func: Callable):
     if os.environ.get(env_name, 'false').lower() == 'true':
         try:
             func()
+            print(f'INFO: Ran `{func.__name__}` based on environment variable `{env_name}`')
         except OperationalError as exc:
             FAIL = True
             print(f'WARNING: Ignoring environment variable `{env_name}` as the database is not ready/migrated.')
