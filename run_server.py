@@ -21,6 +21,7 @@
 
 import importlib
 import os
+import subprocess
 from pathlib import Path
 
 import django
@@ -68,17 +69,26 @@ def dir_check():
 
 def cuda_check():
     """Check if cuda is available and set the environment variable DEVICE."""
+    if 'DEVICE' in os.environ:
+        print(f'Device set via environment variable to: `{os.environ["DEVICE"]}`')
+        return
+    print('Checking for CUDA availability...')
     try:
         importlib.import_module('torch')
     except ModuleNotFoundError:
-        pass
+        try:
+            subprocess.run(['nvidia-smi'], check=True, capture_output=True)
+        except FileNotFoundError:
+            pass
+        else:
+            print('Torch not found, but `nvidia-smi` is available, setting DEVICE to `cuda`')
+            print('!!! In case of errors try setting the DEVICE environment variable to "cpu"')
+            os.environ['DEVICE'] = 'cuda'
     else:
         import torch
         if not torch.cuda.is_available():
             print('CUDA is not available, falling back to using CPU')
             os.environ['DEVICE'] = 'cpu'
-        elif os.environ.get('DEVICE', 'cuda') != 'cuda':
-            print('CUDA is available, but manually disabled using the "DEVICE" environment variable, using CPU')
         else:
             os.environ.setdefault('DEVICE', 'cuda')
             print('CUDA is available, using GPU')
@@ -86,20 +96,15 @@ def cuda_check():
 def init():
     """Run server initializations"""
     from ocr_translate.ocr_tsl.initializers import (auto_create_languages,
-                                                    auto_create_models,
                                                     init_most_used)
     ac_lang = os.environ.get('AUTO_CREATE_LANGUAGES', 'true')
     if ac_lang == 'true':
         print('Autocreate language entries in database...')
         auto_create_languages()
-    ac_models = os.environ.get('AUTOCREATE_VALIDATED_MODELS', 'true')
-    if ac_models == 'true':
-        print('Autocreate validated models in database...')
-        auto_create_models()
     if os.getenv('LOAD_ON_START', 'false') == 'true':
         print('Load most used models in memory...')
-
         init_most_used()
+
 def superuser():
     """Create a superuser if it does not exist and check for default password."""
     default_su_password = 'password'
@@ -126,16 +131,32 @@ def main():
     print('Running django setup...')
     django.setup()
 
-    print('Create database if needed and apply database migrations (if any)...')
+    print('Create database (if needed) and apply database migrations (if any)...')
     call_command('migrate')
 
     superuser()
     init()
 
-    bind_address = os.environ.get('DJANGO_BIND_ADDRESS', '127.0.0.1')
+    bind_address = os.environ.get('OCT_DJANGO_BIND_ADDRESS', '127.0.0.1')
+    port = os.environ.get('OCT_DJANGO_PORT', '4000')
 
     print('Starting server...')
-    call_command('runserver', '--noreload', f'{bind_address}:4000')
+    try:
+        importlib.import_module('gunicorn')
+    except ImportError:
+        call_command('runserver', '--noreload', f'{bind_address}:{port}')
+    else:
+        import getpass
+        user = os.environ.get('OCT_GUNICON_USER', getpass.getuser())
+        timeout = os.environ.get('OCT_GUNICON_TIMEOUT', '1200')
+        num_workers = os.environ.get('OCT_GUNICON_NUM_WORKERS', '1')
+        subprocess.run([
+            'gunicorn', 'mysite.wsgi',
+            '--user', user,
+            '--bind', f'{bind_address}:{port}',
+            '--timeout', timeout,
+            '--workers', num_workers,
+        ], check=True)
 
 if __name__ == '__main__':
     main()

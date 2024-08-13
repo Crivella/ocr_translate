@@ -35,6 +35,7 @@ RUN mkdir -p /opt/app/media
 
 COPY start-server.sh /opt/app/
 COPY manage.py /opt/app/
+COPY run_server.py /opt/app/
 # COPY ocr_translate /opt/app/ocr_translate/
 COPY mysite /opt/app/mysite/
 COPY staticfiles /opt/app/static/
@@ -54,10 +55,14 @@ ENV \
     LOAD_ON_START="true" \
     AUTOCREATE_LANGUAGES="true" \
     AUTOCREATE_VALIDATED_MODELS="true" \
-    OCT_BASE_DIR="/models" \
+    OCT_BASE_DIR="/plugin_data" \
+    TRANSFORMERS_CACHE="/models" \
     TRANSFORMERS_OFFLINE="0" \
+    EASYOCR_MODULE_PATH="/models/easyocr" \
+    TESSERACT_PREFIX="/models/tesseract" \
+    TESSERACT_ALLOW_DOWNLOAD="true" \
     DEVICE="cpu" \
-    NUM_WEB_WORKERS="1" \
+    OCT_GUNICON_NUM_WORKERS="1" \
     NUM_MAIN_WORKERS="4" \
     NUM_BOX_WORKERS="1" \
     NUM_OCR_WORKERS="1" \
@@ -67,14 +72,15 @@ ENV \
     DJANGO_SUPERUSER_USERNAME="" \
     DJANGO_SUPERUSER_PASSWORD="" \
     DATABASE_ENGINE="django.db.backends.sqlite3" \
-    DATABASE_NAME="/data/db.sqlite3" \
+    DATABASE_NAME="/db_data/db.sqlite3" \
     DATABASE_HOST="" \
     DATABASE_PORT="" \
     DATABASE_USER="" \
     DATABASE_PASSWORD=""
 
+VOLUME [ "/plugin_data" ]
 VOLUME [ "/models" ]
-VOLUME [ "/data" ]
+VOLUME [ "/db_data" ]
 
 WORKDIR /opt/app
 
