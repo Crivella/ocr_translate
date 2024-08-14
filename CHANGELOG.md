@@ -26,6 +26,7 @@ I have not found a way to incorporate pip in the frozen executable, or make it a
 
     (see the parte on PaddleOCR below for an example).
     If the package name contains a `-` it should be replaced with `_min_` in the package name
+- Streamlined docker image to also use the `run_server.py` script for initialization.
 - Added plugin for `ollama` (https://github.com/ollama/ollama) for translation using LLMs
   - Note ollama needs to be run/installed separately and the plugin will just make calls to the server.
   - Use the `OLLAMA_ENDPOINT` environment variable to specify the endpoint of the ollama server

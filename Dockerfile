@@ -34,7 +34,6 @@ RUN mkdir -p /opt/app/static
 RUN mkdir -p /opt/app/media
 
 COPY start-server.sh /opt/app/
-COPY manage.py /opt/app/
 COPY run_server.py /opt/app/
 # COPY ocr_translate /opt/app/ocr_translate/
 COPY mysite /opt/app/mysite/
@@ -54,12 +53,6 @@ ENV \
     GID=1000 \
     LOAD_ON_START="true" \
     AUTOCREATE_LANGUAGES="true" \
-    OCT_BASE_DIR="/plugin_data" \
-    TRANSFORMERS_CACHE="/models" \
-    TRANSFORMERS_OFFLINE="0" \
-    EASYOCR_MODULE_PATH="/models/easyocr" \
-    TESSERACT_PREFIX="/models/tesseract" \
-    TESSERACT_ALLOW_DOWNLOAD="true" \
     DEVICE="cpu" \
     OCT_GUNICORN_NUM_WORKERS="1" \
     NUM_MAIN_WORKERS="4" \
@@ -77,9 +70,7 @@ ENV \
     DATABASE_USER="" \
     DATABASE_PASSWORD=""
 
-VOLUME [ "/plugin_data" ]
-VOLUME [ "/models" ]
-VOLUME [ "/db_data" ]
+VOLUME plugin_data, models, db_data
 
 WORKDIR /opt/app
 

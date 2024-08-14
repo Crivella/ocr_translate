@@ -17,9 +17,19 @@ chown -R ${USER}:${USER} /plugin_data
 chown -R ${USER}:${USER} /models
 chown -R ${USER}:${USER} /db_data
 
-export OCT_DJANGO_PORT=4010
-
 echo "Starting nginx."
 nginx
 
-su ${USER} -c "source /venv/bin/activate && python run_server.py"
+su ${USER}
+
+export OCT_DJANGO_PORT=4010
+export OCT_BASE_DIR="/plugin_data"
+export TRANSFORMERS_CACHE="/models/huggingface"
+export TRANSFORMERS_OFFLINE="0"
+export EASYOCR_MODULE_PATH="/models/easyocr"
+export TESSERACT_PREFIX="/models/tesseract"
+export TESSERACT_ALLOW_DOWNLOAD="true"
+export PADDLEOCR_PREFIX="/models/paddleocr"
+
+source /venv/bin/activate
+python run_server.py
