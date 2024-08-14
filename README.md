@@ -114,7 +114,7 @@ Download the image from DockerHUB:
 
 or create it manually create your image:
 
-    docker build -t IMAGE_TAG -f Dockerfile
+    docker build -t IMAGE_TAG -f Dockerfile .
 
 Run the container by tuning the following command:
 
