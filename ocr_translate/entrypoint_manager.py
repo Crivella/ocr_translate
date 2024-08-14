@@ -43,7 +43,11 @@ GROUPS = {
 
 @contextlib.contextmanager
 def ep_manager():
-    """Context manager for entrypoint management"""
+    """Context manager for entrypoint management.
+    Provides a context that monitors changes to server server specific entrypoints.
+    Make sures models from added entrypoints are created/activated and models from removed
+    entrypoints are deactivated.
+    """
     before: dict[str, set] = {}
     for grp in GROUPS:
         before[grp] = get_group_entrypoints(grp)
