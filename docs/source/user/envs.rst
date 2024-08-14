@@ -31,6 +31,14 @@ This is a list of common possible ways:
         ]
     }
 
+- Docker: :code:`docker run -e VARIABLE_NAME=value ...`
+- Docker: :code:`docker run --env-file .env ...` where `.env` is a file with the format
+
+.. code-block::
+
+    VARIABLE_NAME_1=VALUE_1
+    ...
+    VARIABLE_NAME_N=VALUE_N
 
 App variable List
 -----------------
@@ -38,51 +46,110 @@ App variable List
 Variables used by the application.
 
 .. list-table:: Title
-    :widths: 25 25 50
+    :widths: 16 16 68
+    :header-rows: 1
+
+    * - Variable
+      - Default
+      - Usage
+    * - :code:`OCT_BASE_DIR`
+      - false
+      - Path to the base directory of the project.
+
+        If no other paths are configured using environment
+
+        variables, the server database, plugin files
+
+        and downloaded models will be stored here.
+    * - :code:`LOAD_ON_START`
+      - false
+      - Will automatically load the most used
+
+        source/destination languages and most used models
+
+        for that language combination at server start
+    * - :code:`AUTOCREATE_LANGUAGES`
+      - false
+      - Will force the server to automatically
+
+        create/update the Language entries in the database.
+    * - :code:`DEVICE`
+      - cpu
+      - Which device to use for plugins that support it.
+
+        Currently allowed: cpu, cuda
+    * - :code:`NUM_MAIN_WORKERS`
+      - 4
+      - Number of `WorkerMessageQueue` workers handling
+
+        incoming OCR_TSL post requests
+    * - :code:`NUM_BOX_WORKERS`
+      - 1
+      - Number of `WorkerMessageQueue` workers handling
+
+        box_ocr pipelines (Should be set as 1 until the
+
+        pipeline is build to handle multiple concurrent
+
+        request efficiently without slowdowns)
+    * - :code:`NUM_OCR_WORKERS`
+      - 1
+      - Number of `WorkerMessageQueue` workers handling
+
+        ocr pipelines (Should be set as 1 until the
+
+        pipeline is build to handle multiple concurrent
+
+        request efficiently without slowdowns)
+    * - :code:`NUM_TSL_WORKERS`
+      - 1
+      - Number of `WorkerMessageQueue` workers handling
+
+        translation pipelines (Should be set as 1 until
+
+        the pipeline is build to handle multiple
+
+        concurrent request efficiently without slowdowns)
+
+run_server.py variable List
+---------------------------
+
+This variables are used if running the server using the provided `run_server.py` script.
+This includes the windows release file and docker image that are based on the same script.
+
+.. list-table:: Title
+    :widths: 16 16 68
     :header-rows: 1
 
     * - Variable
       - Values
       - Usage
-    * - :code:`LOAD_ON_START`
-      - false[/true]
-      - Will automatically load the most used source/destination languages and most used models for that language combination at server start
-    * - :code:`AUTOCREATE_LANGUAGES`
-      - false[/true]
-      - Will automatically create the Language entries in the database as defined in [languages.json](ocr_translate/OCR_TSL/languages.json)
-    * - :code:`AUTOCREATE_VALIDATED_MODELS`
-      - false[/true]
-      - Will automatically create the model entries defined in code and plugins `entrypoints`.
-    * - :code:`DEVICE`
-      - cpu[/cuda]
-      - Which device to use with torch
-    * - :code:`EASYOCR_MODULE_PATH`
-      - :code:`$HOME/.EasyOCR`
-      - Directory where EasyOCR store its downloaded models
-    * - :code:`TRANSFORMERS_CACHE`
-      - :code:`$HOME/.cache/huggingface/hub/`
-      - Directory where [Hugging Face](https://huggingface.co/) models are being stored (either downloaded manually or downloaded by `transformers`)
-    * - :code:`TRANSFORMERS_OFFLINE`
-      - 1[/0]
-      - By default `transformers` will try to download missing models. Set this to 0 to only work in offline mode
-    * - :code:`TESSERACT_PREFIX`
-      - :code:`$TRANSFORMERS_CACHE/tesseract`
-      - Directory where tesseract will store and look for models
-    * - :code:`TESSERACT_ALLOW_DOWNLOAD`
-      - false[/true]
-      - Control whether the app should download missing models (true) or work in offline mode only (false)
-    * - :code:`NUM_MAIN_WORKERS`
-      - 4
-      - Number of `WorkerMessageQueue` workers handling incoming OCR_TSL post requests
-    * - :code:`NUM_BOX_WORKERS`
+    * - :code:`DJANGO_SUPERUSER_USERNAME`
+      - admin
+      - Username for the superuser to be created
+    * - :code:`DJANGO_SUPERUSER_PASSWORD`
+      - password
+      - Password for the superuser to be created
+    * - :code:`OCT_DJANGO_BIND_ADDRESS`
+      - 127.0.0.1
+      - Address to bind the server to
+    * - :code:`OCT_DJANGO_PORT`
+      - 4000
+      - Port the server will listen to
+    * - :code:`OCT_GUNICORN_USER`
+      - current user
+      - User to run the server as if using gunicorn.
+    * - :code:`OCT_GUNICORN_TIMEOUT`
+      - 1200
+      - Timeout for gunicorn workers
+    * - :code:`OCT_GUNICORN_NUM_WORKERS`
       - 1
-      - Number of `WorkerMessageQueue` workers handling box_ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)
-    * - :code:`NUM_OCR_WORKERS`
-      - 1
-      - Number of `WorkerMessageQueue` workers handling ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)
-    * - :code:`NUM_TSL_WORKERS`
-      - 1
-      - Number of `WorkerMessageQueue` workers handling translation pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)
+      - Number of gunicorn workers
+
+Plugin specific variables
+-------------------------
+
+See :doc:`plugins doc <plugins>`
 
 Server variable List
 --------------------

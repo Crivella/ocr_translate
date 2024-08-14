@@ -18,19 +18,19 @@ The server is designed to be used together with [this browser extension](https:/
 
 For more information, please consult the **[Full Documentation](https://crivella.github.io/ocr_translate/)**
 
+## Contributing
+
+- Suggestions/Ideas are always welcome and can be posted as [discussions](https://github.com/Crivella/ocr_translate/discussions).\
+  You can also just propose a new model to be tested/added to the ones available by default.
+- Bugs can be reported as [issues](https://github.com/Crivella/ocr_translate/issues)
+- Code contributions as [pull requests](https://github.com/Crivella/ocr_translate/pulls).
+  Check [the documentation](https://crivella.github.io/ocr_translate/contrib/index.html) for more information.
+
 ## Plugins
 
 The server is designed to only offer the basic functionalities, while the models that can be used and how they are used are defined by plugins.
 
 See the documentation for a [list of available plugins](https://crivella.github.io/ocr_translate/user/index.html#known-validated-plugins)
-
-<!-- - [ocr_translate-hugging_face](https://github.com/Crivella/ocr_translate-hugging_face): Plugin for using Hugging Face models for OCR and translation.
-- [ocr_translate-easyocr](https://github.com/Crivella/ocr_translate-easyocr): Plugin for using EasyOCR models for BBox detection.
-- [ocr_translate-tesseract](https://github.com/Crivella/ocr_translate-tesseract): Plugin for using Tesseract models for OCR.
-- [ocr_translate-paddle](https://github.com/Crivella/ocr_translate-paddle): Plugin for using PaddleOCR models for BBox detection and OCR.
-- [ocr_translate-ollama](https://github.com/Crivella/ocr_translate-ollama): Plugin for using LLMs through ollama for translation.
-- [ocr_translate-google](https://github.com/Crivella/ocr_translate-google): Plugin for using Google Translate for translation. -->
-
 
 ## Running the server
 
@@ -38,13 +38,14 @@ ${\color{red}{\bf !!!!}}$ Since version `v0.6` (all methods but the docker image
 
 All the different way to run the server may provide different set of default values (each of them is targeted for a different level of usage).
 
-**NOTE**: For all of the following methods, the behavior of the server (eg: model/plugin/db install locations nd allowed hosts) can be customized using [Environment variables](https://crivella.github.io/ocr_translate/user/envs.html)
+**NOTE**: For all of the following methods, the behavior of the server (eg: model/plugin/db install locations and allowed hosts) can be customized using [Environment variables](https://crivella.github.io/ocr_translate/user/envs.html)
 
 ### From Release file (Windows)
 
 (Tested on Windows 11)
 
 - Make sure to have [python](https://www.python.org/downloads/windows/) (3.11 suggested) installed on your system and available in the PATH (There is a checkbox as soon as you run the installer to automatically do this).
+  ![windows_python_install.png](md_images/windows_python_install.png)
 - Download the [release file](/../../releases/latest/download/run_server.zip)
 - Unzip the file
 - Run the `run_server.exe` file
@@ -70,13 +71,11 @@ Run the server by using the provided [run_server.py](run_server.py) script.
 
     python run_server.py
 
-By default the Django development server will be used. You can install [gunicorn](https://gunicorn.org/)
+By default the Django development server will be used.
+
+The [run_server.py](run_server.py) also supports using [gunicorn](https://gunicorn.org/) (Linux only) if it is installed on the system.
 
     pip install gunicorn
-
-and the script will use it instead.
-
-${\color{red}{\bf !!!!}}$ Gunicorn will work on UNIX system only ([see missing module fcntl](https://stackoverflow.com/questions/62788628/modulenotfounderror-no-module-named-fcntl))
 
 ### Notes
 
