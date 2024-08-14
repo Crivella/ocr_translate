@@ -612,6 +612,36 @@
         "version": "10.4.0",
         "extras": "",
         "scope": "generic"
+      },
+      {
+        "name": "requests",
+        "version": "2.31.0",
+        "extras": "",
+        "scope": "generic"
+      },
+      {
+        "name": "certifi",
+        "version": "2024.2.2",
+        "extras": "",
+        "scope": "generic"
+      },
+      {
+        "name": "charset-normalizer",
+        "version": "3.3.2",
+        "extras": "",
+        "scope": "generic"
+      },
+      {
+        "name": "idna",
+        "version": "3.6",
+        "extras": "",
+        "scope": "generic"
+      },
+      {
+        "name": "urllib3",
+        "version": "2.2.1",
+        "extras": "",
+        "scope": "generic"
       }
     ]
   },
