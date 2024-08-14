@@ -17,12 +17,9 @@ chown -R ${USER}:${USER} /plugin_data
 chown -R ${USER}:${USER} /models
 chown -R ${USER}:${USER} /db_data
 
-# source /venv/bin/activate
-
 export OCT_DJANGO_PORT=4010
 
-su ${USER} -c "source /venv/bin/activate && python run_server.py" &
-
-# su runner -c "source /venv/bin/activate && gunicorn mysite.wsgi --user runner --bind 0.0.0.0:4010 --timeout 1200 --workers ${NUM_WEB_WORKERS}" &
 echo "Starting nginx."
-nginx -g "daemon off;"
+nginx
+
+su ${USER} -c "source /venv/bin/activate && python run_server.py"
