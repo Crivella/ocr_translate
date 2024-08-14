@@ -2,7 +2,7 @@
 Installation
 ====================
 
-For both the Githyb and PyPI installation it is strongly suggested to install this project using a `virtual environment <https://docs.python.org/3/library/venv.html>`_.
+NOTE!!: Since version `v0.6`, `python` (or at least) `pip` needs to be installed on the system. (See https://www.python.org/downloads/)
 
 .. toctree::
    :maxdepth: 3
@@ -10,48 +10,53 @@ For both the Githyb and PyPI installation it is strongly suggested to install th
 From Release file (Windows only)
 --------------------------------
 
-From the :github:`github releases page <releases/>` you can download either:
 
-- The :github:`CPU only version <releases/latest/download/run_server-cpu.zip>`
-- The GPU version split in :github:`file1 <releases/latest/download/run_server-gpu.zip.001>` and :github:`file2 <releases/latest/download/run_server-gpu.zip.002>` (The CUDA dependencies makes it take much more space), wich can be restored using tools like `7zip <https://www.7-zip.org/>`_ and `NanaZip <https://github.com/M2Team/NanaZip>`_.
+- Make sure to have `python ,https://www.python.org/downloads/windows/`_ (3.11 suggested) installed on your system and available in the PATH (There is a checkbox that you need to tick as soon as you run the installer to automatically do this).
+- From :github:`github <releases/>` download the :github:`release file <releases/latest/download/run_server.zip>`
+- Extract the content of the zip file in a folder of your choice
+- Run the :code:`run_server.exe` file
+
+The server will run with sensible defaults. Most notably the models files, plugin files (needed python packages) and database will be downloaded/created under :code:`%userprofile%/.ocr_translate`.
 
 From Github
 -----------
 
+This assumes you have access to a terminal and have `python` and `git` installed on your system.
+
 - Clone or download the repository
+
   - :code:`git clone https://github.com/Crivella/ocr_translate.git`
-- Install the project dependencies (choose the appropriate files depending if you wanna run on GPU or CPU only):
-  - :code:`pip install -r requirements-torch-[cpu/cuda].txt`
-  - :code:`pip install -r requirementscs.txt`
+  - :code:`cd ocr_translate`
+
+- (Optional) create and use a `virtual environment <https://docs.python.org/3/library/venv.html>`_
+
+  - :code:`python -m venv venv`
+  - :code:`venv\Scripts\activate`
+
+- Install the project and its dependencies
+  - :code:`pip install .`
 
 From Docker
 -----------
 
-CPU and CUDA specific images are available on :dockerhub:`Dockerhub <>`:
+Images are available on :dockerhub:`Dockerhub <>`:
 
-- CPU: :code:`docker pull crivella1/ocr_translate:latest-cpu`
-- GPU: :code:`docker pull crivella1/ocr_translate:latest-gpu`
+- :code:`docker pull crivella1/ocr_translate:latest`
 
 Manually create your image:
 
-- Create a .pip-cache-[cpu/gpu] directory inside your project.
-- Optional: re-install the project dependencies pointing this as the cache folder for pip (will make the build process much faster, by reusing the cached dependencies)
-- Run :code:`docker build -t IMAGE_TAG -f Dockerfile-[cpu/gpu] .`
+- :code:`git clone https://github.com/Crivella/ocr_translate.git`
+- :code:`cd ocr_translate`
+- :code:`docker build -t IMAGE_TAG -f Dockerfile .`
 
 From PyPI
 ---------
 
 Run the command
 
+- (Optional) create and use a `virtual environment <https://docs.python.org/3/library/venv.html>`_
+
+  - :code:`python -m venv venv`
+  - :code:`venv\Scripts\activate`
+
 - :code:`pip install django-ocr_translate`
-
-By default torch 2.x will come in its CUDA enabled version. While this works also for CPU, it will also install ~1 GB of cuda dependencies.
-If you wish to run on CPU only, download the file [requirements-torch-cpu.txt](requirements-torch-cpu.txt) first and run
-
-- :code:`pip install -r requirements-torch-cpu.txt`
-
-before installing the python package.
-
-Than install the validated plugins (or edit the settings.py file to remove them from the `INSTALLED_APPS`)
-
-- :code:`pip install -r plugins.txt`
