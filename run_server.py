@@ -143,12 +143,14 @@ def main():
     try:
         importlib.import_module('gunicorn')
     except ImportError:
+        print('...using django development server')
         call_command('runserver', '--noreload', f'{bind_address}:{port}')
     else:
+        print('...using gunicorn')
         import getpass
-        user = os.environ.get('OCT_GUNICON_USER', getpass.getuser())
-        timeout = os.environ.get('OCT_GUNICON_TIMEOUT', '1200')
-        num_workers = os.environ.get('OCT_GUNICON_NUM_WORKERS', '1')
+        user = os.environ.get('OCT_GUNICORN_USER', getpass.getuser())
+        timeout = os.environ.get('OCT_GUNICORN_TIMEOUT', '1200')
+        num_workers = os.environ.get('OCT_GUNICORN_NUM_WORKERS', '1')
         subprocess.run([
             'gunicorn', 'mysite.wsgi',
             '--user', user,

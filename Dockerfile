@@ -54,7 +54,6 @@ ENV \
     GID=1000 \
     LOAD_ON_START="true" \
     AUTOCREATE_LANGUAGES="true" \
-    AUTOCREATE_VALIDATED_MODELS="true" \
     OCT_BASE_DIR="/plugin_data" \
     TRANSFORMERS_CACHE="/models" \
     TRANSFORMERS_OFFLINE="0" \
@@ -62,7 +61,7 @@ ENV \
     TESSERACT_PREFIX="/models/tesseract" \
     TESSERACT_ALLOW_DOWNLOAD="true" \
     DEVICE="cpu" \
-    OCT_GUNICON_NUM_WORKERS="1" \
+    OCT_GUNICORN_NUM_WORKERS="1" \
     NUM_MAIN_WORKERS="4" \
     NUM_BOX_WORKERS="1" \
     NUM_OCR_WORKERS="1" \
