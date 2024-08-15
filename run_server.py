@@ -133,20 +133,26 @@ def main():
     banner()
     env_default()
     dir_check()
+    print('--------------------------------------------')
     cuda_check()
 
+    print('--------------------------------------------')
     print('Running django setup...')
     django.setup()
 
     print('Create database (if needed) and apply database migrations (if any)...')
     call_command('migrate')
+    print('--------------------------------------------')
 
     superuser()
+    print('--------------------------------------------')
+    print('Running server initializations...')
     init()
 
     bind_address = os.environ.get('OCT_DJANGO_BIND_ADDRESS', '127.0.0.1')
     port = os.environ.get('OCT_DJANGO_PORT', '4000')
 
+    print('--------------------------------------------')
     print('Starting server...')
     try:
         importlib.import_module('gunicorn')
