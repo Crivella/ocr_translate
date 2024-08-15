@@ -649,7 +649,7 @@
     "name": "ocr_translate_paddle",
     "package": "ocr_translate-paddle",
     "description": "This is a plugin for the ocr_translate. Plugins to enable usage of PaddleOCR in ocr_translate",
-    "version": "0.1.2",
+    "version": "0.2.1",
     "homepage": "https://github.com/Crivella/ocr_translate-paddle",
     "dependencies": [
       {
