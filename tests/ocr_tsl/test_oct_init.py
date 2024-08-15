@@ -18,16 +18,33 @@
 ###################################################################################
 """Tests ENVIROMENT VARIABLES initialization."""
 
+import importlib
+
 import pytest
 from django.db.utils import OperationalError
 
 from ocr_translate import ocr_tsl as o
+from ocr_translate.ocr_tsl import initializers as ini
 
 
 @pytest.fixture(autouse=True)
 def init_no_fail(monkeypatch):
     """Initialize without fail."""
     monkeypatch.setattr(o, 'FAIL', False)
+
+def test_oct_init_fail(monkeypatch, capsys):
+    """Test call on env variable."""
+    def raise_func():
+        raise OperationalError('Test')
+    monkeypatch.setenv('LOAD_ON_START', 'true')
+    monkeypatch.setattr(ini, 'init_most_used', raise_func)
+    importlib.reload(o)
+
+    assert o.FAIL
+    captured = capsys.readouterr()
+    stdout = list(filter(None, captured.out.split('\n')))
+    assert len(stdout) == 3
+    assert all(x.startswith('WARNING:') for x in stdout)
 
 def test_oct_init_call_true(monkeypatch, mock_called):
     """Test call on env variable."""

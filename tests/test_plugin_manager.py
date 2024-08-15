@@ -200,7 +200,7 @@ def test_overrides_decorator_other_double():
         return args
 
     args = ['cls', 'name', ]
-    arg_names = ['version', 'extras', 'scope', 'system', 'force']
+    arg_names = ['version', 'extras', 'scope', 'system']
     for name in arg_names:
         args.append(name)
         with pytest.raises(TypeError):
@@ -226,6 +226,21 @@ def test_overrides_decorator_only_kwargs():
         return args
 
     assert test_func('cls', 'name', 3, somekw=1) == ('cls',)
+
+def test_pip_install_raisee(monkeypatch, mock_called):
+    """Test pip install with raise call."""
+    def raise_func(*args, **kwargs):
+        exc = pm.subprocess.CalledProcessError(1, 'test')
+        exc.stdout = b'test stdout'
+        exc.stderr = b'test stderr'
+        raise exc
+    monkeypatch.setattr(pm.subprocess, 'run', raise_func)
+    monkeypatch.setattr(pm.logger, 'error', mock_called)
+
+    with pytest.raises(pm.subprocess.CalledProcessError):
+        pm._pip_install('test', '.')
+    assert mock_called.called
+    assert mock_called.args[0] == 'test stderr'
 
 def test_pip_install_extras_none(monkeypatch):
     """Test pip install with no extras."""
@@ -807,6 +822,28 @@ def test_install_package_install_twice(monkeypatch, mock_called):
     del mock_called.called
     pmng.install_package(name, version, scope=scope)
     assert not hasattr(mock_called, 'called')
+
+def test_install_package_overwrite_version(monkeypatch, mock_called):
+    """Test plugin manager installing an already installed package with different version."""
+    # django.setup()
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pm, '_pip_install', mock_called)
+    name = 'test'
+    version = '1.0'
+    scope = pm.GENERIC_SCOPE
+    sp_dir = pmng.plugin_dir / 'test' / 'site-packages'
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    pmng.install_package(name, version, scope=scope)
+    assert mock_called.called
+    assert f'{scope}::{name}' in pmng.installed_pkgs
+
+    # Test that installing different version triggers the install action and removes the old version
+    version = '2.0'
+    del mock_called.called
+    sp_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(pmng, '_uninstall_package', mock_called)
+    pmng.install_package(name, version, scope=scope)
+    assert  mock_called.called
 
 def test_install_package_list_extras(monkeypatch, mock_called):
     """Test plugin manager installing with `list` extras."""

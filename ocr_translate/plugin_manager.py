@@ -60,7 +60,7 @@ def get_safe_name(name: str) -> str:
 
 def install_overrides_decorator(func):
     """Decorator to install a package."""
-    arg_names = ['version', 'extras', 'scope', 'system', 'force']
+    arg_names = ['version', 'extras', 'scope', 'system']
 
     @functools.wraps(func)
     def wrapped(*args, **kwargs):
@@ -257,7 +257,6 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
             extras: list| str = None,
             scope: str = GENERIC_SCOPE,
             system: str = '',
-            force: bool = False
             ):
         """Install a package."""
         with self.lock_pkg:
@@ -275,9 +274,12 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
                 extras = list(filter(None, extras.split(' ')))
             scoped_name = f'{scope}::{name}'
 
-            if not force and scoped_name in self.installed_pkgs:
+            if scoped_name in self.installed_pkgs:
                 if self.installed_pkgs[scoped_name]['version'] == version:
+                    logger.debug(f'{scoped_name}=={version} already installed')
                     return
+                logger.debug(f'Uninstalling {scoped_name}=={self.installed_pkgs[scoped_name]["version"]}')
+                self._uninstall_package(scoped_name)
 
             ptr = {}
             self.installed_pkgs[scoped_name] = ptr
@@ -339,24 +341,29 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
                 settings.INSTALLED_APPS.append(name)
             reload_django_apps()
 
-    def uninstall_package(self, name: str):
+    def _uninstall_package(self, name: str):
         """Uninstall a package."""
-        with self.lock_pkg:
-            if name not in self.installed_pkgs:
-                return
-            logger.info(f'Uninstalling package {name}')
-            scope, _ = name.split('::')
-            if scope not in self.scopes:
-                logger.debug(f'Skipping {name} for scope {scope}')
-                return
-            ptr = self.installed_pkgs.pop(name)
-            scope_dir = self.PLUGIN_SP[scope]
-            for pth in ptr['files']:
-                (scope_dir / pth).unlink()
-            for pth in ptr['dirs']:
-                shutil.rmtree(scope_dir / pth)
+        if name not in self.installed_pkgs:
+            return
+        logger.info(f'Uninstalling package {name}')
+        scope, _ = name.split('::')
+        if scope not in self.scopes:
+            logger.debug(f'Skipping {name} for scope {scope}')
+            return
+        ptr = self.installed_pkgs.pop(name)
+        scope_dir = self.PLUGIN_SP[scope]
+        for pth in ptr['files']:
+            (scope_dir / pth).unlink()
+        for pth in ptr['dirs']:
+            shutil.rmtree(scope_dir / pth)
 
-            self.save_installed()
+        self.save_installed()
+
+
+    def uninstall_package(self, name: str):
+        """Uninstall a package thread safe."""
+        with self.lock_pkg:
+            self._uninstall_package(name)
 
     def uninstall_plugin(self, name: str):
         """Uninstall the plugin."""
