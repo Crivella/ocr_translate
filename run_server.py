@@ -27,6 +27,7 @@ from pathlib import Path
 import django
 from django.core.management import call_command
 
+import ocr_translate.plugin_manager as pm
 from ocr_translate import __version__
 
 
@@ -69,22 +70,28 @@ def dir_check():
 
 def cuda_check():
     """Check if cuda is available and set the environment variable DEVICE."""
+    print('Checking for CUDA availability...')
     if 'DEVICE' in os.environ:
         print(f'Device set via environment variable to: `{os.environ["DEVICE"]}`')
-        return
-    print('Checking for CUDA availability...')
-    try:
-        importlib.import_module('torch')
-    except ModuleNotFoundError:
+    else:
         try:
             subprocess.run(['nvidia-smi'], check=True, capture_output=True)
         except FileNotFoundError:
             pass
         else:
-            print('Torch not found, but `nvidia-smi` is available, setting DEVICE to `cuda`')
-            print('!!! In case of errors try setting the DEVICE environment variable to "cpu"')
+            print('`nvidia-smi` is available, setting DEVICE to `cuda`')
             os.environ['DEVICE'] = 'cuda'
+
+    try:
+        # The version of torch found depends on the current scope.
+        # This check is still useful to se if a CUDA capale torch is installed but a GPU is not available.
+        pm.PluginManager()  # Make sure the plugin manager is initialized to have installed plugins libs in path
+        importlib.import_module('torch')
+    except ModuleNotFoundError:
+        print('Torch not found: cannot check for CUDA availability explicitly.')
+        print('In case of errors try setting the DEVICE environment variable to "cpu"')
     else:
+        print('Torch found, using it for CUDA availability check...')
         import torch
         if not torch.cuda.is_available():
             print('CUDA is not available, falling back to using CPU')
@@ -92,6 +99,7 @@ def cuda_check():
         else:
             os.environ.setdefault('DEVICE', 'cuda')
             print('CUDA is available, using GPU')
+        importlib.reload(pm)  # Reload the plugin manager to have the correct DEVICE set
 
 def init():
     """Run server initializations"""
