@@ -6,7 +6,6 @@ User's guide
    :maxdepth: 2
 
    envs
-   plugins
 
 Supported/tested databases
 --------------------------

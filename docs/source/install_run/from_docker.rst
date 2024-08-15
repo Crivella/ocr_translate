@@ -1,8 +1,6 @@
 From Docker image
 -----------------
 
-See the section on how to :doc:`install from DockerHUB </install/index>` first if you don't have it already.
-
 Images can be downloaded from :dockerhub:`Dockerhub <>`:
 
 - :code:`docker pull crivella1/ocr_translate:latest`

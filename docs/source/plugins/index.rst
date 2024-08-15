@@ -1,7 +1,13 @@
-Kwnown plugins
-==============
+Plugins
+=======
 
-This is a list of known and approved plugins available for install in the server.
+Plugins are the bread and butter of `ocr_translate`.
+
+The base project implements functionalities to handle the web server, database, translation pipelines and queues.
+
+How and which models are used is implemented entirely in plugins.
+
+Plugins can be installed by using the plugin collapsable menu on the extension, or by directly using the `manage_plugins/` endpoint (:doc:`see here <../contrib/api>`).
 
 ocr_translate-hugging_face
 --------------------------
@@ -9,6 +15,8 @@ ocr_translate-hugging_face
 `HOMEPAGE <https://github.com/Crivella/ocr_translate-hugging_face>`__
 
 Plugin for using Hugging Face models for OCR and translation.
+
+Implements `VED models <https://huggingface.co/docs/transformers/en/model_doc/vision-encoder-decoder>`_ for OCR and `Seq2Seq <https://huggingface.co/learn/nlp-course/en/chapter1/7>`_ models for translation.
 
 Plugin or associated packages environment variables
 
