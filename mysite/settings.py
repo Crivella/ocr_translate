@@ -72,7 +72,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'propagate': True,
+            'propagate': False,
         },
         'django.request': {
             'handlers': ['console'],
@@ -83,16 +83,19 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
+            'propagate': False,
         },
         'ocr.worker': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
+            'propagate': False,
         },
         'plugin': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
+            'propagate': False,
         },
     },
 }
