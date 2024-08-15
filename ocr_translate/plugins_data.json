@@ -74,7 +74,7 @@
       },
       {
         "name": "torch",
-        "version": "2.2.1",
+        "version": "2.2.1+cu118",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
       },
@@ -146,9 +146,107 @@
       },
       {
         "name": "torch",
-        "version": "2.2.1",
+        "version": "2.2.1+cu118",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
+      },
+      {
+        "name": "nvidia-cublas-cu11",
+        "version": "11.11.3.6",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cuda-cupti-cu11",
+        "version": "11.8.87",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cuda-nvrtc-cu11",
+        "version": "11.8.89",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cuda-runtime-cu11",
+        "version": "11.8.89",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cudnn-cu11",
+        "version": "8.7.0.84",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cublas-cu11",
+        "version": "11.11.3.6",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cufft-cu11",
+        "version": "10.9.0.58",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-curand-cu11",
+        "version": "10.3.0.86",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cusolver-cu11",
+        "version": "11.4.1.48",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cublas-cu11",
+        "version": "11.11.3.6",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cusparse-cu11",
+        "version": "11.7.5.86",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-nccl-cu11",
+        "version": "=2.19.3",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-nvtx-cu11",
+        "version": "11.8.86",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "triton",
+        "version": "2.2.0",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
       },
       {
         "name": "filelock",
@@ -461,7 +559,7 @@
       },
       {
         "name": "torch",
-        "version": "2.2.1",
+        "version": "2.2.1+cu118",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
       },
@@ -533,9 +631,107 @@
       },
       {
         "name": "torch",
-        "version": "2.2.1",
+        "version": "2.2.1+cu118",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
+      },
+      {
+        "name": "nvidia-cublas-cu11",
+        "version": "11.11.3.6",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cuda-cupti-cu11",
+        "version": "11.8.87",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cuda-nvrtc-cu11",
+        "version": "11.8.89",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cuda-runtime-cu11",
+        "version": "11.8.89",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cudnn-cu11",
+        "version": "8.7.0.84",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cublas-cu11",
+        "version": "11.11.3.6",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cufft-cu11",
+        "version": "10.9.0.58",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-curand-cu11",
+        "version": "10.3.0.86",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cusolver-cu11",
+        "version": "11.4.1.48",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cublas-cu11",
+        "version": "11.11.3.6",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-cusparse-cu11",
+        "version": "11.7.5.86",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-nccl-cu11",
+        "version": "=2.19.3",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "nvidia-nvtx-cu11",
+        "version": "11.8.86",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
+      },
+      {
+        "name": "triton",
+        "version": "2.2.0",
+        "extras": "",
+        "scope": "cuda",
+        "system": "linux"
       },
       {
         "name": "filelock",
