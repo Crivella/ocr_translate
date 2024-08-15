@@ -34,7 +34,7 @@ The server is designed to be used together with this browser `extension`_, actin
 
             +++
 
-            .. button-ref:: running/index
+            .. button-ref:: install_run/index
                :expand:
                :color: secondary
                :click-parent:
@@ -75,6 +75,5 @@ The server is designed to be used together with this browser `extension`_, actin
    :hidden:
 
    install_run/index
-   running/index
    user/index
    contrib/index

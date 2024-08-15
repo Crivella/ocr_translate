@@ -6,7 +6,7 @@ This is a list of known and approved plugins available for install in the server
 ocr_translate-hugging_face
 --------------------------
 
-`HOMEPAGE <https://github.com/Crivella/ocr_translate-hugging_face>`_
+`HOMEPAGE <https://github.com/Crivella/ocr_translate-hugging_face>`__
 
 Plugin for using Hugging Face models for OCR and translation.
 
@@ -17,7 +17,7 @@ Plugin or associated packages environment variables
     :header-rows: 1
 
     * - Variable
-      - Values
+      - Default
       - Usage
     * - :code:`TRANSFORMERS_CACHE`
       - :code:`$OCT_BASE_DIR`
@@ -27,7 +27,7 @@ Plugin or associated packages environment variables
 
         by `transformers`)
     * - :code:`TRANSFORMERS_OFFLINE`
-      - 1[/0]
+      - 0
       - By default `transformers` will try to download
 
         missing models. Set this to 0 to only work in
@@ -37,7 +37,7 @@ Plugin or associated packages environment variables
 ocr_translate-easyocr
 ---------------------
 
-`HOMEPAGE <https://github.com/Crivella/ocr_translate-easyocr>`_
+`HOMEPAGE <https://github.com/Crivella/ocr_translate-easyocr>`__
 
 Plugin for using EasyOCR models for BBox detection.
 
@@ -48,7 +48,7 @@ Plugin or associated packages environment variables
     :header-rows: 1
 
     * - Variable
-      - Values
+      - Default
       - Usage
     * - :code:`EASYOCR_MODULE_PATH`
       - :code:`$HOME/.EasyOCR`
@@ -59,7 +59,7 @@ Plugin or associated packages environment variables
 ocr_translate-tesseract
 -----------------------
 
-`HOMEPAGE <https://github.com/Crivella/ocr_translate-tesseract>`_
+`HOMEPAGE <https://github.com/Crivella/ocr_translate-tesseract>`__
 
 Plugin for using Tesseract models for OCR.
 This requires tesseract to be installed on your machine.
@@ -71,7 +71,7 @@ Plugin or associated packages environment variables
     :header-rows: 1
 
     * - Variable
-      - Values
+      - Default
       - Usage
     * - :code:`TESSERACT_PREFIX`
       - :code:`$TRANSFORMERS_CACHE/tesseract`
@@ -87,7 +87,7 @@ Plugin or associated packages environment variables
 ocr_translate-paddle
 --------------------
 
-`HOMEPAGE <https://github.com/Crivella/ocr_translate-paddle>`_
+`HOMEPAGE <https://github.com/Crivella/ocr_translate-paddle>`__
 
 Plugin for using PaddleOCR models for BBox detection and OCR.
 
@@ -96,7 +96,7 @@ Plugin for using PaddleOCR models for BBox detection and OCR.
     :header-rows: 1
 
     * - Variable
-      - Values
+      - Default
       - Usage
     * - :code:`PADDLEOCR_PREFIX`
       - :code:`$TRANSFORMERS_CACHE/tesseract`
@@ -107,24 +107,40 @@ Plugin for using PaddleOCR models for BBox detection and OCR.
 ocr_translate-ollama
 --------------------
 
-`HOMEPAGE <https://github.com/Crivella/ocr_translate-paddle>`_
+`HOMEPAGE <https://github.com/Crivella/ocr_translate-ollama>`__
 
 Plugin for using LLMs through ollama for translation.
+
+The `Ollama <https://ollama.com/>`_ server needs to be setup independently.
 
 .. list-table:: Title
     :widths: 16 16 68
     :header-rows: 1
 
     * - Variable
-      - Values
+      - Default
       - Usage
-    * - :code:`PADDLEOCR_PREFIX`
-      - :code:`$TRANSFORMERS_CACHE/tesseract`
-      - Directory where PaddleOCR will store and look
-
-        for models
+    * - :code:`OCT_OLLAMA_ENDPOINT`
+      - :code:`http://127.0.0.1:11434/api`
+      - Endpoint where the ollama server is running
 
 
-.. - [e]():
-.. - [ocr_translate-ollama](https://github.com/Crivella/ocr_translate-ollama):
-.. - [ocr_translate-google](https://github.com/Crivella/ocr_translate-google): Plugin for using Google Translate for translation. -->
+ocr_translate-google
+--------------------
+
+`HOMEPAGE <https://github.com/Crivella/ocr_translate-google>`__
+
+Plugin for using Google Translate for translation.
+
+This plugins requires an internet connection and will send the text to be translated to google.
+
+.. list-table:: Title
+    :widths: 16 16 68
+    :header-rows: 1
+
+    * - Variable
+      - Default
+      - Usage
+    * - EMPTY
+      - EMPTY
+      - EMPTY

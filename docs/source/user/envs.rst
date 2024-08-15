@@ -122,7 +122,7 @@ This includes the windows release file and docker image that are based on the sa
     :header-rows: 1
 
     * - Variable
-      - Values
+      - Default
       - Usage
     * - :code:`DJANGO_SUPERUSER_USERNAME`
       - admin
@@ -161,10 +161,10 @@ Variables used specifically by the DJANGO server.
     :header-rows: 1
 
     * - Variable
-      - Values
+      - Default
       - Usage
     * - :code:`DJANGO_DEBUG`
-      - false[/true]
+      - false
       - Whether to run the server in debug (true) or production (false) mode
     * - :code:`DJANGO_LOG_LEVEL`
       - INFO

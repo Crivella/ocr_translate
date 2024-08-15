@@ -4,6 +4,11 @@ From Release File (Windows)
 Tested for Windows11
 
 - Make sure to have `python <https://www.python.org/downloads/windows/>`_ (3.11 suggested) installed on your system and available in the PATH (There is a checkbox that you need to tick as soon as you run the installer to automatically do this).
+
+.. image:: windows_python_install.png
+    :alt: Python installer
+    :align: center
+
 - From :github:`github <releases/>` download the :github:`release file <releases/latest/download/run_server.zip>`
 - Extract the content of the zip file in a folder of your choice
 - Run the :code:`run_server.exe` file

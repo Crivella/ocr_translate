@@ -49,7 +49,7 @@ or manually run the Django server.
 At least for the first time, it is suggested to run the server with the :doc:`Environment variable <../user/envs>` `AUTOCREATE_LANGUAGES` set to `"true"` to automatically load the validated languages and models provided by the project.
 
 Notes
------
+_____
 
 - Gunicorn workers will each spawn a separate instance of the loaded models, each taking its own space in the memory. This can quickly fill up the memory especially if running on GPU. Ideally set this to 1.
 - Django development server will spawn new threads for handling incoming requests (if no currently existing thread is free), which share the same memory. Running more than one worker per loaded model concurrently might slow down the actual computation and in some case also block the execution.
