@@ -59,7 +59,7 @@ def test_manage_plugins_noaction(monkeypatch, mock_called, client, post_kwargs):
     assert response.status_code == 200
     assert mock_called.called
 
-def test_manage_plugins_install(monkeypatch, mock_called, client, post_kwargs):
+def test_manage_plugins_install(monkeypatch, epm_no_ept, mock_called, client, post_kwargs):
     """Test manage_plugins with POST request: install a plugin."""
     pmng = PluginManager()
     monkeypatch.setattr(pmng, 'install_plugin', mock_called)
@@ -73,7 +73,7 @@ def test_manage_plugins_install(monkeypatch, mock_called, client, post_kwargs):
     assert mock_called.called
     assert mock_called.args[0] == plugin_name
 
-def test_manage_plugins_uninstall(monkeypatch, mock_called, client, post_kwargs):
+def test_manage_plugins_uninstall(monkeypatch, epm_no_ept, mock_called, client, post_kwargs):
     """Test manage_plugins with POST request: uninstall a plugin."""
     pmng = PluginManager()
     monkeypatch.setattr(pmng, 'uninstall_plugin', mock_called)

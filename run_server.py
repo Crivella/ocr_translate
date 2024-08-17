@@ -104,13 +104,15 @@ def cuda_check():
 def init():
     """Run server initializations"""
     from ocr_translate import models as m
-    from ocr_translate.ocr_tsl.initializers import auto_create_languages
+    from ocr_translate.ocr_tsl.initializers import (auto_create_languages,
+                                                    ensure_plugins)
     ac_lang = os.environ.get('AUTO_CREATE_LANGUAGES', 'false').lower() in ['true', '1']
     ac_lang |= m.Language.objects.count() == 0
     if ac_lang:
         print('Autocreate language entries in database...')
         auto_create_languages()
         os.environ['AUTO_CREATE_LANGUAGES'] = 'false'
+    ensure_plugins()
 
 def superuser():
     """Create a superuser if it does not exist and check for default password."""

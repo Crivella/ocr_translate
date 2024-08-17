@@ -23,6 +23,7 @@ import pytest
 from PIL import Image
 
 import ocr_translate
+from ocr_translate import entrypoint_manager as epm
 from ocr_translate import models as m
 from ocr_translate import ocr_tsl, queues, views
 from ocr_translate.ocr_tsl import box, lang, ocr, tsl
@@ -310,3 +311,8 @@ def queues_no_reuse(monkeypatch):
     monkeypatch.setattr(queues.box_queue.msg_queue, 'reuse_msg', False)
     monkeypatch.setattr(queues.ocr_queue.msg_queue, 'reuse_msg', False)
     monkeypatch.setattr(queues.tsl_queue.msg_queue, 'reuse_msg', False)
+
+@pytest.fixture()
+def epm_no_ept(monkeypatch):
+    """Set entrypoints to be empty."""
+    monkeypatch.setattr(epm, 'get_group_entrypoints', lambda *args, **kwargs: set())

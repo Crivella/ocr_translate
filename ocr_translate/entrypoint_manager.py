@@ -63,7 +63,8 @@ def ep_manager():
         cls, create_func, get_func, unload_func = data
         loaded_model = get_func()
         added = after[grp] - before[grp]
-        for ept in added:
+        # Using after to ensure that when using same plugin folder with new db, the models are created
+        for ept in after[grp]:
             data = ept.load()
             model_id = data['name']
             try:

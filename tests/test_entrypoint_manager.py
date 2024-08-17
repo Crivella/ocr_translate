@@ -60,7 +60,6 @@ def mock_cls(request):
             if name == 'prev68187471':
                 object.__setattr__(self, name, value)
             MockCls.set_counter[name] += 1
-            # super().__setattr__(name, value)
 
         def __call__(self, *args, **kwargs):
             """Mock call"""
@@ -98,8 +97,6 @@ def mock_ini(monkeypatch, mock_cls):
     monkeypatch.setattr(ini, 'add_tsl_model', tsl)
     importlib.reload(epm)
 
-# pytestmark = pytest.mark.django_db
-
 @pytest.fixture
 def entrypoint1():
     """Mock entrypoint"""
@@ -121,12 +118,22 @@ def test_get_group_entrypoints():
     assert isinstance(res, set)
     assert all(isinstance(ep, EntryPoint) for ep in res)
 
-def test_manager_no_change(mock_models, mock_cls):
-    """Test manager with no changes"""
+def test_manager_no_change_empty(monkeypatch, mock_models, mock_cls):
+    """Test manager with no changes and no entrypoints"""
+    monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: set())
     with epm.ep_manager():
         pass
 
     assert mock_cls.call_counter == {}
+def test_manager_no_change_models(monkeypatch, mock_models, entrypoint1, mock_cls):
+    """Test manager with no changes and entrypoints"""
+    monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: {entrypoint1})
+    with epm.ep_manager():
+        pass
+
+    assert mock_cls.call_counter['get'] == 3
+    assert mock_cls.call_counter['save'] == 3
+    assert mock_cls.set_counter['active'] == 3
 
 def test_manager_change_add(monkeypatch, mock_models, mock_cls, entrypoint1, mock_called):
     """Test manager with entrypoint added"""

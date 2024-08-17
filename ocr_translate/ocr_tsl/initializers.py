@@ -25,6 +25,7 @@ from importlib.metadata import entry_points
 from django.db.models import Count
 
 from .. import models as m
+from ..plugin_manager import PluginManager
 from .box import load_box_model
 from .lang import load_lang_dst, load_lang_src
 from .ocr import load_ocr_model
@@ -156,3 +157,14 @@ def add_tsl_model(ep_dict: dict) -> m.TSLModel:
         model.dst_languages.add(*m.Language.objects.filter(**kwargs))
     model.save()
     return model
+
+def ensure_plugins():
+    """Ensure that all plugins are installed on initialization.
+    This is used to make sure that running the server with a new DEVICE will have the correct dependencies installed."""
+    logger.info('Ensuring that all plugins are loaded')
+    pmng = PluginManager()
+    known = set(_['name'] for _ in pmng.plugins_data)
+    installed = set(pmng.plugins)
+    for plugin in known:
+        if plugin in installed:
+            pmng.install_plugin(plugin)

@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from ocr_translate import plugin_manager as pm
+from ocr_translate.ocr_tsl.initializers import ensure_plugins
 
 
 @pytest.fixture()
@@ -1038,3 +1039,10 @@ def test_uninstall_package_thread_lock(monkeypatch, mock_installed_file):
         t.join()
     assert name not in pmng.installed_pkgs
     assert not MockDict.called
+
+def test_ensure_plugins(monkeypatch, mock_called, mock_plugin_file, mock_plugin_data):
+    """Test initializer ensure plugins."""
+    pmng = pm.PluginManager()
+    monkeypatch.setattr(pmng, 'install_plugin', mock_called)
+    ensure_plugins()
+    assert mock_called.called
