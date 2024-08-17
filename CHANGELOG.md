@@ -19,13 +19,15 @@ I have not found a way to incorporate pip in the frozen executable, or make it a
 - Added a plugin manager to install/uninstall plugins on demand
   - The installed plugins can be controlled via the new version of the firefox extension or directly using the
     `manage_plugins/` endpoint.
-  - The plugin data is stored in a JSON file inside the project [plugins_Data.json](blob/v0.6.0/ocr_translate/plugins_data.json)
+  - The plugin data is stored in a JSON file inside the project [plugins_data.json](blob/v0.6.0/ocr_translate/plugins_data.json)
   - Version/Scope/Extras of a package to be installed can be controlled via environment variables
 
         OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]
 
-    (see the parte on PaddleOCR below for an example).
+    (eg to change torch to version A.B.C you would set `OCT_PKG_TORCH_VERSION="A.B.C"`).
     If the package name contains a `-` it should be replaced with `_min_` in the package name
+  - Removed env variable `AUTOCREATE_VALIDATED_MODELS` and relative server initialization.
+    Now models are created/activated or deactivated via the plugin manager, when the respective plugin is installed/uninstalled.
 - Streamlined docker image to also use the `run_server.py` script for initialization.
 - Added plugin for `ollama` (https://github.com/ollama/ollama) for translation using LLMs
   - Note ollama needs to be run/installed separately and the plugin will just make calls to the server.
@@ -33,15 +35,15 @@ I have not found a way to incorporate pip in the frozen executable, or make it a
     ([see the plugin page for more details](https://github.com/Crivella/ocr_translate-ollama))
 - Added plugin for `PaddleOCR` (https://github.com/PaddlePaddle/PaddleOCR) (Box and OCR) (seems to work very well
   with chinese).
-  - The default versions installed by the `plugin_manager` (`2.5.2` on linux and `2.6.1`) might not work for every
-    system as there can be underlying failures in the C++ code that the plugin uses.
+  - The default versions installed by the `plugin_manager` of `paddlepaddle` (`2.5.2` on linux and `2.6.1` on windows)
+    might not work for every system as there can be underlying failures in the C++ code that the plugin uses.
     The version installed can be controlled using the environment variable `OCT_PKG_PADDLEPADDLE_VERSION`.
-- Added possibility to specify extra `ALLOWED_HOSTS` and a server bind address via environment variables. (Fixes #30)
+- Added possibility to specify extra `DJANGO_ALLOWED_HOSTS` and a server bind address via environment variables. (Fixes #30)
 - Manual model is not implemented as an entrypoint anymore (will work also without recreating models).
 - OCR models can now use a `tokenizer` and a `processor` from different models.
+- Added caching of the languages and allowed box/ocr/tsl models for faster response times on the handshake endpoint.
 - New endpoint `run_tsl_xua` made to work with `XUnity.AutoTranslator` (https://github.com/bbepis/XUnity.AutoTranslator)
 - Improved API return codes
-- Improved the server script in the docker image
 
 ## 0.5.1
 
