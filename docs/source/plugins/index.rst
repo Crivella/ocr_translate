@@ -38,7 +38,7 @@ Plugin or associated packages environment variables
       - 0
       - By default `transformers` will try to download
 
-        missing models. Set this to 0 to only work in
+        missing models. Set this to 1 to only work in
 
         offline mode
 
@@ -60,9 +60,7 @@ Plugin or associated packages environment variables
       - Usage
     * - :code:`EASYOCR_MODULE_PATH`
       - :code:`$HOME/.EasyOCR`
-      - Directory where EasyOCR store its downloaded
-
-        models
+      - Directory where EasyOCR downloads its models
 
 ocr_translate-tesseract
 -----------------------
@@ -83,9 +81,8 @@ Plugin or associated packages environment variables
       - Usage
     * - :code:`TESSERACT_PREFIX`
       - :code:`$TRANSFORMERS_CACHE/tesseract`
-      - Directory where tesseract will store and look
+      - Directory where tesseract downloads its models
 
-        for models
     * - :code:`TESSERACT_ALLOW_DOWNLOAD`
       - true
       - Control whether the app should download missing
@@ -108,9 +105,7 @@ Plugin for using PaddleOCR models for BBox detection and OCR.
       - Usage
     * - :code:`PADDLEOCR_PREFIX`
       - :code:`$TRANSFORMERS_CACHE/tesseract`
-      - Directory where PaddleOCR will store and look
-
-        for models
+      - Directory where PaddleOCR downloads its models
 
 ocr_translate-ollama
 --------------------

@@ -52,7 +52,11 @@ The check on `Add python.exe to PATH` is needed so that `pip` can be run without
 
 The server is designed to only offer the basic functionalities, while the models that can be used and how they are used are defined by plugins.
 
-See the documentation for a [list of available plugins](https://crivella.github.io/ocr_translate/user/index.html#known-validated-plugins)
+See the documentation for a [list of available plugins](https://crivella.github.io/ocr_translate/plugins/index.html)
+
+### Notes
+
+- When switching the server between CPU/CUDA mode for the first time, run the installation of the plugins again to make sure the scope-specific dependencies are installed.
 
 ## Possible problems
 
