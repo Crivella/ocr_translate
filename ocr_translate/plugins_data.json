@@ -37,26 +37,8 @@
         "scope": "generic"
       },
       {
-        "name": "regex",
-        "version": "2023.12.25",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "six",
         "version": "1.16.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "tqdm",
-        "version": "4.66.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "safetensors",
-        "version": "0.3.3",
         "extras": "",
         "scope": "generic"
       },
@@ -67,66 +49,6 @@
         "scope": "generic"
       },
       {
-        "name": "torch",
-        "version": "2.2.1",
-        "extras": "--index-url https://download.pytorch.org/whl/cpu",
-        "scope": "cpu"
-      },
-      {
-        "name": "torch",
-        "version": "2.2.1+cu118",
-        "extras": "--index-url https://download.pytorch.org/whl/cu118",
-        "scope": "cuda"
-      },
-      {
-        "name": "filelock",
-        "version": "3.13.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "fsspec",
-        "version": "2024.3.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "Jinja2",
-        "version": "3.1.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "MarkupSafe",
-        "version": "2.1.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "networkx",
-        "version": "3.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "sympy",
-        "version": "1.12",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "mpmath",
-        "version": "1.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "typing_extensions",
-        "version": "4.8.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "torchvision",
         "version": "0.17.1",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
@@ -149,13 +71,6 @@
         "version": "2.2.1+cu118",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
-      },
-      {
-        "name": "nvidia-cublas-cu11",
-        "version": "11.11.3.6",
-        "extras": "",
-        "scope": "cuda",
-        "system": "linux"
       },
       {
         "name": "nvidia-cuda-cupti-cu11",
@@ -181,13 +96,6 @@
       {
         "name": "nvidia-cudnn-cu11",
         "version": "8.7.0.84",
-        "extras": "",
-        "scope": "cuda",
-        "system": "linux"
-      },
-      {
-        "name": "nvidia-cublas-cu11",
-        "version": "11.11.3.6",
         "extras": "",
         "scope": "cuda",
         "system": "linux"
@@ -249,18 +157,6 @@
         "system": "linux"
       },
       {
-        "name": "filelock",
-        "version": "3.13.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "fsspec",
-        "version": "2024.3.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "Jinja2",
         "version": "3.1.2",
         "extras": "",
@@ -291,20 +187,8 @@
         "scope": "generic"
       },
       {
-        "name": "typing_extensions",
-        "version": "4.8.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "transformers",
         "version": "4.30.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "filelock",
-        "version": "3.13.1",
         "extras": "",
         "scope": "generic"
       },
@@ -323,54 +207,6 @@
       {
         "name": "fsspec",
         "version": "2024.3.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "packaging",
-        "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "PyYAML",
-        "version": "6.0.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "requests",
-        "version": "2.31.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "certifi",
-        "version": "2024.2.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "charset-normalizer",
-        "version": "3.3.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "idna",
-        "version": "3.6",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "urllib3",
-        "version": "2.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "tqdm",
-        "version": "4.66.2",
         "extras": "",
         "scope": "generic"
       },
@@ -516,20 +352,8 @@
         "scope": "generic"
       },
       {
-        "name": "networkx",
-        "version": "3.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "packaging",
         "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "scipy",
-        "version": "1.12.0",
         "extras": "",
         "scope": "generic"
       },
@@ -552,66 +376,6 @@
         "scope": "generic"
       },
       {
-        "name": "torch",
-        "version": "2.2.1",
-        "extras": "--index-url https://download.pytorch.org/whl/cpu",
-        "scope": "cpu"
-      },
-      {
-        "name": "torch",
-        "version": "2.2.1+cu118",
-        "extras": "--index-url https://download.pytorch.org/whl/cu118",
-        "scope": "cuda"
-      },
-      {
-        "name": "filelock",
-        "version": "3.13.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "fsspec",
-        "version": "2024.3.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "Jinja2",
-        "version": "3.1.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "MarkupSafe",
-        "version": "2.1.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "networkx",
-        "version": "3.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "sympy",
-        "version": "1.12",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "mpmath",
-        "version": "1.3.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "typing_extensions",
-        "version": "4.8.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "torchvision",
         "version": "0.17.1",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
@@ -634,13 +398,6 @@
         "version": "2.2.1+cu118",
         "extras": "--index-url https://download.pytorch.org/whl/cu118",
         "scope": "cuda"
-      },
-      {
-        "name": "nvidia-cublas-cu11",
-        "version": "11.11.3.6",
-        "extras": "",
-        "scope": "cuda",
-        "system": "linux"
       },
       {
         "name": "nvidia-cuda-cupti-cu11",
@@ -666,13 +423,6 @@
       {
         "name": "nvidia-cudnn-cu11",
         "version": "8.7.0.84",
-        "extras": "",
-        "scope": "cuda",
-        "system": "linux"
-      },
-      {
-        "name": "nvidia-cublas-cu11",
-        "version": "11.11.3.6",
         "extras": "",
         "scope": "cuda",
         "system": "linux"
@@ -887,12 +637,6 @@
         "scope": "generic"
       },
       {
-        "name": "certifi",
-        "version": "2024.2.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "chardet",
         "version": "3.0.4",
         "extras": "",
@@ -935,18 +679,6 @@
         "scope": "generic"
       },
       {
-        "name": "sniffio",
-        "version": "1.3.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "idna",
-        "version": "3.6",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "rfc3986",
         "version": "1.5.0",
         "extras": "",
@@ -965,20 +697,8 @@
         "scope": "generic"
       },
       {
-        "name": "protobuf",
-        "version": "3.20.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "attrdict",
         "version": "2.0.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "six",
-        "version": "1.16.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1001,164 +721,14 @@
         "scope": "generic"
       },
       {
-        "name": "fire",
-        "version": "0.6.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "six",
-        "version": "1.16.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "termcolor",
-        "version": "2.4.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "fonttools",
-        "version": "4.50.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "imgaug",
         "version": "0.4.0",
         "extras": "",
         "scope": "generic"
       },
       {
-        "name": "imageio",
-        "version": "2.34.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "matplotlib",
-        "version": "3.8.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "contourpy",
-        "version": "1.2.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "cycler",
-        "version": "0.12.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "fonttools",
-        "version": "4.50.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "kiwisolver",
-        "version": "1.4.5",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "packaging",
-        "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pyparsing",
-        "version": "3.1.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "python-dateutil",
-        "version": "2.9.0.post0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "six",
-        "version": "1.16.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "scikit-image",
-        "version": "0.22.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "imageio",
-        "version": "2.34.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "lazy_loader",
-        "version": "0.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "networkx",
-        "version": "3.2.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "packaging",
-        "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "scipy",
-        "version": "1.12.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "tifffile",
-        "version": "2024.2.12",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "scipy",
-        "version": "1.12.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "shapely",
-        "version": "2.0.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "six",
-        "version": "1.16.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "lmdb",
         "version": "1.4.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "lxml",
-        "version": "5.1.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1181,50 +751,8 @@
         "scope": "generic"
       },
       {
-        "name": "fire",
-        "version": "0.6.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "six",
-        "version": "1.16.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "termcolor",
-        "version": "2.4.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "fonttools",
-        "version": "4.50.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "PyMuPDF",
-        "version": "1.20.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "python-docx",
-        "version": "1.1.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "lxml",
-        "version": "5.1.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "typing_extensions",
-        "version": "4.8.0",
+        "version": "1.24.9",
         "extras": "",
         "scope": "generic"
       },
@@ -1249,42 +777,6 @@
       {
         "name": "cssutils",
         "version": "2.9.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "lxml",
-        "version": "5.1.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "requests",
-        "version": "2.31.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "certifi",
-        "version": "2024.2.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "charset-normalizer",
-        "version": "3.3.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "idna",
-        "version": "3.6",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "urllib3",
-        "version": "2.2.1",
         "extras": "",
         "scope": "generic"
       },
@@ -1349,12 +841,6 @@
         "scope": "generic"
       },
       {
-        "name": "packaging",
-        "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "scipy",
         "version": "1.12.0",
         "extras": "",
@@ -1403,60 +889,6 @@
         "scope": "generic"
       },
       {
-        "name": "six",
-        "version": "1.16.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "Flask",
-        "version": "3.0.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "blinker",
-        "version": "1.7.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "click",
-        "version": "8.1.7",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "itsdangerous",
-        "version": "2.1.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "Jinja2",
-        "version": "3.1.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "MarkupSafe",
-        "version": "2.1.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "Werkzeug",
-        "version": "3.0.1",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "MarkupSafe",
-        "version": "2.1.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "flask-babel",
         "version": "4.0.0",
         "extras": "",
@@ -1493,30 +925,12 @@
         "scope": "generic"
       },
       {
-        "name": "Jinja2",
-        "version": "3.1.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "MarkupSafe",
-        "version": "2.1.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "Werkzeug",
         "version": "3.0.1",
         "extras": "",
         "scope": "generic"
       },
       {
-        "name": "MarkupSafe",
-        "version": "2.1.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "Jinja2",
         "version": "3.1.2",
         "extras": "",
@@ -1525,12 +939,6 @@
       {
         "name": "MarkupSafe",
         "version": "2.1.3",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "pytz",
-        "version": "2024.1",
         "extras": "",
         "scope": "generic"
       },
@@ -1565,26 +973,8 @@
         "scope": "generic"
       },
       {
-        "name": "packaging",
-        "version": "24.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "pyparsing",
         "version": "3.1.2",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "python-dateutil",
-        "version": "2.9.0.post0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "six",
-        "version": "1.16.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1603,12 +993,6 @@
       {
         "name": "python-dateutil",
         "version": "2.9.0.post0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "six",
-        "version": "1.16.0",
         "extras": "",
         "scope": "generic"
       },
@@ -1761,12 +1145,6 @@
       {
         "name": "hyperframe",
         "version": "5.2.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
-        "name": "sniffio",
-        "version": "1.3.1",
         "extras": "",
         "scope": "generic"
       },
