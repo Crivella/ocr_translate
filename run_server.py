@@ -24,7 +24,13 @@ import os
 import subprocess
 from pathlib import Path
 
-import django
+try:
+    import django
+except ImportError:
+    print('Django not found: installing django-ocr_translate...')
+    subprocess.run(['pip', 'install', 'django-ocr_translate==0.6.0'], check=True)
+    import django
+
 from django.core.management import call_command
 
 import ocr_translate.plugin_manager as pm

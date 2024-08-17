@@ -31,6 +31,7 @@ classifiers = [
 keywords = ["django", "ocr", "translation"]
 requires-python = ">=3.10"
 dependencies = [
+    "wheel",
     "numpy~=1.24.1",
     "Django~=5.1",
     "Pillow~=10.4.0",
@@ -68,8 +69,7 @@ pre-commit = [
     "pylint-django~=2.5.3",
 ]
 release = [
-    "flit",
-    "pyinstaller"
+    "flit"
 ]
 
 [tool.flit.module]
@@ -78,8 +78,8 @@ name = "ocr_translate"
 [tool.flit.sdist]
 exclude = [
     ".gitignore", ".github", ".pre-commit-config.yaml",
-    "icon.ico", "run_server.py", "build.sh",
-    "Dockerfile-cpu", "Dockerfile-gpu", "nginx.default", "start-server.sh",
+    "icon.ico", "run_server.py", "run.bat",
+    "Dockerfile", "nginx.default", "start-server.sh",
     "mysite/", "mysite/*", "manage.py", "tests/", "tests/*",
     "docs/", "docs/*"
     ]
