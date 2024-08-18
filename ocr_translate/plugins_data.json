@@ -3,7 +3,7 @@
     "name": "ocr_translate_hugging_face",
     "package": "ocr_translate-hugging_face",
     "description": "Plugins to enable usage of HuggingFace Models in ocr_translate",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "homepage": "https://github.com/Crivella/ocr_translate-hugging_face",
     "dependencies": [
       {
@@ -294,7 +294,7 @@
     "name": "ocr_translate_easyocr",
     "package": "ocr_translate-easyocr",
     "description": "Plugins to enable usage of EasyOCR in ocr_translate",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "homepage": "https://github.com/Crivella/ocr_translate-easyocr",
     "dependencies": [
       {
@@ -538,7 +538,7 @@
     "package": "ocr_translate-tesseract",
     "description": "Plugins to enable usage of Tesseract in ocr_translate",
     "warning": "This plugin requires Tesseract to be installed on your system (or already included in Docker release).",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "homepage": "https://github.com/Crivella/ocr_translate-tesseract",
     "dependencies": [
       {
@@ -595,7 +595,7 @@
     "name": "ocr_translate_paddle",
     "package": "ocr_translate-paddle",
     "description": "This is a plugin for the ocr_translate. Plugins to enable usage of PaddleOCR in ocr_translate",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "homepage": "https://github.com/Crivella/ocr_translate-paddle",
     "dependencies": [
       {
@@ -1066,7 +1066,7 @@
   },
   {
     "name": "ocr_translate_ollama",
-    "package": "ocr_translate-ollama",
+    "package": "ocr_translate_ollama",
     "description": "This is a plugin for ocr_translate that implements translations through ollama using Large Language Models (LLM)s.",
     "warning": "This plugin requires a running ollama server that is not include with the project. See the homepage for more details",
     "version": "0.1.4",
