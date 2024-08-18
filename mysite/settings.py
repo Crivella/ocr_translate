@@ -63,7 +63,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO').upper(),
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'medium',

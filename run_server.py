@@ -62,12 +62,6 @@ def dir_check():
         base = Path(os.environ['OCT_BASE_DIR'])
     base.mkdir(exist_ok=True, parents=True)
 
-    if not 'TRANSFORMERS_CACHE' in os.environ:
-        print(f'TRANSFORMERS_CACHE not set:  Using "{base}" as transformers cache')
-        os.environ['TRANSFORMERS_CACHE'] = base.as_posix()
-    else:
-        Path(os.environ['TRANSFORMERS_CACHE']).mkdir(exist_ok=True, parents=True)
-
     if not 'DATABASE_NAME' in os.environ:
         print(f'DATABASE_NAME not set:  Using "{base / "db.sqlite3"}" as database')
         os.environ['DATABASE_NAME'] = (base / 'db.sqlite3').as_posix()
