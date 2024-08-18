@@ -6,8 +6,8 @@ List of changes between versions
 
 ### IMPORTANT
 
-From version 0.6 onward python or at the very least pip need to be installed on the system.
-I have not found a way to incorporate pip in the frozen executable, or make it autoinstall in a way that would not require creating another installer/executable, so I decided to have people install python themselves.
+From version 0.6 onward `python` and `pip` need to be installed on the system.
+See more below in the [Changes](#changes) section.
 
 - Windows: https://www.python.org/downloads/windows/
   - **NOTE**: make sure to check the box that says "Add Python to PATH" so that pip can be found by the server script without having to make any assumptions
@@ -16,9 +16,18 @@ I have not found a way to incorporate pip in the frozen executable, or make it a
 
 ### Changes
 
+- Removed the frozen executable from the release files in favor of an Automatic1111 stile batch script
+  - Even with the plugin manager, installing some dependencies that requiers actual compilation by invoking pip from within the frozen executable was giving non trivial to fix trouble.\
+    For this reason I decided to axe the PyInstaller frozen EXE all together and go with a batch script that will:
+    - Allow user to more easily set environment variables (a few of the most relevant ones are already set as empty in the script)
+    - Create or reuse a virtual environment in a folder `venv` in the same directory as the script
+    - Install the minimum required packages in it to run the server
+    - Run the server
 - Added a plugin manager to install/uninstall plugins on demand
   - The installed plugins can be controlled via the new version of the firefox extension or directly using the
     `manage_plugins/` endpoint.
+  - The plugins will by be installed under `$OCT_BASE_DIR/plugins` which by default will be under your user profile (e.g. `C:\Users\username\.ocr_translate` on windows). \
+    If you have trouble with space under `C:\` consider setting the `OCT_BASE_DIR` environment variable to a different location.
   - The plugin data is stored in a JSON file inside the project [plugins_data.json](blob/v0.6.0/ocr_translate/plugins_data.json)
   - Version/Scope/Extras of a package to be installed can be controlled via environment variables
 
@@ -31,7 +40,7 @@ I have not found a way to incorporate pip in the frozen executable, or make it a
 - Streamlined docker image to also use the `run_server.py` script for initialization.
 - Added plugin for `ollama` (https://github.com/ollama/ollama) for translation using LLMs
   - Note ollama needs to be run/installed separately and the plugin will just make calls to the server.
-  - Use the `OLLAMA_ENDPOINT` environment variable to specify the endpoint of the ollama server
+  - Use the `OCT_OLLAMA_ENDPOINT` environment variable to specify the endpoint of the ollama server
     ([see the plugin page for more details](https://github.com/Crivella/ocr_translate-ollama))
 - Added plugin for `PaddleOCR` (https://github.com/PaddlePaddle/PaddleOCR) (Box and OCR) (seems to work very well
   with chinese).

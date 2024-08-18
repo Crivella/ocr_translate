@@ -28,7 +28,7 @@ Plugin or associated packages environment variables
       - Default
       - Usage
     * - :code:`TRANSFORMERS_CACHE`
-      - :code:`$OCT_BASE_DIR`
+      - :code:`$OCT_BASE_DIR/models/huggingface`
       - Directory where `Hugging Face <https://huggingface.co/>`_ models are being
 
         stored (either downloaded manually or downloaded
@@ -58,8 +58,8 @@ Plugin or associated packages environment variables
     * - Variable
       - Default
       - Usage
-    * - :code:`EASYOCR_MODULE_PATH`
-      - :code:`$HOME/.EasyOCR`
+    * - :code:`EASYOCR_PREFIX`
+      - :code:`$OCT_BASE_DIR/models/easyocr`
       - Directory where EasyOCR downloads its models
 
 ocr_translate-tesseract
@@ -80,7 +80,7 @@ Plugin or associated packages environment variables
       - Default
       - Usage
     * - :code:`TESSERACT_PREFIX`
-      - :code:`$TRANSFORMERS_CACHE/tesseract`
+      - :code:`$OCT_BASE_DIR/models/tesseract`
       - Directory where tesseract downloads its models
 
     * - :code:`TESSERACT_ALLOW_DOWNLOAD`
@@ -104,7 +104,7 @@ Plugin for using PaddleOCR models for BBox detection and OCR.
       - Default
       - Usage
     * - :code:`PADDLEOCR_PREFIX`
-      - :code:`$TRANSFORMERS_CACHE/tesseract`
+      - :code:`$OCT_BASE_DIR/models/paddleocr`
       - Directory where PaddleOCR downloads its models
 
 ocr_translate-ollama

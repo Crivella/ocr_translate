@@ -11,6 +11,7 @@ This is a list of common possible ways:
 
 - Windows Powershell: :code:`$env:VARIABLE_NAME = "value"` (code must be run in the same shell)
 - Windows Command Prompt: :code:`set VARIABLE_NAME=value` (code must be run in the same shell)
+  !! Do not use quotes as they will be included in the value
 - Windows Settings: :code:`Control Panel > System > Advanced System Settings > Environment Variables`
 - Linux BASH: :code:`export VARIABLE_NAME=value` (code must be run in the same shell)
 - VSCode: :code:`launch.json > env > VARIABLE_NAME`
@@ -149,7 +150,7 @@ This includes the windows release file and docker image that are based on the sa
 Plugin specific variables
 -------------------------
 
-See :doc:`plugins doc <plugins>`
+See :doc:`plugins doc <../plugins/index>`
 
 Server variable List
 --------------------

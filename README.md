@@ -25,7 +25,8 @@ See the [documentation](https://crivella.github.io/ocr_translate/user/index.html
 **TLDR:** If you are on windows you will need to:
 
 - install [python](https://www.python.org/downloads/windows/) with the check on `Add python.exe to PATH`
-- download>unzip>run the [release file](/../../releases/latest/download/run_server.zip)
+- download>unzip the [release file](/../../releases/latest/download/run_server.zip)
+- run the `run-user.bat` file
 
 ### Why do I need to install python
 
@@ -39,6 +40,9 @@ Unfortunately I have not found a way to include pip reliably in the frozen insta
 The alternative would've been to add a 2nd installer just to get `pip` before running the server, but why reinvent the wheel.
 
 The check on `Add python.exe to PATH` is needed so that `pip` can be run without having to make any assumption on the installation path.
+
+Also since I am now asking people to install python, I decided to go all the way and use an approach similar to what [automatic1111's webui.bat](https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/webui.bat) does for stable diffusion.\
+This batch script will create/reuse a virtual environment in a folder `venv` in the same directory as the script and install the required packages in it.
 
 ## Contributing
 
