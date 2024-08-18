@@ -29,6 +29,7 @@ try:
 except ImportError:
     print('Django not found: installing django-ocr_translate...')
     subprocess.run(['pip', 'install', 'django-ocr_translate==0.6.0'], check=True)
+    # subprocess.run(['pip', 'install', '../..'], check=True)
     import django
 
 from django.core.management import call_command
