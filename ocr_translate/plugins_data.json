@@ -554,12 +554,6 @@
         "scope": "generic"
       },
       {
-        "name": "pillow",
-        "version": "10.4.0",
-        "extras": "",
-        "scope": "generic"
-      },
-      {
         "name": "requests",
         "version": "2.31.0",
         "extras": "",
