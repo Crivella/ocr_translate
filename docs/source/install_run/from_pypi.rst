@@ -8,7 +8,7 @@ These are the minimal instruction for creating a project and start running the s
 - (Optional) create and use a `virtual environment <https://docs.python.org/3/library/venv.html>`_
 
   - :code:`python -m venv venv`
-  - :code:`venv\Scripts\activate`
+  - :code:`venv\\Scripts\\activate` (or the equivalent for your OS)
 
 - :code:`pip install django-ocr_translate`
 - :code:`django-admin startproject mysite`

@@ -11,7 +11,7 @@ This assumes you have access to a terminal and have `python` and `git` installed
 - (Optional) create and use a `virtual environment <https://docs.python.org/3/library/venv.html>`_
 
   - :code:`python -m venv venv`
-  - :code:`venv\Scripts\activate`
+  - :code:`venv\\Scripts\\activate` (or the equivalent for your OS)
 
 - Install the project and its dependencies
   - :code:`pip install .`
