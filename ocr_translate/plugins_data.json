@@ -294,7 +294,7 @@
     "name": "ocr_translate_easyocr",
     "package": "ocr_translate-easyocr",
     "description": "Plugins to enable usage of EasyOCR in ocr_translate",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "homepage": "https://github.com/Crivella/ocr_translate-easyocr",
     "dependencies": [
       {
