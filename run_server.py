@@ -73,7 +73,10 @@ def cuda_check():
     """Check if cuda is available and set the environment variable DEVICE."""
     print('Checking for CUDA availability...')
     if 'DEVICE' in os.environ:
-        print(f'Device set via environment variable to: `{os.environ["DEVICE"]}`')
+        device = os.environ['DEVICE']
+        print(f'Device set via environment variable to: `{device}`')
+        if device == 'cpu':
+            return
     else:
         try:
             subprocess.run(['nvidia-smi'], check=True, capture_output=True)
