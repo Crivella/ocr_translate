@@ -18,9 +18,10 @@
 ###################################################################################
 """Manages the globaly selected source and destination language."""
 from .. import models as m
+from .signals import refresh_model_cache_signal
 
-LANG_SRC = None
-LANG_DST = None
+LANG_SRC: m.Language = None
+LANG_DST: m.Language = None
 
 def get_lang_src():
     """Return the source language."""
@@ -34,8 +35,10 @@ def load_lang_src(iso1):
     """Load the source language."""
     global LANG_SRC
     LANG_SRC = m.Language.objects.get(iso1=iso1)
+    refresh_model_cache_signal.send(sender=None)
 
 def load_lang_dst(iso1):
     """Load the destination language."""
     global LANG_DST
     LANG_DST = m.Language.objects.get(iso1=iso1)
+    refresh_model_cache_signal.send(sender=None)

@@ -23,8 +23,9 @@ import pytest
 from PIL import Image
 
 import ocr_translate
+from ocr_translate import entrypoint_manager as epm
 from ocr_translate import models as m
-from ocr_translate import ocr_tsl, views
+from ocr_translate import ocr_tsl, queues, views
 from ocr_translate.ocr_tsl import box, lang, ocr, tsl
 
 strings = [
@@ -75,7 +76,8 @@ def box_model_dict():
         'entrypoint': 'test_entrypoint.box',
         'iso1_map': {
             'ja': 'jap',
-        }
+        },
+        'active': True
     }
 
 @pytest.fixture()
@@ -84,7 +86,8 @@ def ocr_model_dict():
     return {
         'name': 'test_ocr_model/id',
         'language_format': 'iso1',
-        'entrypoint': 'test_entrypoint.ocr'
+        'entrypoint': 'test_entrypoint.ocr',
+        'active': True
     }
 
 @pytest.fixture()
@@ -94,7 +97,8 @@ def ocr_model_dict_single():
         'name': 'test_ocr_model/id',
         'language_format': 'iso1',
         'entrypoint': 'test_entrypoint.ocr',
-        'ocr_mode': 'single'
+        'ocr_mode': 'single',
+        'active': True
     }
 
 @pytest.fixture()
@@ -103,7 +107,8 @@ def tsl_model_dict():
     return {
         'name': 'test_tsl_model/id',
         'language_format': 'iso1',
-        'entrypoint': 'test_entrypoint.tsl'
+        'entrypoint': 'test_entrypoint.tsl',
+        'active': True
     }
 
 @pytest.fixture()
@@ -207,6 +212,12 @@ def tsl_run(language, text, tsl_model, option_dict):
         )
 
 @pytest.fixture()
+def mock_loaded_lang_only(monkeypatch, language):
+    """Mock languages being loaded"""
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(lang, 'LANG_DST', language)
+
+@pytest.fixture()
 def mock_loaded(monkeypatch, language, box_model, ocr_model, tsl_model):
     """Mock models being loaded"""
     monkeypatch.setattr(box, 'BOX_MODEL_ID', box_model.name)
@@ -292,3 +303,16 @@ def mock_load_ept():
         return [res]
 
     return function
+
+@pytest.fixture()
+def queues_no_reuse(monkeypatch):
+    """Set queues to not reuse connections."""
+    monkeypatch.setattr(queues.main_queue.msg_queue, 'reuse_msg', False)
+    monkeypatch.setattr(queues.box_queue.msg_queue, 'reuse_msg', False)
+    monkeypatch.setattr(queues.ocr_queue.msg_queue, 'reuse_msg', False)
+    monkeypatch.setattr(queues.tsl_queue.msg_queue, 'reuse_msg', False)
+
+@pytest.fixture()
+def epm_no_ept(monkeypatch):
+    """Set entrypoints to be empty."""
+    monkeypatch.setattr(epm, 'get_group_entrypoints', lambda *args, **kwargs: set())

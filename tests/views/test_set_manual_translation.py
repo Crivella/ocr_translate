@@ -23,7 +23,6 @@ import pytest
 from django.urls import reverse
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import lang
 
 pytestmark = pytest.mark.django_db
 
@@ -44,14 +43,14 @@ def test_set_manual_translation_nonpost(client):
     response = client.get(url)
     assert response.status_code == 405
 
-def test_set_manual_translation_post_noheader(client):
+def test_set_manual_translation_post_noheader(client, mock_loaded):
     """Test set_manual_translation with POST request without content/type."""
     url = reverse('ocr_translate:set_manual_translation')
     response = client.post(url)
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_missing_text(client, post_kwargs):
+def test_set_manual_translation_post_missing_text(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with missing text."""
     del post_kwargs['data']['text']
 
@@ -60,7 +59,7 @@ def test_set_manual_translation_post_missing_text(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_missing_translation(client, post_kwargs):
+def test_set_manual_translation_post_missing_translation(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with missing translation."""
     del post_kwargs['data']['translation']
 
@@ -69,7 +68,7 @@ def test_set_manual_translation_post_missing_translation(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_invalid_data(client, post_kwargs):
+def test_set_manual_translation_post_invalid_data(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with non recognized field."""
     post_kwargs['data']['invalid_field'] = 'test'
 
@@ -78,7 +77,7 @@ def test_set_manual_translation_post_invalid_data(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_set_manual_translation_post_text_not_found(client, post_kwargs):
+def test_set_manual_translation_post_text_not_found(client, mock_loaded, post_kwargs):
     """Test set_manual_translation with POST request with text not found."""
     post_kwargs['data']['text'] = 'invalid'
 
@@ -87,13 +86,23 @@ def test_set_manual_translation_post_text_not_found(client, post_kwargs):
 
     assert response.status_code == 404
 
-def test_set_manual_translation_post_success_new(
-        monkeypatch, client, post_kwargs, text,
+def test_set_manual_translation_langnotloaded(
+        client, post_kwargs, text,
         manual_model, option_dict, language
         ):
+    """Test set_manual_translation with POST but no language loaded."""
+    url = reverse('ocr_translate:set_manual_translation')
+    post_kwargs['data']['text'] = text.text
+
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 512
+
+def test_set_manual_translation_post_success_new(
+        client, post_kwargs, text,
+        manual_model, option_dict, language, mock_loaded_lang_only
+        ):
     """Test set_manual_translation with POST request with success."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
     post_kwargs['data']['text'] = text.text
 
     assert m.TranslationRun.objects.count() == 0
@@ -106,12 +115,10 @@ def test_set_manual_translation_post_success_new(
 
 @pytest.mark.django_db(transaction=True)
 def test_set_manual_translation_post_success_exist(
-        monkeypatch, client, post_kwargs, text,
-        manual_model, option_dict, language
+        client, post_kwargs, text,
+        manual_model, option_dict, language, mock_loaded_lang_only
         ):
     """Test set_manual_translation with POST request with success."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
 
     res = m.Text.objects.create(text='TEST')
     assert m.TranslationRun.objects.count() == 0

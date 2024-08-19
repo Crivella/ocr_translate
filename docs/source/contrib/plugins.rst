@@ -15,6 +15,13 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
     class Meta:
         proxy = True
 
+Model definitions
+-----------------
+
+The entrypoint for model definitions tell the server which models should be available to the user after the plugin is installed.
+
+They consist of an entrypoint of type `ocr_translate.XXX_data` where `XXX` is one of `box`, `ocr` and `tsl`.
+
 - :code:`ocr_translate.box_data`: Point this entrypoint to a dictionary with the info required to create a new :code:`OCRBoxModel`
 
 .. code-block:: python
@@ -65,7 +72,12 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
         'entrypoint': 'hugginface.seq2seq'
     }
 
-- :code:`ocr_translate.box_models`: Point this entrypoint to a class that subclasses :code:`OCRBoxModel`. Should redefine atleast the following methods
+Model usage
+-----------
+
+The entrypoint for model usage point the server to a proxy class of either `OCRBoxModel`, `OCRModel` or `TSLModel` that will be used to interact with the model.
+
+- :code:`ocr_translate.box_models`: Point this entrypoint to a class that subclasses :code:`OCRBoxModel`. Should redefine at least the following methods
 
 .. code-block:: python
 
@@ -192,3 +204,55 @@ IMPORTANT: The model class are supposed to be proxy classes  and should ence con
             # IMPORTANT: the main codebase treats this function as batchable:
             # The input `tokens` can be a list of strings or a list of list of strings. The output should match the input being a string or list of strings.
             # (This is used to leverage the capability of pytorch to batch inputs and outputs for faster performances, or it can also used to write a plugin for an online service by using a single request for multiple inputs using some separator that the service will leave unaltered.)
+
+ALLOWED_OPTIONS
+---------------
+
+Since version `v0.5.1` the server can communicate a list of allowed options to the extension.
+The latter will use them to generate a form for the user to overwrite the default options.
+
+In order to use this feature, the plugin needs to define a class variable `ALLOWED_OPTIONS` that is a dictionary with the following structure:
+
+.. code-block:: python
+
+    class YourFancyModel(m.TSLModel):
+        """OCRtranslate plugin to allow usage of google_translate as translator."""
+
+        ALLOWED_OPTIONS = {
+            **m.TSLModel.ALLOWED_OPTIONS,
+            'OPTION_NAME1': {
+                'type': float,
+                'default': 2.0,
+                'description': 'This is a float option that will generate an input field of type number.',
+            },
+            'OPTION_NAME2': {
+                'type': bool,
+                'default': False,
+                'description': 'This is a boolean option that will generate an input field of type checkbox.',
+            },
+        }
+
+Note the line of code
+
+.. code-block:: python
+
+    **m.TSLModel.ALLOWED_OPTIONS,
+
+This is used to inherit the default options from the parent class.
+
+The allowed types are:
+
+- `int`
+- `float`
+- `str`
+- `bool`
+
+that will be converted respectively by the extension in the form into an input field of type:
+
+- `number`
+- `number`
+- `text`
+- `checkbox`
+
+The `descrciption` field is used to generate a tooltip that will be shown to the user when hovering
+a question mark icon next to the input field.

@@ -15,31 +15,31 @@ The server is designed to be used together with this browser `extension`_, actin
 .. grid:: 2
       :gutter: 3
 
-      .. grid-item-card:: Installation
+      .. grid-item-card:: Installation/Running
 
-            Guide on installing ocr_translate with various methods.
+            Guide on installing and running ocr_translate with various methods.
 
             +++
 
-            .. button-ref:: install/index
+            .. button-ref:: install_run/index
                :expand:
                :color: secondary
                :click-parent:
 
-               Installation Guides
+               Installation/Running Guides
 
-      .. grid-item-card:: Running
+      .. grid-item-card:: Plugins
 
-            Guide on running ocr_translate from one of the installations.
+            Detail on the plugins available for ocr_translate.
 
             +++
 
-            .. button-ref:: running/index
+            .. button-ref:: plugins/index
                :expand:
                :color: secondary
                :click-parent:
 
-               Running Guides
+               Plugins
 
       .. grid-item-card:: User Guides
 
@@ -74,7 +74,7 @@ The server is designed to be used together with this browser `extension`_, actin
 .. toctree::
    :hidden:
 
-   install/index
-   running/index
+   install_run/index
    user/index
+   plugins/index
    contrib/index

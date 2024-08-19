@@ -59,9 +59,12 @@ class Message():
         try:
             self._response = self.handler(*self.msg.get('args', ()), **self.msg.get('kwargs', {}))
         except Exception as exc:
+            logger.error(f'Error resolving message {self.msg}', exc_info=True)
             self._response = exc
-            raise
-        logger.debug(f'MSG Resolved {self.msg} -> {self._response}')
+            # Avoid killing the worker thread
+            # raise
+        else:
+            logger.debug(f'MSG Resolved {self.msg} -> {self._response}')
 
         # Make sure to dereference the message to avoid keeping raw images in memory
         # since i am gonna keep the message in the queue after it is resolved (for msg caching)

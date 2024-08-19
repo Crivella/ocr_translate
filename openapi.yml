@@ -72,6 +72,8 @@ paths:
           description: Method not allowed.
         '404':  # status code
           description: Text not found.
+        '512': # status code
+          description: Attempting translation with no languages selected.
         '200':    # status code
           description: A JSON dictionary with the translation.
           content:
@@ -173,6 +175,10 @@ paths:
                     type: string
         '405':   # status code
           description: Method not allowed.
+        '512': # status code
+          description: Attempting translation with no languages selected.
+        '513': # status code
+          description: Attempting translation with no models selected.
         '200':    # status code
           description: A JSON dictionary with the translated text.
           content:
@@ -220,6 +226,10 @@ paths:
           description: Method not allowed.
         '406': # status code
           description: Can't lazyload with only md5.
+        '512': # status code
+          description: Attempting translation with no languages selected.
+        '513': # status code
+          description: Attempting translation with no models selected.
         '200':    # status code
           description: A JSON dictionary with the translated text.
           content:
@@ -243,6 +253,31 @@ paths:
                             description: "l, b, r, t"
                           minItems: 4
                           maxItems: 4
+  /run_tsl_get_xunityautotrans:
+    get:
+      summary: Run translation from a GET endpoint.
+      description: Runt translation of text with API compatible with https://github.com/bbepis/XUnity.AutoTranslator.
+      parameters:
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: true
+          description: The text to translate.
+      responses:
+        '404':  # status code
+          description: Text not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: Success.
   /set_manual_translation:
     post:
       summary: Set manual translation.
@@ -279,6 +314,8 @@ paths:
                     type: string
         '405':   # status code
           description: Method not allowed.
+        '512': # status code
+          description: Attempting translation with no languages selected.
         '200':    # status code
           description: Success.
   /get_active_options:
@@ -313,3 +350,66 @@ paths:
                               value: ""
                       ocr_model: *options_model_dict
                       tsl_model: *options_model_dict
+  /get_plugin_data:
+    get:
+      summary: Get the data of the available plugins
+      description: Get a dict of available plugins and their data, including if they are installed or not.
+      responses:
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: A JSON dictionary with the plugin data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plugins:
+                    type: object
+                    properties:
+                      <plugin_name>:
+                        type: object
+                        required:
+                          - name
+                          - installed
+                          - version
+                        properties:
+                          name:
+                            type: string
+                          version:
+                            type: string
+                          description:
+                            type: string
+                          homepage:
+                            type: string
+                          warning:
+                            type: string
+                          installed:
+                            type: boolean
+  /manage_plugins:
+    post:
+      summary: Manage plugins.
+      description: Manage the plugins, by installing/uninstalling them.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                <plugin_name>:
+                  type: boolean
+      responses:
+        '400':  # status code
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '405':   # status code
+          description: Method not allowed.
+        '200':    # status code
+          description: Success.

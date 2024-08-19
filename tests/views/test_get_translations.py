@@ -38,25 +38,25 @@ def test_get_translations_nonget(client):
     assert response.status_code == 405
 
 @pytest.mark.parametrize('remove_key', ['text'])
-def test_get_translations_get_missing_required(client, get_kwargs, remove_key):
+def test_get_translations_get_missing_required(client, mock_loaded, get_kwargs, remove_key):
     """Test get_translations with GET request missing required attribute."""
     del get_kwargs[remove_key]
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
 
     assert response.status_code == 400
-    assert response.json() == {'error': 'no text'}
+    assert response.json() == {'error': 'text not found in GET data'}
 
-def test_get_translations_get_invalid_data(client, get_kwargs):
+def test_get_translations_get_invalid_data(client, mock_loaded, get_kwargs):
     """Test get_translations with GET request with non recognized attribute."""
     get_kwargs['invalid_field'] = 'test'
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
 
     assert response.status_code == 400
-    assert 'invalid data: ' in response.json()['error']
+    assert 'Unexpected keys: invalid_field' in response.json()['error']
 
-def test_get_translations_get_notfound(client, get_kwargs):
+def test_get_translations_get_notfound(client, mock_loaded, get_kwargs):
     """Test get_translations with GET request with non recognized attribute."""
     get_kwargs['text'] = 'other text'
     url = reverse('ocr_translate:get_trans')
@@ -64,7 +64,7 @@ def test_get_translations_get_notfound(client, get_kwargs):
 
     assert response.status_code == 404
 
-def test_get_translations_get_valid_notslrun(client, get_kwargs):
+def test_get_translations_get_valid_notslrun(client, get_kwargs, mock_loaded_lang_only):
     """Test get_translations with GET request with valid data. No tsl run."""
     url = reverse('ocr_translate:get_trans')
     response = client.get(url, get_kwargs)
@@ -76,6 +76,13 @@ def test_get_translations_get_valid_notslrun(client, get_kwargs):
     translations = content['translations']
     assert isinstance(translations, list)
     assert len(translations) == 0
+
+def test_get_translations_get_langnotloaded(client, get_kwargs, tsl_run):
+    """Test get_translations with GET request with no language loaded."""
+    url = reverse('ocr_translate:get_trans')
+    response = client.get(url, get_kwargs)
+
+    assert response.status_code == 512
 
 def test_get_translations_get_valid_tslrun(client, get_kwargs, mock_loaded, tsl_run):
     """Test get_translations with GET request with valid data. Tsl run."""

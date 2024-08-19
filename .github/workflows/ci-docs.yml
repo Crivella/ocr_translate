@@ -46,7 +46,7 @@ jobs:
       id: linkcheck
       run: |
         make -C docs html linkcheck 2>&1 | tee check.log
-        echo "broken=$(grep '(line\s*[0-9]*)\(\s\)broken\(\s\)' check.log)" >> $GITHUB_OUTPUT
+        echo "broken=$(grep -E 'line\s+[0-9]+)\s+broken\s+' check.log)" >> $GITHUB_OUTPUT
       env:
         SPHINXOPTS: -nW --keep-going
 

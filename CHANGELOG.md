@@ -2,6 +2,58 @@
 
 List of changes between versions
 
+## 0.6.0
+
+### IMPORTANT
+
+From version 0.6 onward `python` and `pip` need to be installed on the system.
+See more below in the [Changes](#changes) section.
+
+- Windows: https://www.python.org/downloads/windows/
+  - **NOTE**: make sure to check the box that says "Add Python to PATH" so that pip can be found by the server script without having to make any assumptions
+
+- Linux: Use your package manager (e.g. `sudo apt install python3 python3-pip`)
+
+### Changes
+
+- Removed the frozen executable from the release files in favor of an Automatic1111 stile batch script
+  - Even with the plugin manager, installing some dependencies that requiers actual compilation by invoking pip from within the frozen executable was giving non trivial to fix trouble.\
+    For this reason I decided to axe the PyInstaller frozen EXE all together and go with a batch script that will:
+    - Allow user to more easily set environment variables (a few of the most relevant ones are already set as empty in the script)
+    - Create or reuse a virtual environment in a folder `venv` in the same directory as the script
+    - Install the minimum required packages in it to run the server
+    - Run the server
+- Added a plugin manager to install/uninstall plugins on demand
+  - The installed plugins can be controlled via the new version of the firefox extension or directly using the
+    `manage_plugins/` endpoint.
+  - The plugins will by be installed under `$OCT_BASE_DIR/plugins` which by default will be under your user profile (e.g. `C:\Users\username\.ocr_translate` on windows). \
+    If you have trouble with space under `C:\` consider setting the `OCT_BASE_DIR` environment variable to a different location.
+  - The plugin data is stored in a JSON file inside the project [plugins_data.json](blob/v0.6.0/ocr_translate/plugins_data.json)
+  - Version/Scope/Extras of a package to be installed can be controlled via environment variables
+
+        OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]
+
+    (eg to change torch to version A.B.C you would set `OCT_PKG_TORCH_VERSION="A.B.C"`).
+    If the package name contains a `-` it should be replaced with `_min_` in the package name
+  - Removed env variable `AUTOCREATE_VALIDATED_MODELS` and relative server initialization.
+    Now models are created/activated or deactivated via the plugin manager, when the respective plugin is installed/uninstalled.
+- Streamlined docker image to also use the `run_server.py` script for initialization.
+- Added plugin for `ollama` (https://github.com/ollama/ollama) for translation using LLMs
+  - Note ollama needs to be run/installed separately and the plugin will just make calls to the server.
+  - Use the `OCT_OLLAMA_ENDPOINT` environment variable to specify the endpoint of the ollama server
+    ([see the plugin page for more details](https://github.com/Crivella/ocr_translate-ollama))
+- Added plugin for `PaddleOCR` (https://github.com/PaddlePaddle/PaddleOCR) (Box and OCR) (seems to work very well
+  with chinese).
+  - The default versions installed by the `plugin_manager` of `paddlepaddle` (`2.5.2` on linux and `2.6.1` on windows)
+    might not work for every system as there can be underlying failures in the C++ code that the plugin uses.
+    The version installed can be controlled using the environment variable `OCT_PKG_PADDLEPADDLE_VERSION`.
+- Added possibility to specify extra `DJANGO_ALLOWED_HOSTS` and a server bind address via environment variables. (Fixes #30)
+- Manual model is not implemented as an entrypoint anymore (will work also without recreating models).
+- OCR models can now use a `tokenizer` and a `processor` from different models.
+- Added caching of the languages and allowed box/ocr/tsl models for faster response times on the handshake endpoint.
+- New endpoint `run_tsl_xua` made to work with `XUnity.AutoTranslator` (https://github.com/bbepis/XUnity.AutoTranslator)
+- Improved API return codes
+
 ## 0.5.1
 
 - Implemented endpoint for manual translation

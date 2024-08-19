@@ -5,17 +5,14 @@ RUN virtualenv /venv/
 
 RUN mkdir -p /src
 
-COPY requirements-torch-cpu.txt /src/
-COPY requirements.txt /src/
-COPY plugins.txt /src/
-# This might have to be removed when pushing the image?
-COPY .pip_cache-cpu /pip_cache
+COPY ocr_translate /src/ocr_translate
+COPY pyproject.toml /src/
+COPY README.md /src/
 
 RUN mkdir -p /pip_cache
-RUN /venv/bin/pip install -r /src/requirements-torch-cpu.txt --cache-dir /pip_cache
-RUN /venv/bin/pip install -r /src/requirements.txt --cache-dir /pip_cache
-RUN /venv/bin/pip install -r /src/plugins.txt --cache-dir /pip_cache
-RUN /venv/bin/pip install gunicorn --cache-dir /pip_cache
+RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache /src/
+# RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache django-ocr_translate
+RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install gunicorn --cache-dir /pip_cache
 
 FROM python:3.10.12-slim-bookworm
 
@@ -37,8 +34,8 @@ RUN mkdir -p /opt/app/static
 RUN mkdir -p /opt/app/media
 
 COPY start-server.sh /opt/app/
-COPY manage.py /opt/app/
-COPY ocr_translate /opt/app/ocr_translate/
+COPY run_server.py /opt/app/
+# COPY ocr_translate /opt/app/ocr_translate/
 COPY mysite /opt/app/mysite/
 COPY staticfiles /opt/app/static/
 COPY media /opt/app/media/
@@ -56,11 +53,8 @@ ENV \
     GID=1000 \
     LOAD_ON_START="true" \
     AUTOCREATE_LANGUAGES="true" \
-    AUTOCREATE_VALIDATED_MODELS="true" \
-    TRANSFORMERS_CACHE="/models" \
-    TRANSFORMERS_OFFLINE="0" \
     DEVICE="cpu" \
-    NUM_WEB_WORKERS="1" \
+    OCT_GUNICORN_NUM_WORKERS="1" \
     NUM_MAIN_WORKERS="4" \
     NUM_BOX_WORKERS="1" \
     NUM_OCR_WORKERS="1" \
@@ -70,14 +64,13 @@ ENV \
     DJANGO_SUPERUSER_USERNAME="" \
     DJANGO_SUPERUSER_PASSWORD="" \
     DATABASE_ENGINE="django.db.backends.sqlite3" \
-    DATABASE_NAME="/data/db.sqlite3" \
+    DATABASE_NAME="/db_data/db.sqlite3" \
     DATABASE_HOST="" \
     DATABASE_PORT="" \
     DATABASE_USER="" \
     DATABASE_PASSWORD=""
 
-VOLUME [ "/models" ]
-VOLUME [ "/data" ]
+VOLUME plugin_data, models, db_data
 
 WORKDIR /opt/app
 

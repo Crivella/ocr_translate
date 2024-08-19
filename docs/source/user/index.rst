@@ -7,14 +7,6 @@ User's guide
 
    envs
 
-Known validated plugins
------------------------
-
-- `ocr_translate-hugging_face <https://github.com/Crivella/ocr_translate-hugging_face>`_: Enables usage of HuggingFace VED models for OCR and seq2seq models for translations.
-- `ocr_translate-easyocr <https://github.com/Crivella/ocr_translate-easyocr>`_: Enables usage of easyocr for Box detection.
-- `ocr_translate-tesseract <https://github.com/Crivella/ocr_translate-tesseract>`_: Enables usage of tesseract for OCR (tesseract need to be installed on the pc).
-- `ocr_translate-google <https://github.com/Crivella/ocr_translate-google>`_: Enables usage of GoogleTranslate for translations.
-
 Supported/tested databases
 --------------------------
 

@@ -67,7 +67,23 @@ def test_run_tsl_post_invalid_data(client, post_kwargs):
 
     assert response.status_code == 400
 
-def test_run_tsl_post_valid(client, monkeypatch, post_kwargs, tsl_model):
+def test_run_tsl_langnotloaded(client, post_kwargs):
+    """Test run_tsl with POST request with language not loaded."""
+    post_kwargs['data']['text'] = 'test'
+    url = reverse('ocr_translate:run_tsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 512
+
+def test_run_tsl_modelnotloaded(client, post_kwargs, mock_loaded_lang_only):
+    """Test run_tsl with POST request with model not loaded."""
+    post_kwargs['data']['text'] = 'test'
+    url = reverse('ocr_translate:run_tsl')
+    response = client.post(url, **post_kwargs)
+
+    assert response.status_code == 513
+
+def test_run_tsl_post_valid(client, monkeypatch, post_kwargs, mock_loaded, tsl_model):
     """Test run_tsl with POST request with valid data."""
     def mock_tsl_run(text, *args, **kwargs):
         """Mock translate."""

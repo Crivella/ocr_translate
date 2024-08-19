@@ -61,6 +61,10 @@ class Language(models.Model):
             return self.iso1 == other
         return False
 
+    # https://stackoverflow.com/questions/61212514/django-model-objects-became-not-hashable-after-upgrading-to-django-2-2
+    def __hash__(self):
+        return hash(self.iso1)
+
 class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""
     class Meta:
@@ -78,7 +82,9 @@ class BaseModel(models.Model):
     entrypoint = models.CharField(max_length=128, null=True)
 
     language_format = models.CharField(max_length=32, null=True)
-    iso1_map = models.JSONField(null=True)
+    iso1_map = models.JSONField(null=True, blank=True)
+
+    active = models.BooleanField(default=False)
 
     default_options = models.ForeignKey(
         OptionDict, on_delete=models.SET_NULL, related_name='used_by_%(class)s', null=True
@@ -140,6 +146,8 @@ class OCRModel(BaseModel):
 
     languages = models.ManyToManyField(Language, related_name='ocr_models')
     ocr_mode = models.CharField(max_length=32, choices=OCR_MODE_CHOICES, default=MERGED)
+    tokenizer_name = models.CharField(max_length=128, null=True)
+    processor_name = models.CharField(max_length=128, null=True)
 
     def prepare_image(
             self,
@@ -301,7 +309,7 @@ class OCRModel(BaseModel):
                 raise ValueError('Image is required for OCR')
             logger.info('Running OCR')
 
-            id_ = (bbox_obj.id, self.id, lang.id)
+            id_ = (bbox_obj.id, self.id, lang.id, options_obj.id)
             mlang = self.get_lang_code(lang)
             opt_dct = options_obj.options
             text = queues.ocr_queue.put(
@@ -416,7 +424,7 @@ class OCRBoxModel(BaseModel):
                 raise ValueError('Image is required for BBox OCR')
             logger.info('Running BBox OCR')
             opt_dct = options_obj.options
-            id_ = (img_obj.id, self.id, lang.id)
+            id_ = (img_obj.id, self.id, lang.id, options_obj.id)
             bboxes = queues.box_queue.put(
                 id_=id_,
                 handler=self._box_detection,
@@ -643,7 +651,7 @@ class TSLModel(BaseModel):
         Returns:
             m.TranslationRun: The TranslationRun object from the database.
         """
-        manual_model = TSLModel.objects.filter(name='manual').first()
+        manual_model, _ = TSLModel.objects.get_or_create(name='manual')
         params = {
             'model': manual_model,
             'lang_src': src,
@@ -703,8 +711,8 @@ class TSLModel(BaseModel):
                 raise ValueError('Value not found for lazy TSL run')
             logger.info('Running TSL')
             # Generate a unique id for a message
-            id_ = (text_obj.id, self.id, options_obj.id, src.id, dst.id)
-            batch_id = (self.id, options_obj.id, src.id, dst.id)
+            id_ = (text_obj.id, self.id, options_obj.id, src.id, dst.id, options_obj.id)
+            batch_id = (self.id, options_obj.id, src.id, dst.id, options_obj.id)
             lang_dct = getattr(src.default_options, 'options', {})
             model_dct =  getattr(self.default_options, 'options', {})
             opt_dct = {**lang_dct, **model_dct, **options_obj.options}

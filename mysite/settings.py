@@ -31,6 +31,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from ocr_translate.plugin_manager import PluginManager
+
+PMNG = PluginManager()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -59,7 +63,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO').upper(),
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'medium',
@@ -68,7 +72,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'propagate': True,
+            'propagate': False,
         },
         'django.request': {
             'handlers': ['console'],
@@ -79,16 +83,19 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
+            'propagate': False,
         },
         'ocr.worker': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
+            'propagate': False,
         },
         'plugin': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
+            'propagate': False,
         },
     },
 }
@@ -104,10 +111,10 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-7h+*^e963rdi*2
 DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS += os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(';')
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -116,11 +123,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ocr_translate',
-    # 'ocr_translate_tesseract',
-    # 'ocr_translate_easyocr',
-    # 'ocr_translate_google',
-    # 'ocr_translate_hugging_face',
-]
+] + PMNG.plugins
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -172,6 +175,11 @@ OPTIONS = {}
 if DATABASE_ENGINE == 'django.db.backends.mysql':
     # https://stackoverflow.com/questions/2108824/mysql-incorrect-string-value-error-when-save-unicode-string-in-django
     OPTIONS['charset'] = 'utf8mb4'
+
+if DATABASE_ENGINE == 'django.db.backends.sqlite3':
+    ptr = {}
+    DATABASE['OPTIONS'] = ptr
+    ptr['init_command'] = 'PRAGMA journal_mode=wal;'
 
 DATABASES = {
     'default': DATABASE
