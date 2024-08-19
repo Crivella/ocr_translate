@@ -65,12 +65,13 @@ def ep_manager():
         added = after[grp] - before[grp]
         # Using after to ensure that when using same plugin folder with new db, the models are created
         for ept in after[grp]:
+            if ept in added:
+                logger.info(f'New entrypoint {ept.name} found')
             data = ept.load()
             model_id = data['name']
             try:
                 model = cls.objects.get(name=model_id)
             except cls.DoesNotExist:
-                logger.info(f'New entrypoint {ept.name} found')
                 model = create_func(data.copy())
             model.active = True
             model.save()
@@ -81,8 +82,9 @@ def ep_manager():
             model_id = data['name']
             try:
                 model = cls.objects.get(name=model_id)
-                if loaded_model is model:
-                    unload_func()
+                if loaded_model is not None:
+                    if loaded_model.name == model.name:
+                        unload_func()
                 model.active = False
                 model.save()
                 logger.info(f'Entrypoint {ept.name} removed')
