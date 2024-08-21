@@ -24,7 +24,7 @@ See the [documentation](https://crivella.github.io/ocr_translate/user/index.html
 
 **TLDR:** If you are on windows you will need to:
 
-- install [python](https://www.python.org/downloads/windows/) with the check on `Add python.exe to PATH`
+- install [python](https://www.python.org/downloads/windows/) (3.10 or 3.11) with the check on `Add python.exe to PATH`
 - download>unzip the [release file](/../../releases/latest/download/run_server.zip)
 - run the `run-user.bat` file
 

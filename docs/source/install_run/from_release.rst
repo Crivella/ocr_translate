@@ -3,18 +3,20 @@ From Release File (Windows)
 
 Tested for Windows11
 
-- Make sure to have `python <https://www.python.org/downloads/windows/>`_ (3.11 suggested) installed on your system and available in the PATH (There is a checkbox that you need to tick as soon as you run the installer to automatically do this).
+- Make sure to have `python <https://www.python.org/downloads/windows/>`_ (3.10 or 3.11) (Currently 3.12 is incompatible due to the version of numpy used) installed on your system and available in the PATH (There is a checkbox that you need to tick as soon as you run the installer to automatically do this).
+  (If you have multiple version of python installed (including 3.12), make sure the first to appear in the PATH is a compatible version or
+  set the `PYTHON` environment variable to the path of the compatible version in `run-user.bat`)
 
 .. image:: windows_python_install.png
     :alt: Python installer
     :align: center
 
 - From :github:`github <releases/>` download the :github:`release file <releases/latest/download/run_server.zip>`
-- Extract the content of the zip file in a folder of your choice
-- Run the :code:`run_server.exe` file
 - Unzip the release file downloaded in the previous step.
 - From inside the folder, run the :code:`run-user.bat` file that will
 
+  - Allow the user to tweak the environment variables to your liking (text editing the file), by setting/changing value to the already present ones,
+    or adding new ones.
   - Create or reuse a virtual environment in the folder :code:`venv` in the same directory as the script
   - Install the required packages to run the server
   - Start the server
