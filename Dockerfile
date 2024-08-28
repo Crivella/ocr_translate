@@ -70,7 +70,9 @@ ENV \
     DATABASE_USER="" \
     DATABASE_PASSWORD=""
 
-VOLUME plugin_data, models, db_data
+VOLUME plugin_data
+VOLUME models
+VOLUME db_data
 
 WORKDIR /opt/app
 
