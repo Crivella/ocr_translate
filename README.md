@@ -61,6 +61,24 @@ See the documentation for a [list of available plugins](https://crivella.github.
 ### Notes
 
 - When switching the server between CPU/CUDA mode for the first time, run the installation of the plugins again to make sure the scope-specific dependencies are installed.
+- Different plugins will make different types of models available:
+  - `BOX Model`: EasyOcr, PaddleOCR
+  - `OCR Model`: PaddleOCR, Tesseract, HuggingFace
+  - `Translation Model`: HuggingFace, GoogleTranslate, Ollama
+
+- Also some plugins might requires additional tools to be installed on the server and possibly some environment variable configured.
+  Refer to the [plugin documentation](https://crivella.github.io/ocr_translate/plugins/index.html) and the information the the tooltip shown by hovering the question mark next to the plugin name.
+
+### Troubleshooting
+
+- Related to https://github.com/Crivella/ocr_extension/issues/5 If a plugins fails to install, either via an error message you see in the server window or by not having the models available, try the following:
+  - Uninstall the plugin in question by deselecting it in the popup menu and clicking submit.
+  - Nuke the entire plugin installation by:
+    - Stopping the server
+    - Delete the `plugins` directory and the `plugins.json` file under `$OCT_BASE_DIR` (default to `$HOME/.ocr_translate` on Linux and `%userprofile%\.ocr_translate` on Windows)
+    - Restart the server
+
+If all else fails, please open an issue on the [backend server](https://github.com/Crivella/ocr_translate) possibly attaching the DEBUG log of the server (run the server by setting the environment variable `DJANGO_LOG_LEVEL=DEBUG` in your `run-user.[sh/bat]` script).
 
 ## Possible problems
 
