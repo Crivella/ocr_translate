@@ -7,6 +7,7 @@ List of changes between versions
 - Ensure changing an option for only a step of the pipeline will not cause the other steps to also be re-triggered
   (Unless there is some change in the incoming input from a changed step)
 - Added locks to API to avoid loading/using models while plugin_manager is working.
+- `plugin_manager` will try to reinstall failed packages 3 times with an interval before failing
 
 ## 0.6.0
 

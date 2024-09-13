@@ -29,6 +29,7 @@ import shutil
 import site
 import subprocess
 import sys
+import time
 from importlib import resources
 from pathlib import Path
 from threading import Lock
@@ -87,13 +88,14 @@ def install_overrides_decorator(func):
         for key in arg_names:
             over_name = f'OCT_PKG_{safe_name}_{key.upper()}'
             if over_name in os.environ:
+                logger.debug(f'Overriding {key} for {name} with {os.environ[over_name]}')
                 new_args[key] = os.environ[over_name]
 
         return func(cls, **new_args)
 
     return wrapped
 
-def _pip_install(package: str, prefix: str, extras: list[str] = None):
+def _pip_install(package: str, prefix: str, extras: list[str] = None, retries: int = 3):
     """Install a package with pip."""
     if extras is None:
         extras = []
@@ -105,13 +107,24 @@ def _pip_install(package: str, prefix: str, extras: list[str] = None):
         '--no-build-isolation',
         f'--prefix={prefix}',
         ] + extras
-    try:
-        res = subprocess.run(cmd, check=True, capture_output=True)
-    except subprocess.CalledProcessError as exc:
-        logger.error(f'Error installing {package}')
-        logger.error(exc.stdout.decode())
-        logger.error(exc.stderr.decode())
-        raise exc
+    attempts = 0
+    while True:
+        attempts += 1
+        try:
+            res = subprocess.run(cmd, check=True, capture_output=True)
+        except subprocess.CalledProcessError as exc:
+            if attempts <= retries:
+                logger.error(
+                    f'Error installing {package}, retrying {attempts}/{retries}. '
+                    'Waiting 5s before retrying...'
+                    )
+                time.sleep(5)
+                continue
+            logger.error(f'Error installing {package}')
+            logger.error(exc.stdout.decode())
+            logger.error(exc.stderr.decode())
+            raise exc
+        break
     logger.debug(res.stdout.decode())
 
 class PluginManager:  # pylint: disable=too-many-instance-attributes
@@ -205,6 +218,7 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
             pth.mkdir(exist_ok=True, parents=True)
             self.PLUGIN_SP[scope] = pth
             sys.path.insert(0, pth.as_posix())
+            logger.debug(f'Added {pth} to sys.path')
         sys.path_importer_cache.clear()
 
         site.USER_BASE = self.plugin_dir.as_posix()
