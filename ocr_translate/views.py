@@ -47,12 +47,14 @@ from .plugin_manager import PluginManager
 from .queues import main_queue as q
 from .request_decorators import (get_backend_langs, get_backend_models,
                                  get_data_deserializer, method_or_405,
-                                 post_data_deserializer)
+                                 post_data_deserializer, use_lock,
+                                 wait_for_lock)
 from .tries import load_trie_src
 
 logger = logging.getLogger('ocr.general')
 
 PMNG = PluginManager()
+
 
 @method_or_405(['GET'])
 def handshake(request: HttpRequest) -> JsonResponse:
@@ -103,6 +105,8 @@ def handshake(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 @method_or_405(['POST'])
 @post_data_deserializer(['box_model_id', 'ocr_model_id', 'tsl_model_id'], required=False)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def set_models(request: HttpRequest, box_model_id, ocr_model_id, tsl_model_id) -> JsonResponse:
     """Handle a POST request to load models.
     Expected data:
@@ -180,6 +184,8 @@ def set_lang(request: HttpRequest, lang_src, lang_dst) -> JsonResponse:
 @post_data_deserializer(['text'], required=True)
 @get_backend_langs(strict=True)
 @get_backend_models(strict=True)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> JsonResponse:
     """Handle a POST request to run translation.
     Expected data:
@@ -199,6 +205,8 @@ def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> Json
 @get_backend_langs(strict=True)
 @get_backend_models(strict=True)
 @get_data_deserializer(['text'], required=True)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def run_tsl_get_xunityautotrans(
     request: HttpRequest, tsl_model: m.TSLModel, text: str,
     lang_src: m.Language, lang_dst: m.Language, **kwargs
@@ -220,6 +228,8 @@ def run_tsl_get_xunityautotrans(
 @get_backend_langs(strict=True)
 @get_backend_models(strict=True)
 @post_data_deserializer(['contents', 'md5', 'force', 'options'], required=False)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def run_ocrtsl(  # pylint: disable=too-many-locals
     request: HttpRequest,
     lang_src: m.Language, lang_dst: m.Language,
@@ -423,6 +433,8 @@ def get_default_options_from_cascade(
 @method_or_405(['GET'])
 @get_backend_models(strict=False)
 @get_data_deserializer([], required=False)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def get_active_options(
     request: HttpRequest,
     box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel,
@@ -454,6 +466,8 @@ def get_active_options(
     return JsonResponse({'options': res})
 
 @method_or_405(['GET'])
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def get_plugin_data(request: HttpRequest) -> JsonResponse:
     """Handle a GET request to get plugins."""
     resp = {}
@@ -473,6 +487,8 @@ def get_plugin_data(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 @method_or_405(['POST'])
 @post_data_deserializer(['plugins'], required=True)
+@use_lock('plugin', blocking=True)
+@use_lock('block_plugin_changes', blocking=True)
 def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonResponse:
     """Handle a POST request to install a plugin."""
     logger.debug(f'Manage plugins: {plugins}')
