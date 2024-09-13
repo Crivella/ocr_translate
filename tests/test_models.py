@@ -513,7 +513,10 @@ def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model_single)
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 
-    res = full.ocr_tsl_pipeline_work(image_pillow, image.md5)
+    res = full.ocr_tsl_pipeline_work(
+        image_pillow, image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     # Check that `merge_single_result` is being called with the expected arguments
     assert mock_called.args[0] == language.iso1
@@ -521,7 +524,10 @@ def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
     assert mock_called.args[2] == [bbox_single]
     assert mock_called.args[3] == [bbox]
 
-    res_lazy = full.ocr_tsl_pipeline_lazy(image.md5)
+    res_lazy = full.ocr_tsl_pipeline_lazy(
+        image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     assert res == res_lazy
 
@@ -552,7 +558,10 @@ def test_ocr_tsl_work_plus_lazy(
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 
-    res = full.ocr_tsl_pipeline_work(image_pillow, image.md5)
+    res = full.ocr_tsl_pipeline_work(
+        image_pillow, image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     assert isinstance(res, list)
     assert len(res) == 1
@@ -561,14 +570,20 @@ def test_ocr_tsl_work_plus_lazy(
     assert res[0]['tsl'] == text.text + '_ocred' + '_translated'
     assert res[0]['box'] == bbox.lbrt
 
-    res_lazy = full.ocr_tsl_pipeline_lazy(image.md5)
+    res_lazy = full.ocr_tsl_pipeline_lazy(
+        image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     assert res == res_lazy
 
-def test_ocr_tsl_lazy():
+def test_ocr_tsl_lazy(option_dict: m.OptionDict):
     """Test performing an ocr_tsl_run lazy (no image)"""
     with pytest.raises(ValueError, match=r'^Image with md5 .* does not exist$'):
-        full.ocr_tsl_pipeline_lazy('')
+        full.ocr_tsl_pipeline_lazy(
+            '',
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )
 
 def test_ocr_tsl_lazy_image(
         monkeypatch, image: m.Image,
@@ -580,4 +595,7 @@ def test_ocr_tsl_lazy_image(
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 
     with pytest.raises(ValueError):
-        full.ocr_tsl_pipeline_lazy(image.md5)
+        full.ocr_tsl_pipeline_lazy(
+            image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )

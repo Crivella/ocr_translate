@@ -220,7 +220,7 @@ def run_tsl_get_xunityautotrans(
 @get_backend_langs(strict=True)
 @get_backend_models(strict=True)
 @post_data_deserializer(['contents', 'md5', 'force', 'options'], required=False)
-def run_ocrtsl(
+def run_ocrtsl(  # pylint: disable=too-many-locals
     request: HttpRequest,
     lang_src: m.Language, lang_dst: m.Language,
     box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel,
@@ -239,18 +239,25 @@ def run_ocrtsl(
     frc = force
     opt = options or {}
 
-    opt = {
-        **opt.get(box_model.name if box_model else None, {}),
-        **opt.get(ocr_model.name if ocr_model else None, {}),
-        **opt.get(tsl_model.name if tsl_model else None, {}),
-    }
+    opt_box = opt.get(box_model.name if box_model else None, {})
+    opt_ocr = opt.get(ocr_model.name if ocr_model else None, {})
+    opt_tsl = opt.get(tsl_model.name if tsl_model else None, {})
+
+    options_box, _ = m.OptionDict.objects.get_or_create(options=opt_box)
+    options_ocr, _ = m.OptionDict.objects.get_or_create(options=opt_ocr)
+    options_tsl, _ = m.OptionDict.objects.get_or_create(options=opt_tsl)
 
     if b64 is None:
         logger.info('No contents, trying to lazyload')
         if frc:
             return JsonResponse({'error': 'Cannot force ocr without contents'}, status=400)
         try:
-            res = ocr_tsl_pipeline_lazy(md5, options=opt)
+            res = ocr_tsl_pipeline_lazy(
+                md5,
+                options_box=options_box,
+                options_ocr=options_ocr,
+                options_tsl=options_tsl,
+                )
         except ValueError:
             logger.info('Failed to lazyload ocr')
             return JsonResponse({'error': 'Failed to lazyload ocr'}, status=406)
@@ -268,15 +275,24 @@ def run_ocrtsl(
         np.array(img)
 
         # Check if same request is already in queue. If yes attach listener to it
-        options, _ = m.OptionDict.objects.get_or_create(options=opt)
-
-        id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id, options.id)
+        id_ = (
+            md5,
+            lang_src.id, lang_dst.id,
+            box_model.id, ocr_model.id, tsl_model.id,
+            options_box.id, options_ocr.id, options_tsl.id,
+            )
 
         msg = q.put(
             id_ = id_,
             msg = {
                 'args': (img, md5),
-                'kwargs': {'force': frc, 'options': opt},
+                'kwargs': {
+                    'force': frc,
+                    # 'options': opt,
+                    'options_box': options_box,
+                    'options_ocr': options_ocr,
+                    'options_tsl': options_tsl,
+                    },
             },
             handler = ocr_tsl_pipeline_work,
         )

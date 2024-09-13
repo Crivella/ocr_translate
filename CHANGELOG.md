@@ -2,6 +2,11 @@
 
 List of changes between versions
 
+## 0.6.1
+
+- Ensure changing an option for only a step of the pipeline will not cause the other steps to also be retriggered
+  (Unless there is some change in the incoming input from a changed step)
+
 ## 0.6.0
 
 ### IMPORTANT
