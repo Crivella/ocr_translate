@@ -32,6 +32,22 @@ from .tries import get_trie_src
 
 logger = logging.getLogger('ocr.general')
 
+def get_or_create(model: Type[models.Model], strict: bool = False, **kwargs) -> models.Model:
+    """Get or create a model instance in a safe way.
+
+    Args:
+        model (Type[models.Model]): The model class to get or create.
+        strict (bool, optional): Whether to raise a caught exception if ocurred. Defaults to False.
+    """
+    try:
+        obj, _ = model.objects.get_or_create(**kwargs)
+    except model.MultipleObjectsReturned:
+        if strict:
+            raise
+        logger.warning(f'Multiple objects returned for {model}: {model.objects.filter(**kwargs).all()}')
+        obj = model.objects.filter(**kwargs).first()
+    return obj
+
 class OptionDict(models.Model):
     """Dictionary of options for OCR and translation"""
     options = models.JSONField(unique=True)
@@ -328,9 +344,8 @@ class OCRModel(BaseModel):
             text = text.response()
             if lang.iso1 in self._NO_SPACE_LANGUAGES:
                 text = text.replace(' ', '')
-            text_obj, _ = Text.objects.get_or_create(
-                text=text,
-                )
+
+            text_obj = get_or_create(Text, text=text)
             params[f'result_{self.ocr_mode}'] = text_obj
             ocr_run_obj = OCRRun.objects.create(**params)
         else:
@@ -734,9 +749,7 @@ class TSLModel(BaseModel):
             if not block:
                 yield new
             new = new.response()
-            text_obj, _ = Text.objects.get_or_create(
-                text = new,
-                )
+            text_obj = get_or_create(Text, text=new)
             params['result'] = text_obj
             tsl_run_obj = TranslationRun.objects.create(**params)
         else:
