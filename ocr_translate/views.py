@@ -22,6 +22,7 @@ import base64
 import hashlib
 import io
 import logging
+import traceback
 from typing import Union
 
 import numpy as np
@@ -311,7 +312,8 @@ def run_ocrtsl(  # pylint: disable=too-many-locals
 
         if isinstance(res, Exception):
             logger.error(f'Failed to run ocr: {res}')
-            return JsonResponse({'error': str(res)}, status=400)
+            logger.debug(traceback.print_exception(type(res), res, res.__traceback__))
+            return JsonResponse({'error': str(res)}, status=500)
 
 
     return JsonResponse({
