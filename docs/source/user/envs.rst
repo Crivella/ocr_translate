@@ -169,7 +169,14 @@ Variables used specifically by the DJANGO server.
       - Whether to run the server in debug (true) or production (false) mode
     * - :code:`DJANGO_LOG_LEVEL`
       - INFO
-      - python `logging` level for
+      - | python `logging` level. \
+        | See `logging_docs`_ for allowed values
+    * - :code:`DJANGO_ALLOWED_HOSTS`
+      - optional
+      - | Add list of semi-colon :code:`;` separated IPs to the :code:`ALLOWED_HOSTS` of the server. \
+        | Needed if you want to host the server on a different machine than the one querying it. \
+        | EXAMPLE: :code:`DJANGO_ALLOWED_HOSTS="192.168.1.1;172.108.104.3"` \
+        | SEE `Django Documentation <https://docs.djangoproject.com/en/2.2/ref/settings/#allowed-hosts>`_ for more info.
     * - :code:`DATABASE_NAME`
       - *db.sqlite3*
       - For `sqlite3` this is the path to the database file. For other backend it should be the name of the database
@@ -188,3 +195,5 @@ Variables used specifically by the DJANGO server.
     * - :code:`DATABASE_PASSWORD`
       - optional
       - Probably required if using another db back-end
+
+.. _logging_docs: https://docs.python.org/3/library/logging.html#logging-levels
