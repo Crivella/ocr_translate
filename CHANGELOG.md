@@ -8,6 +8,9 @@ List of changes between versions
   (Unless there is some change in the incoming input from a changed step)
 - Added locks to API to avoid loading/using models while plugin_manager is working.
 - `plugin_manager` will try to reinstall failed packages 3 times with an interval before failing
+- Added capability to load both MOST or LAST model used at server start (Fixes #42) \
+  `LOAD_ON_START` can now be set to either `most` or `last` to load the most used or the last used model at server start.
+  Setting it to `true` will default to `most` with a deprecation warning.
 
 ## 0.6.0
 
