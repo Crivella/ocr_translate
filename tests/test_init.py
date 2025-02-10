@@ -156,6 +156,60 @@ def test_init_most_used_more_content(mock_loaders, language_dict, image, option_
     assert ocr.OCR_MODEL_OBJ == ocr_model2
     assert tsl.TSL_MODEL_OBJ == tsl_model1
 
+def test_init_last_used_clean(mock_loaders):
+    """Test init_last_used with empty database."""
+    ocr_tsl.init_last_used()
+    assert box.BOX_MODEL_OBJ is None
+    assert ocr.OCR_MODEL_OBJ is None
+    assert tsl.TSL_MODEL_OBJ is None
+    assert lang.LANG_SRC is None
+    assert lang.LANG_DST is None
+
+def test_init_last_used_partial(mock_loaders, language, language2):
+    """Test init_last_used with content in the database."""
+    language.load_src()
+    language2.load_dst()
+    ocr_tsl.init_last_used()
+    assert box.BOX_MODEL_OBJ is None
+    assert ocr.OCR_MODEL_OBJ is None
+    assert tsl.TSL_MODEL_OBJ is None
+    assert lang.LANG_SRC == language
+    assert lang.LANG_DST == language2
+
+    language.load_dst()
+    language2.load_src()
+    ocr_tsl.init_last_used()
+    assert box.BOX_MODEL_OBJ is None
+    assert ocr.OCR_MODEL_OBJ is None
+    assert tsl.TSL_MODEL_OBJ is None
+    assert lang.LANG_SRC == language2
+    assert lang.LANG_DST == language
+
+def test_init_last_used_full(mock_loaders, monkeypatch, language, language2, ocr_model, box_model, tsl_model):
+    """Test init_last_used with content in the database."""
+    monkeypatch.setattr(ocr_model, 'load', lambda: None)
+    monkeypatch.setattr(box_model, 'load', lambda: None)
+    monkeypatch.setattr(tsl_model, 'load', lambda: None)
+
+    language.load_src()
+    language2.load_dst()
+    ocr_model.load()
+    box_model.load()
+    tsl_model.load()
+
+    assert box.BOX_MODEL_OBJ is None
+    assert ocr.OCR_MODEL_OBJ is None
+    assert tsl.TSL_MODEL_OBJ is None
+    assert lang.LANG_SRC is None
+    assert lang.LANG_DST is None
+
+    ocr_tsl.init_last_used()
+    assert box.BOX_MODEL_OBJ == box_model
+    assert ocr.OCR_MODEL_OBJ == ocr_model
+    assert tsl.TSL_MODEL_OBJ == tsl_model
+    assert lang.LANG_SRC == language
+    assert lang.LANG_DST == language2
+
 def test_auto_create_languages():
     """Test auto_create_languages."""
     ocr_tsl.auto_create_languages()
@@ -214,8 +268,8 @@ def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     assert m.OCRModel.objects.count() > 0
     assert m.TSLModel.objects.count() > 0
 
-def test_env_init_most_used(monkeypatch):
-    """Test that init_most_used is called when LOAD_ON_START is 'true'."""
+def test_env_load_on_start_true(monkeypatch):
+    """Test that the previous behavior of calling `init_most_used` when LOAD_ON_START is set to true is removed."""
     def mock_init_most_used():
         """Mock init_most_used."""
         mock_init_most_used.called = True
@@ -224,19 +278,48 @@ def test_env_init_most_used(monkeypatch):
     monkeypatch.setenv('LOAD_ON_START', 'true')
 
     importlib.reload(ocr_tsl)
-    assert mock_init_most_used.called
+    assert not hasattr(mock_init_most_used, 'called')
 
-def test_env_init_most_used_false(monkeypatch):
-    """Test that init_most_used is not called when LOAD_ON_START is not 'true'."""
+def test_env_init_most_used(monkeypatch):
+    """Test that init_most_used is called when LOAD_ON_START is 'most'."""
     def mock_init_most_used():
         """Mock init_most_used."""
         mock_init_most_used.called = True
 
     monkeypatch.setattr(ini, 'init_most_used', mock_init_most_used)
+    monkeypatch.setenv('LOAD_ON_START', 'most')
+
+    importlib.reload(ocr_tsl)
+    assert mock_init_most_used.called
+
+def test_env_init_most_used_false(monkeypatch):
+    """Test that init_most_used is not called when LOAD_ON_START is not 'false'."""
+    def mock_init_most_used():
+        """Mock init_most_used."""
+        mock_init_most_used.called = True
+    def mock_init_last_used():
+        """Mock init_last_used."""
+        mock_init_last_used.called = True
+
+    monkeypatch.setattr(ini, 'init_most_used', mock_init_most_used)
+    monkeypatch.setattr(ini, 'init_last_used', mock_init_last_used)
     monkeypatch.setenv('LOAD_ON_START', 'false')
 
     importlib.reload(ocr_tsl)
     assert not hasattr(mock_init_most_used, 'called')
+    assert not hasattr(mock_init_last_used, 'called')
+
+def test_env_init_last_used(monkeypatch):
+    """Test that init_last_used is called when LOAD_ON_START is 'last'."""
+    def mock_init_last_used():
+        """Mock init_last_used."""
+        mock_init_last_used.called = True
+
+    monkeypatch.setattr(ini, 'init_last_used', mock_init_last_used)
+    monkeypatch.setenv('LOAD_ON_START', 'last')
+
+    importlib.reload(ocr_tsl)
+    assert mock_init_last_used.called
 
 def test_env_auto_create_languges(monkeypatch):
     """Test that auto_create_languages is called when AUTOCREATE_LANGUAGES is 'true'."""

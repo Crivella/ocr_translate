@@ -64,7 +64,9 @@ Variables used by the application.
         and downloaded models will be stored here.
     * - :code:`LOAD_ON_START`
       - false
-      - Will automatically load the most used
+      - :code:`most`: Load the most used models and the respective languages
+
+        :code:`last`: Load the last used models and languages
 
         source/destination languages and most used models
 

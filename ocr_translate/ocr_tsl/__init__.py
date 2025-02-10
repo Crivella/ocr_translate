@@ -23,24 +23,42 @@ from typing import Callable
 
 from django.db.utils import OperationalError
 
-from .initializers import auto_create_languages, init_most_used
+from .initializers import auto_create_languages, init_last_used, init_most_used
 
 FAIL = False
 
-def run_on_env(env_name: str, func: Callable):
+def run_on_env(env_name: str, func_map: dict[str, Callable], value: str = 'true'):
     """Run a function if the environment variable is set."""
     global FAIL
-    if os.environ.get(env_name, 'false').lower() == 'true':
-        try:
-            func()
-            print(f'INFO: Ran `{func.__name__}` based on environment variable `{env_name}`')
-        except OperationalError as exc:
-            FAIL = True
-            print(f'WARNING: Ignoring environment variable `{env_name}` as the database is not ready/migrated.')
-            print(f'WARNING: {exc}')
+    if env_name in os.environ:
+        value = os.environ.get(env_name).lower()
+        if value in func_map:
+            try:
+                func = func_map[value]
+                func()
+                print(f'INFO: Ran `{func.__name__}` based on environment variable `{env_name}`')
+            except OperationalError as exc:
+                FAIL = True
+                print(f'WARNING: Ignoring environment variable `{env_name}` as the database is not ready/migrated.')
+                print(f'WARNING: {exc}')
+        else:
+            print('Unknown value for environment variable `{env_name}`: {value}')
 
-run_on_env('AUTOCREATE_LANGUAGES', auto_create_languages)
-run_on_env('LOAD_ON_START', init_most_used)
+run_on_env(
+    'AUTOCREATE_LANGUAGES',
+    {
+        'true': auto_create_languages,
+        'false': lambda: None
+    }
+)
+run_on_env(
+    'LOAD_ON_START',
+    {
+        'most': init_most_used,
+        'last': init_last_used,
+        'false': lambda: None
+    }
+)
 
 if FAIL:
     print('WARNING: Create/migrate the database by running `python manage.py migrate`')

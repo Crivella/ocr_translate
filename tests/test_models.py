@@ -88,6 +88,37 @@ def test_add_option_dict(option_dict: m.OptionDict):
     assert query.exists()
     assert str(query.first()) == str({})
 
+def test_goc_multiple_object_returned(box_model_dict: dict):
+    """Test that `get_or_create` the first created object is returned when multiple objects are found."""
+    assert m.OCRBoxModel.objects.count() == 0
+    obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
+    obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
+    assert m.OCRBoxModel.objects.count() == 2
+    assert obj1 is not obj2
+
+    res = m.get_or_create(m.OCRBoxModel, **box_model_dict)
+
+    assert res.id == obj1.id
+
+def test_goc_multiple_object_returned_strict(box_model_dict: dict):
+    """Test that `get_or_create` raises  when multiple objects are found with strict."""
+    assert m.OCRBoxModel.objects.count() == 0
+    obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
+    obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
+    assert m.OCRBoxModel.objects.count() == 2
+    assert obj1 is not obj2
+
+    with pytest.raises(m.OCRBoxModel.MultipleObjectsReturned):
+        m.get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
+
+def test_box_load(monkeypatch, box_model: m.OCRBoxModel):
+    """Test that loading a TSLModel creates a respective LoadEvent."""
+    monkeypatch.setattr(box_model, 'load', lambda: None)
+    assert m.LoadEvent.objects.count() == 0
+    box_model.load()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(box_model.load_events.all()) == 1
+
 def test_box_run(
         monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict
         ):
@@ -183,6 +214,14 @@ def test_box_run_04migration_replace(
     assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first() is None
     assert len(single) == 1
     assert len(merged) == 1
+
+def test_ocr_load(monkeypatch, ocr_model: m.OCRModel):
+    """Test that loading a TSLModel creates a respective LoadEvent."""
+    monkeypatch.setattr(ocr_model, 'load', lambda: None)
+    assert m.LoadEvent.objects.count() == 0
+    ocr_model.load()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(ocr_model.load_events.all()) == 1
 
 def test_ocr_run_nooption(
         monkeypatch, image_pillow: PILImage,
@@ -387,6 +426,14 @@ def test_tsl_pre_tokenize_restorespaces(monkeypatch):
     monkeypatch.setattr(tries, 'TRIE_SRC', trie)
     res = m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
     assert res == ['apple pie']
+
+def test_tsl_load(monkeypatch, tsl_model: m.TSLModel):
+    """Test that loading a TSLModel creates a respective LoadEvent."""
+    monkeypatch.setattr(tsl_model, 'load', lambda: None)
+    assert m.LoadEvent.objects.count() == 0
+    tsl_model.load()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(tsl_model.load_events.all()) == 1
 
 def test_tsl_run(
         monkeypatch, mock_called,

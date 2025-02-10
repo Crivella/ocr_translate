@@ -55,6 +55,37 @@ def init_most_used():
     if tsl and tsl.count > 0:
         load_tsl_model(tsl.name)
 
+def init_last_used():
+    """Initialize the server with the most used languages and models."""
+    logger.info('Initializing server with the last used languages and models')
+    src = m.Language.get_last_loaded_src()
+    dst = m.Language.get_last_loaded_dst()
+
+    box = m.OCRBoxModel.get_last_loaded()
+    ocr = m.OCRModel.get_last_loaded()
+    tsl = m.TSLModel.get_last_loaded()
+
+    if src:
+        load_lang_src(src.iso1)
+    else:
+        logger.warning('No last source language found')
+    if dst:
+        load_lang_dst(dst.iso1)
+    else:
+        logger.warning('No last destination language found')
+    if box:
+        load_box_model(box.name)
+    else:
+        logger.warning('No last box model found')
+    if ocr:
+        load_ocr_model(ocr.name)
+    else:
+        logger.warning('No last OCR model found')
+    if tsl:
+        load_tsl_model(tsl.name)
+    else:
+        logger.warning('No last TSL model found')
+
 def auto_create_languages():
     """Create Language objects from json file."""
     lang_file = resources.files('ocr_translate.ocr_tsl').joinpath('languages.json')

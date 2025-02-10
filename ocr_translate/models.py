@@ -41,9 +41,9 @@ def get_or_create(model: Type[models.Model], strict: bool = False, **kwargs) -> 
     """
     try:
         obj, _ = model.objects.get_or_create(**kwargs)
-    except model.MultipleObjectsReturned:
+    except model.MultipleObjectsReturned as exc:
         if strict:
-            raise
+            raise exc
         logger.warning(f'Multiple objects returned for {model}: {model.objects.filter(**kwargs).all()}')
         obj = model.objects.filter(**kwargs).first()
     return obj
@@ -67,6 +67,9 @@ class Language(models.Model):
         OptionDict, on_delete=models.CASCADE, related_name='lang_default_options', null=True
         )
 
+    load_events_src = models.ManyToManyField('LoadEvent', related_name='languages_src')
+    load_events_dst = models.ManyToManyField('LoadEvent', related_name='languages_dst')
+
     def __str__(self):
         return f'{self.name} ({self.iso1})'
 
@@ -80,6 +83,38 @@ class Language(models.Model):
     # https://stackoverflow.com/questions/61212514/django-model-objects-became-not-hashable-after-upgrading-to-django-2-2
     def __hash__(self):
         return hash(self.iso1)
+
+    def load_src(self) -> None:
+        """Load the language trie"""
+        self.load_events_src.create(description=f'Loading SRC Language {self.name}')
+
+    def load_dst(self) -> None:
+        """Load the language trie"""
+        self.load_events_dst.create(description=f'Loading DST Language {self.name}')
+
+    @classmethod
+    def get_last_loaded_src(cls) -> 'Language':
+        """Get the last loaded language"""
+        res = cls.objects.order_by('-load_events_src__date').first()
+        if res is None or len(res.load_events_src.all()) == 0:
+            logger.debug('No load events found for Language')
+            return None
+        return res
+
+    @classmethod
+    def get_last_loaded_dst(cls) -> 'Language':
+        """Get the last loaded language"""
+        res = cls.objects.order_by('-load_events_dst__date').first()
+        if res is None or len(res.load_events_dst.all()) == 0:
+            logger.debug('No load events found for Language')
+            return None
+        return res
+
+class LoadEvent(models.Model):
+    """Event log for the OCR and translation tasks"""
+    description = models.CharField(max_length=512)
+
+    date = models.DateTimeField(auto_now_add=True)
 
 class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""
@@ -106,6 +141,8 @@ class BaseModel(models.Model):
         OptionDict, on_delete=models.SET_NULL, related_name='used_by_%(class)s', null=True
         )
 
+    load_events = models.ManyToManyField(LoadEvent, related_name='%(class)s')
+
     def __str__(self):
         return str(self.name)
 
@@ -114,6 +151,25 @@ class BaseModel(models.Model):
             self.unload()
         except NotImplementedError:
             pass
+
+    def __getattribute__(self, name):
+        res = super().__getattribute__(name)
+        if name == 'load':
+            def wrapped():
+                _res = res()
+                self.load_events.create(description=f'Loading model {self.name}')
+                return _res
+            return wrapped
+        return res
+
+    @classmethod
+    def get_last_loaded(cls) -> 'BaseModel':
+        """Get the last loaded model"""
+        res = cls.objects.filter(active=True).order_by('-load_events__date').first()
+        if res is None or len(res.load_events.all()) == 0:
+            logger.debug(f'No load events found for {cls.__name__}')
+            return None
+        return res
 
     def get_lang_code(self, lang: 'Language') -> str:
         """Get the language code for a specific model"""
