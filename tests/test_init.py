@@ -278,7 +278,7 @@ def test_env_load_on_start_true(monkeypatch):
     monkeypatch.setenv('LOAD_ON_START', 'true')
 
     importlib.reload(ocr_tsl)
-    assert not hasattr(mock_init_most_used, 'called')
+    assert hasattr(mock_init_most_used, 'called')
 
 def test_env_init_most_used(monkeypatch):
     """Test that init_most_used is called when LOAD_ON_START is 'most'."""

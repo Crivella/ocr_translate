@@ -44,6 +44,12 @@ def run_on_env(env_name: str, func_map: dict[str, Callable], value: str = 'true'
         else:
             print('Unknown value for environment variable `{env_name}`: {value}')
 
+def deprecate_los_true():
+    """Deprecate the environment variable `LOAD_ON_START=true`."""
+    print('WARNING: The environment variable `LOAD_ON_START=true` is deprecated (defaults to `most`).')
+    print('WARNING: Use `LOAD_ON_START=most` or `LOAD_ON_START=last` instead.')
+    init_most_used()
+
 run_on_env(
     'AUTOCREATE_LANGUAGES',
     {
@@ -56,6 +62,7 @@ run_on_env(
     {
         'most': init_most_used,
         'last': init_last_used,
+        'true': deprecate_los_true,
         'false': lambda: None
     }
 )
