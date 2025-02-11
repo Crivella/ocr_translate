@@ -11,7 +11,7 @@ RUN virtualenv /venv/
 
 RUN mkdir -p /pip_cache
 # RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache /src/
-RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache django-ocr_translate[mysql,postgres]==0.6.0
+RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache django-ocr_translate[mysql,postgres]==0.6.1
 RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install gunicorn --cache-dir /pip_cache
 
 FROM python:3.10.12-slim-bookworm
