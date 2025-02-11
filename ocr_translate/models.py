@@ -95,7 +95,12 @@ class Language(models.Model):
     @classmethod
     def get_last_loaded_src(cls) -> 'Language':
         """Get the last loaded language"""
-        res = cls.objects.order_by('-load_events_src__date').first()
+        res = cls.objects
+        # This is not a problem with SQLite, but with postgres, the order is not guaranteed when no date is set
+        res = res.annotate(count=models.Count('load_events_src'))
+        res = res.filter(count__gt=0)
+        res = res.order_by('-load_events_src__date')
+        res = res.first()
         if res is None or len(res.load_events_src.all()) == 0:
             logger.debug('No load events found for Language')
             return None
@@ -104,7 +109,12 @@ class Language(models.Model):
     @classmethod
     def get_last_loaded_dst(cls) -> 'Language':
         """Get the last loaded language"""
-        res = cls.objects.order_by('-load_events_dst__date').first()
+        res = cls.objects
+        # This is not a problem with SQLite, but with postgres, the order is not guaranteed when no date is set
+        res = res.annotate(count=models.Count('load_events_dst'))
+        res = res.filter(count__gt=0)
+        res = res.order_by('-load_events_dst__date')
+        res = res.first()
         if res is None or len(res.load_events_dst.all()) == 0:
             logger.debug('No load events found for Language')
             return None
@@ -165,7 +175,13 @@ class BaseModel(models.Model):
     @classmethod
     def get_last_loaded(cls) -> 'BaseModel':
         """Get the last loaded model"""
-        res = cls.objects.filter(active=True).order_by('-load_events__date').first()
+        res = cls.objects
+        res = res.filter(active=True)
+        # This is not a problem with SQLite, but with postgres, the order is not guaranteed when no date is set
+        res = res.annotate(count=models.Count('load_events'))
+        res = res.filter(count__gt=0)
+        res = res.order_by('-load_events__date')
+        res = res.first()
         if res is None or len(res.load_events.all()) == 0:
             logger.debug(f'No load events found for {cls.__name__}')
             return None

@@ -111,6 +111,65 @@ def test_goc_multiple_object_returned_strict(box_model_dict: dict):
     with pytest.raises(m.OCRBoxModel.MultipleObjectsReturned):
         m.get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
 
+def test_lang_load_src(language: m.Language):
+    """Test that loading a Language creates a respective src LoadEvent."""
+    assert m.LoadEvent.objects.count() == 0
+    language.load_src()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(language.load_events_src.all()) == 1
+
+def test_lang_load_dst(language: m.Language):
+    """Test that loading a Language creates a respective dst LoadEvent."""
+    assert m.LoadEvent.objects.count() == 0
+    language.load_dst()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(language.load_events_dst.all()) == 1
+
+def test_lang_get_last_loaded_src(language: m.Language):
+    """Test that get_last_loaded_src returns the last loaded src language."""
+    cls = m.Language
+    assert cls.get_last_loaded_src() is None
+    language.load_src()
+    assert cls.get_last_loaded_src() == language
+    assert cls.get_last_loaded_dst() is None
+    language.load_dst()
+    assert cls.get_last_loaded_dst() == language
+
+def test_lang_get_last_loaded_src_order(language: m.Language, language2: m.Language):
+    """Test that get_last_loaded_src returns the last loaded src language."""
+    cls = m.Language
+    assert cls.get_last_loaded_src() is None
+    assert cls.get_last_loaded_dst() is None
+    assert m.LoadEvent.objects.count() == 0
+
+    # Load src for the first time
+    language2.load_src()
+    assert cls.get_last_loaded_src() == language2
+    assert cls.get_last_loaded_dst() is None
+    assert m.LoadEvent.objects.count() == 1
+
+    # Replace src with another language
+    language.load_src()
+    assert cls.get_last_loaded_src() == language
+    assert cls.get_last_loaded_dst() is None
+    assert m.LoadEvent.objects.count() == 2
+
+    # Load dst for the first time
+    language2.load_dst()
+    assert cls.get_last_loaded_src() == language
+    assert cls.get_last_loaded_dst() == language2
+    assert m.LoadEvent.objects.count() == 3
+
+def test_lang_get_last_loaded_dst(language: m.Language):
+    """Test that get_last_loaded_dst returns the last loaded dst language."""
+    cls = m.Language
+    assert cls.get_last_loaded_dst() is None
+    language.load_dst()
+    assert cls.get_last_loaded_dst() == language
+    assert cls.get_last_loaded_src() is None
+    language.load_src()
+    assert cls.get_last_loaded_src() == language
+
 def test_box_load(monkeypatch, box_model: m.OCRBoxModel):
     """Test that loading a TSLModel creates a respective LoadEvent."""
     monkeypatch.setattr(box_model, 'load', lambda: None)
@@ -434,6 +493,25 @@ def test_tsl_load(monkeypatch, tsl_model: m.TSLModel):
     tsl_model.load()
     assert m.LoadEvent.objects.count() == 1
     assert len(tsl_model.load_events.all()) == 1
+
+def test_tsl_get_last_loaded(monkeypatch, tsl_model_dict: dict):
+    """Test that get_last_loaded returns the last loaded TSLModel."""
+    cls = m.TSLModel
+    dct1 = tsl_model_dict.copy()
+    dct2 = tsl_model_dict.copy()
+    dct1['name'] = 'tsl1'
+    dct2['name'] = 'tsl2'
+    tsl1 = m.TSLModel.objects.create(**dct1)
+    tsl2 = m.TSLModel.objects.create(**dct2)
+    monkeypatch.setattr(tsl1, 'load', lambda: None)
+    monkeypatch.setattr(tsl2, 'load', lambda: None)
+    assert tsl1 is not tsl2
+
+    assert cls.get_last_loaded() is None
+    tsl2.load()
+    assert cls.get_last_loaded().id == tsl2.id
+    tsl1.load()
+    assert cls.get_last_loaded().id == tsl1.id
 
 def test_tsl_run(
         monkeypatch, mock_called,
