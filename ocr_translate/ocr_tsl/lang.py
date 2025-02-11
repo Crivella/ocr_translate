@@ -35,10 +35,12 @@ def load_lang_src(iso1):
     """Load the source language."""
     global LANG_SRC
     LANG_SRC = m.Language.objects.get(iso1=iso1)
+    LANG_SRC.load_src()
     refresh_model_cache_signal.send(sender=None)
 
 def load_lang_dst(iso1):
     """Load the destination language."""
     global LANG_DST
     LANG_DST = m.Language.objects.get(iso1=iso1)
+    LANG_DST.load_dst()
     refresh_model_cache_signal.send(sender=None)

@@ -2,6 +2,22 @@
 
 List of changes between versions
 
+## 0.6.1
+
+- Ensure changing an option for only a step of the pipeline will not cause the other steps to also be re-triggered
+  (Unless there is some change in the incoming input from a changed step)
+- Added locks to API to avoid loading/using models while plugin_manager is working.
+- `plugin_manager` will try to reinstall failed packages 3 times with an interval before failing
+- Added capability to load both MOST or LAST model used at server start (Fixes #42) \
+  `LOAD_ON_START` can now be set to either `most` or `last` to load the most used or the last used model at server start.
+  Setting it to `true` will default to `most` with a deprecation warning.
+- Added 2 environment variables to control server update behavior:
+  - `OCT_VERSION` = (`[current_number]/latest`) - The version to install/update to default to the version of the downloaded release.
+    If set to `latest` the server will attempt to update to the latest version.
+    Can be set to any number of version available on PyPI https://pypi.org/project/django-ocr_translate/#history
+  - `OCT_AUTOUPDATE` = (`[false]/true`) - If set to `true` the server will attempt to upgrade the version at every start
+    to the configured value of `OCT_VERSION` (default is release version).
+
 ## 0.6.0
 
 ### IMPORTANT

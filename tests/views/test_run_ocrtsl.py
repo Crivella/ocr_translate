@@ -191,7 +191,7 @@ def test_run_ocrtsl_post_message_raise(client, monkeypatch, queues_no_reuse, moc
     url = reverse('ocr_translate:run_ocrtsl')
     response = client.post(url, **post_kwargs)
 
-    assert response.status_code == 400
+    assert response.status_code == 500
     content = response.json()
 
     assert isinstance(content, dict)

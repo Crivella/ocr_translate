@@ -88,6 +88,96 @@ def test_add_option_dict(option_dict: m.OptionDict):
     assert query.exists()
     assert str(query.first()) == str({})
 
+def test_goc_multiple_object_returned(box_model_dict: dict):
+    """Test that `get_or_create` the first created object is returned when multiple objects are found."""
+    assert m.OCRBoxModel.objects.count() == 0
+    obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
+    obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
+    assert m.OCRBoxModel.objects.count() == 2
+    assert obj1 is not obj2
+
+    res = m.get_or_create(m.OCRBoxModel, **box_model_dict)
+
+    assert res.id == obj1.id
+
+def test_goc_multiple_object_returned_strict(box_model_dict: dict):
+    """Test that `get_or_create` raises  when multiple objects are found with strict."""
+    assert m.OCRBoxModel.objects.count() == 0
+    obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
+    obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
+    assert m.OCRBoxModel.objects.count() == 2
+    assert obj1 is not obj2
+
+    with pytest.raises(m.OCRBoxModel.MultipleObjectsReturned):
+        m.get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
+
+def test_lang_load_src(language: m.Language):
+    """Test that loading a Language creates a respective src LoadEvent."""
+    assert m.LoadEvent.objects.count() == 0
+    language.load_src()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(language.load_events_src.all()) == 1
+
+def test_lang_load_dst(language: m.Language):
+    """Test that loading a Language creates a respective dst LoadEvent."""
+    assert m.LoadEvent.objects.count() == 0
+    language.load_dst()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(language.load_events_dst.all()) == 1
+
+def test_lang_get_last_loaded_src(language: m.Language):
+    """Test that get_last_loaded_src returns the last loaded src language."""
+    cls = m.Language
+    assert cls.get_last_loaded_src() is None
+    language.load_src()
+    assert cls.get_last_loaded_src() == language
+    assert cls.get_last_loaded_dst() is None
+    language.load_dst()
+    assert cls.get_last_loaded_dst() == language
+
+def test_lang_get_last_loaded_src_order(language: m.Language, language2: m.Language):
+    """Test that get_last_loaded_src returns the last loaded src language."""
+    cls = m.Language
+    assert cls.get_last_loaded_src() is None
+    assert cls.get_last_loaded_dst() is None
+    assert m.LoadEvent.objects.count() == 0
+
+    # Load src for the first time
+    language2.load_src()
+    assert cls.get_last_loaded_src() == language2
+    assert cls.get_last_loaded_dst() is None
+    assert m.LoadEvent.objects.count() == 1
+
+    # Replace src with another language
+    language.load_src()
+    assert cls.get_last_loaded_src() == language
+    assert cls.get_last_loaded_dst() is None
+    assert m.LoadEvent.objects.count() == 2
+
+    # Load dst for the first time
+    language2.load_dst()
+    assert cls.get_last_loaded_src() == language
+    assert cls.get_last_loaded_dst() == language2
+    assert m.LoadEvent.objects.count() == 3
+
+def test_lang_get_last_loaded_dst(language: m.Language):
+    """Test that get_last_loaded_dst returns the last loaded dst language."""
+    cls = m.Language
+    assert cls.get_last_loaded_dst() is None
+    language.load_dst()
+    assert cls.get_last_loaded_dst() == language
+    assert cls.get_last_loaded_src() is None
+    language.load_src()
+    assert cls.get_last_loaded_src() == language
+
+def test_box_load(monkeypatch, box_model: m.OCRBoxModel):
+    """Test that loading a TSLModel creates a respective LoadEvent."""
+    monkeypatch.setattr(box_model, 'load', lambda: None)
+    assert m.LoadEvent.objects.count() == 0
+    box_model.load()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(box_model.load_events.all()) == 1
+
 def test_box_run(
         monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict
         ):
@@ -183,6 +273,14 @@ def test_box_run_04migration_replace(
     assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first() is None
     assert len(single) == 1
     assert len(merged) == 1
+
+def test_ocr_load(monkeypatch, ocr_model: m.OCRModel):
+    """Test that loading a TSLModel creates a respective LoadEvent."""
+    monkeypatch.setattr(ocr_model, 'load', lambda: None)
+    assert m.LoadEvent.objects.count() == 0
+    ocr_model.load()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(ocr_model.load_events.all()) == 1
 
 def test_ocr_run_nooption(
         monkeypatch, image_pillow: PILImage,
@@ -388,6 +486,33 @@ def test_tsl_pre_tokenize_restorespaces(monkeypatch):
     res = m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
     assert res == ['apple pie']
 
+def test_tsl_load(monkeypatch, tsl_model: m.TSLModel):
+    """Test that loading a TSLModel creates a respective LoadEvent."""
+    monkeypatch.setattr(tsl_model, 'load', lambda: None)
+    assert m.LoadEvent.objects.count() == 0
+    tsl_model.load()
+    assert m.LoadEvent.objects.count() == 1
+    assert len(tsl_model.load_events.all()) == 1
+
+def test_tsl_get_last_loaded(monkeypatch, tsl_model_dict: dict):
+    """Test that get_last_loaded returns the last loaded TSLModel."""
+    cls = m.TSLModel
+    dct1 = tsl_model_dict.copy()
+    dct2 = tsl_model_dict.copy()
+    dct1['name'] = 'tsl1'
+    dct2['name'] = 'tsl2'
+    tsl1 = m.TSLModel.objects.create(**dct1)
+    tsl2 = m.TSLModel.objects.create(**dct2)
+    monkeypatch.setattr(tsl1, 'load', lambda: None)
+    monkeypatch.setattr(tsl2, 'load', lambda: None)
+    assert tsl1 is not tsl2
+
+    assert cls.get_last_loaded() is None
+    tsl2.load()
+    assert cls.get_last_loaded().id == tsl2.id
+    tsl1.load()
+    assert cls.get_last_loaded().id == tsl1.id
+
 def test_tsl_run(
         monkeypatch, mock_called,
         text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict
@@ -513,7 +638,10 @@ def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model_single)
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 
-    res = full.ocr_tsl_pipeline_work(image_pillow, image.md5)
+    res = full.ocr_tsl_pipeline_work(
+        image_pillow, image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     # Check that `merge_single_result` is being called with the expected arguments
     assert mock_called.args[0] == language.iso1
@@ -521,7 +649,10 @@ def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
     assert mock_called.args[2] == [bbox_single]
     assert mock_called.args[3] == [bbox]
 
-    res_lazy = full.ocr_tsl_pipeline_lazy(image.md5)
+    res_lazy = full.ocr_tsl_pipeline_lazy(
+        image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     assert res == res_lazy
 
@@ -552,7 +683,10 @@ def test_ocr_tsl_work_plus_lazy(
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 
-    res = full.ocr_tsl_pipeline_work(image_pillow, image.md5)
+    res = full.ocr_tsl_pipeline_work(
+        image_pillow, image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     assert isinstance(res, list)
     assert len(res) == 1
@@ -561,14 +695,20 @@ def test_ocr_tsl_work_plus_lazy(
     assert res[0]['tsl'] == text.text + '_ocred' + '_translated'
     assert res[0]['box'] == bbox.lbrt
 
-    res_lazy = full.ocr_tsl_pipeline_lazy(image.md5)
+    res_lazy = full.ocr_tsl_pipeline_lazy(
+        image.md5,
+        options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+        )
 
     assert res == res_lazy
 
-def test_ocr_tsl_lazy():
+def test_ocr_tsl_lazy(option_dict: m.OptionDict):
     """Test performing an ocr_tsl_run lazy (no image)"""
     with pytest.raises(ValueError, match=r'^Image with md5 .* does not exist$'):
-        full.ocr_tsl_pipeline_lazy('')
+        full.ocr_tsl_pipeline_lazy(
+            '',
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )
 
 def test_ocr_tsl_lazy_image(
         monkeypatch, image: m.Image,
@@ -580,4 +720,7 @@ def test_ocr_tsl_lazy_image(
     monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 
     with pytest.raises(ValueError):
-        full.ocr_tsl_pipeline_lazy(image.md5)
+        full.ocr_tsl_pipeline_lazy(
+            image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )

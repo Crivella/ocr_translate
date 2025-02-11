@@ -22,6 +22,7 @@ import base64
 import hashlib
 import io
 import logging
+import traceback
 from typing import Union
 
 import numpy as np
@@ -47,12 +48,14 @@ from .plugin_manager import PluginManager
 from .queues import main_queue as q
 from .request_decorators import (get_backend_langs, get_backend_models,
                                  get_data_deserializer, method_or_405,
-                                 post_data_deserializer)
+                                 post_data_deserializer, use_lock,
+                                 wait_for_lock)
 from .tries import load_trie_src
 
 logger = logging.getLogger('ocr.general')
 
 PMNG = PluginManager()
+
 
 @method_or_405(['GET'])
 def handshake(request: HttpRequest) -> JsonResponse:
@@ -103,6 +106,8 @@ def handshake(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 @method_or_405(['POST'])
 @post_data_deserializer(['box_model_id', 'ocr_model_id', 'tsl_model_id'], required=False)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def set_models(request: HttpRequest, box_model_id, ocr_model_id, tsl_model_id) -> JsonResponse:
     """Handle a POST request to load models.
     Expected data:
@@ -180,6 +185,8 @@ def set_lang(request: HttpRequest, lang_src, lang_dst) -> JsonResponse:
 @post_data_deserializer(['text'], required=True)
 @get_backend_langs(strict=True)
 @get_backend_models(strict=True)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> JsonResponse:
     """Handle a POST request to run translation.
     Expected data:
@@ -199,6 +206,8 @@ def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> Json
 @get_backend_langs(strict=True)
 @get_backend_models(strict=True)
 @get_data_deserializer(['text'], required=True)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def run_tsl_get_xunityautotrans(
     request: HttpRequest, tsl_model: m.TSLModel, text: str,
     lang_src: m.Language, lang_dst: m.Language, **kwargs
@@ -220,7 +229,9 @@ def run_tsl_get_xunityautotrans(
 @get_backend_langs(strict=True)
 @get_backend_models(strict=True)
 @post_data_deserializer(['contents', 'md5', 'force', 'options'], required=False)
-def run_ocrtsl(
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
+def run_ocrtsl(  # pylint: disable=too-many-locals
     request: HttpRequest,
     lang_src: m.Language, lang_dst: m.Language,
     box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel,
@@ -239,18 +250,25 @@ def run_ocrtsl(
     frc = force
     opt = options or {}
 
-    opt = {
-        **opt.get(box_model.name if box_model else None, {}),
-        **opt.get(ocr_model.name if ocr_model else None, {}),
-        **opt.get(tsl_model.name if tsl_model else None, {}),
-    }
+    opt_box = opt.get(box_model.name if box_model else None, {})
+    opt_ocr = opt.get(ocr_model.name if ocr_model else None, {})
+    opt_tsl = opt.get(tsl_model.name if tsl_model else None, {})
+
+    options_box, _ = m.OptionDict.objects.get_or_create(options=opt_box)
+    options_ocr, _ = m.OptionDict.objects.get_or_create(options=opt_ocr)
+    options_tsl, _ = m.OptionDict.objects.get_or_create(options=opt_tsl)
 
     if b64 is None:
         logger.info('No contents, trying to lazyload')
         if frc:
             return JsonResponse({'error': 'Cannot force ocr without contents'}, status=400)
         try:
-            res = ocr_tsl_pipeline_lazy(md5, options=opt)
+            res = ocr_tsl_pipeline_lazy(
+                md5,
+                options_box=options_box,
+                options_ocr=options_ocr,
+                options_tsl=options_tsl,
+                )
         except ValueError:
             logger.info('Failed to lazyload ocr')
             return JsonResponse({'error': 'Failed to lazyload ocr'}, status=406)
@@ -268,15 +286,24 @@ def run_ocrtsl(
         np.array(img)
 
         # Check if same request is already in queue. If yes attach listener to it
-        options, _ = m.OptionDict.objects.get_or_create(options=opt)
-
-        id_ = (md5, lang_src.id, lang_dst.id, box_model.id, ocr_model.id, tsl_model.id, options.id)
+        id_ = (
+            md5,
+            lang_src.id, lang_dst.id,
+            box_model.id, ocr_model.id, tsl_model.id,
+            options_box.id, options_ocr.id, options_tsl.id,
+            )
 
         msg = q.put(
             id_ = id_,
             msg = {
                 'args': (img, md5),
-                'kwargs': {'force': frc, 'options': opt},
+                'kwargs': {
+                    'force': frc,
+                    # 'options': opt,
+                    'options_box': options_box,
+                    'options_ocr': options_ocr,
+                    'options_tsl': options_tsl,
+                    },
             },
             handler = ocr_tsl_pipeline_work,
         )
@@ -285,7 +312,8 @@ def run_ocrtsl(
 
         if isinstance(res, Exception):
             logger.error(f'Failed to run ocr: {res}')
-            return JsonResponse({'error': str(res)}, status=400)
+            logger.debug(traceback.print_exception(type(res), res, res.__traceback__))
+            return JsonResponse({'error': str(res)}, status=500)
 
 
     return JsonResponse({
@@ -407,6 +435,8 @@ def get_default_options_from_cascade(
 @method_or_405(['GET'])
 @get_backend_models(strict=False)
 @get_data_deserializer([], required=False)
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def get_active_options(
     request: HttpRequest,
     box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel,
@@ -438,6 +468,8 @@ def get_active_options(
     return JsonResponse({'options': res})
 
 @method_or_405(['GET'])
+@wait_for_lock('plugin')
+@use_lock('block_plugin_changes', blocking=False)
 def get_plugin_data(request: HttpRequest) -> JsonResponse:
     """Handle a GET request to get plugins."""
     resp = {}
@@ -457,6 +489,8 @@ def get_plugin_data(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 @method_or_405(['POST'])
 @post_data_deserializer(['plugins'], required=True)
+@use_lock('plugin', blocking=True)
+@use_lock('block_plugin_changes', blocking=True)
 def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonResponse:
     """Handle a POST request to install a plugin."""
     logger.debug(f'Manage plugins: {plugins}')

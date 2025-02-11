@@ -18,6 +18,8 @@
 ###################################################################################
 """Tests for full module."""
 
+#pylint: disable=too-many-arguments
+
 import pytest
 
 from ocr_translate import models as m
@@ -25,27 +27,33 @@ from ocr_translate.ocr_tsl import box, full, lang, ocr, tsl
 
 pytestmark = pytest.mark.django_db
 
-def test_lazy_nonexistent_image():
+def test_lazy_nonexistent_image(option_dict):
     """Test lazy pipeline with nonexistent image."""
     with pytest.raises(ValueError):
-        full.ocr_tsl_pipeline_lazy('nonexistent')
+        full.ocr_tsl_pipeline_lazy(
+            'nonexistent',
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )
 
 def test_lazy_nobox(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, image):
+        language, box_model, ocr_model, image, option_dict):
     """Test lazy pipeline with no box."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
     monkeypatch.setattr(ocr_model, 'ocr', mock_called)
     with pytest.raises(ValueError):
-        full.ocr_tsl_pipeline_lazy(image.md5)
+        full.ocr_tsl_pipeline_lazy(
+            image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )
     assert not hasattr(mock_called, 'called')
 
 def test_lazy_noocr(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, tsl_model, image, bbox, box_run):
-    """Test lazy pipeline with no box."""
+        language, box_model, ocr_model, tsl_model, image, bbox, box_run, option_dict):
+    """Test lazy pipeline with no ocr."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
@@ -54,13 +62,16 @@ def test_lazy_noocr(
 
     bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(ValueError):
-        full.ocr_tsl_pipeline_lazy(image.md5)
+        full.ocr_tsl_pipeline_lazy(
+            image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )
     assert not hasattr(mock_called, 'called')
 
 def test_lazy_notsl(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run):
-    """Test lazy pipeline with no box."""
+        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict):
+    """Test lazy pipeline with no translation."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
@@ -69,22 +80,83 @@ def test_lazy_notsl(
 
     bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(TypeError):
-        full.ocr_tsl_pipeline_lazy(image.md5)
+        full.ocr_tsl_pipeline_lazy(
+            image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )
 
     assert hasattr(mock_called, 'called')
 
-def test_lazy_option_favor_manual(monkeypatch, mock_called, box_model, image):
-    """Test lazy pipeline with no box."""
+def test_lazy_option_favor_manual_absent(
+        monkeypatch, mock_called,
+        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict
+        ):
+    """Test favor manual translation option when absent."""
+    # options = {
+    #     'favor_manual': True,
+    #     'other': 'option'
+    # }
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(tsl_model, 'translate', mock_called)
+
+    bbox.from_ocr_merged.result_single.add(bbox)
+    with pytest.raises(TypeError):
+        full.ocr_tsl_pipeline_work(
+            image, image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=option_dict
+            )
+
+    assert mock_called.kwargs['favor_manual'] is True
+
+def test_lazy_option_favor_manual_specified_true(
+        monkeypatch, mock_called,
+        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict
+        ):
+    """Test favor manual translation option when set True."""
     options = {
         'favor_manual': True,
         'other': 'option'
     }
+    new_opt = m.OptionDict.objects.create(options=options)
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(box_model, 'box_detection', mock_called)
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
+    bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(TypeError):
-        full.ocr_tsl_pipeline_lazy(image.md5, options=options)
+        full.ocr_tsl_pipeline_work(
+            image, image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=new_opt
+            )
 
-    called_options: m.OptionDict = mock_called.kwargs['options']
-    assert 'favor_manual' not in called_options.options
-    assert 'other' in  called_options.options
+    assert mock_called.kwargs['favor_manual'] is True
+
+def test_lazy_option_favor_manual_specified_false(
+        monkeypatch, mock_called,
+        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict
+        ):
+    """Test favor manual translation option when set False."""
+    options = {
+        'favor_manual': False,
+        'other': 'option'
+    }
+    new_opt = m.OptionDict.objects.create(options=options)
+    monkeypatch.setattr(lang, 'LANG_SRC', language)
+    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(tsl_model, 'translate', mock_called)
+
+    bbox.from_ocr_merged.result_single.add(bbox)
+    with pytest.raises(TypeError):
+        full.ocr_tsl_pipeline_work(
+            image, image.md5,
+            options_box=option_dict, options_ocr=option_dict, options_tsl=new_opt
+            )
+
+    assert mock_called.kwargs['favor_manual'] is False

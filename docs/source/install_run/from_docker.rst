@@ -13,7 +13,7 @@ Or manually created:
 
 Run the command:
 
-- :code:`docker run --name CONTAINER_NAME -v OCT_MODELS:/models -v OCT_DB_DATA:/db_data -v OCT_PLUGINS_DATA:/plugins_data -p SERVER_PORT:4000 -d IMAGE_NAME`
+- :code:`docker run --name CONTAINER_NAME -v OCT_MODELS:/models -v OCT_DB_DATA:/db_data -v OCT_PLUGINS_DATA:/plugin_data -p SERVER_PORT:4000 -d IMAGE_NAME`
 
 Replace the all caps parts with the appropriate values.
 For the volumes you can either specify a native docker volume using a name or a bind mount using a path (see `docker documentation <https://docs.docker.com/storage/volumes/>``).

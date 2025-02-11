@@ -36,7 +36,7 @@ def test_oct_init_fail(monkeypatch, capsys):
     """Test call on env variable."""
     def raise_func():
         raise OperationalError('Test')
-    monkeypatch.setenv('LOAD_ON_START', 'true')
+    monkeypatch.setenv('LOAD_ON_START', 'most')
     monkeypatch.setattr(ini, 'init_most_used', raise_func)
     importlib.reload(o)
 
@@ -52,7 +52,7 @@ def test_oct_init_call_true(monkeypatch, mock_called):
     monkeypatch.setenv('TEST', 'True')
 
     assert not hasattr(mock_called, 'called')
-    o.run_on_env('TEST', mock_called)
+    o.run_on_env('TEST', {'true': mock_called})
     assert hasattr(mock_called, 'called')
     assert not o.FAIL
 
@@ -61,14 +61,14 @@ def test_oct_init_call_false(monkeypatch, mock_called):
     monkeypatch.setenv('TEST', 'False')
 
     assert not hasattr(mock_called, 'called')
-    o.run_on_env('TEST', mock_called)
+    o.run_on_env('TEST', {'true': mock_called})
     assert not hasattr(mock_called, 'called')
     assert not o.FAIL
 
 def test_oct_init_call_notdef(mock_called):
     """Test call on env variable."""
     assert not hasattr(mock_called, 'called')
-    o.run_on_env('TEST', mock_called)
+    o.run_on_env('TEST', {'true': mock_called})
     assert not hasattr(mock_called, 'called')
     assert not o.FAIL
 
@@ -77,5 +77,5 @@ def test_oct_init_call_raise(monkeypatch):
     monkeypatch.setenv('TEST', 'True')
     def func():
         raise OperationalError('Test')
-    o.run_on_env('TEST', func)
+    o.run_on_env('TEST', {'true': func})
     assert o.FAIL

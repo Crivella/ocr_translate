@@ -19,7 +19,9 @@
 """Decorators to preparse requests and responses."""
 
 import json
+import time
 from functools import wraps
+from threading import Lock
 
 from django.http import HttpRequest, JsonResponse
 
@@ -28,6 +30,42 @@ from .ocr_tsl.lang import get_lang_dst, get_lang_src
 from .ocr_tsl.ocr import get_ocr_model
 from .ocr_tsl.tsl import get_tsl_model
 
+locks = {}
+
+def use_lock(lock_name: str, blocking: bool = False):
+    """Decorator to use a lock for the function."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            lock = locks.setdefault(lock_name, Lock())
+            if blocking:
+                with lock:
+                    return func(*args, **kwargs)
+            else:
+                acquired = lock.acquire(blocking=False)
+                try:
+                    return func(*args, **kwargs)
+                finally:
+                    if acquired:
+                        lock.release()
+        return wrapper
+    return decorator
+
+def wait_for_lock(lock_name: str, timeout: int = None):
+    """Decorator to wait for a lock before executing the function without acquiring the lock."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            lock = locks.get(lock_name, Lock())
+            start = time.time()
+            while lock.locked():
+                time.sleep(0.1)
+                if timeout is not None and time.time() - start > timeout:
+                    return JsonResponse({'error': 'Timeout waiting for lock'}, status=408)
+
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def get_backend_models(strict: bool = True):
     """Decorator to check and add loaded models."""

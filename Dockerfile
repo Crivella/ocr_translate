@@ -3,15 +3,15 @@ FROM python:3.10.12-slim-bookworm as intermediate
 RUN pip install virtualenv
 RUN virtualenv /venv/
 
-# RUN mkdir -p /src
+RUN mkdir -p /src
 
-# COPY ocr_translate /src/ocr_translate
-# COPY pyproject.toml /src/
-# COPY README.md /src/
+COPY ocr_translate /src/ocr_translate
+COPY pyproject.toml /src/
+COPY README.md /src/
 
 RUN mkdir -p /pip_cache
-# RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache /src/
-RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache django-ocr_translate[mysql,postgres]==0.6.0
+RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache /src/[mysql,postgres]
+# RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache django-ocr_translate[mysql,postgres]==0.6.1
 RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install gunicorn --cache-dir /pip_cache
 
 FROM python:3.10.12-slim-bookworm
@@ -69,9 +69,9 @@ ENV \
     DATABASE_USER="" \
     DATABASE_PASSWORD=""
 
-VOLUME plugin_data
-VOLUME models
-VOLUME db_data
+VOLUME /plugin_data
+VOLUME /models
+VOLUME /db_data
 
 WORKDIR /opt/app
 

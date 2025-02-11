@@ -43,6 +43,23 @@ def mock_log_called():
             MockLogFunc.called_kwargs.append(kwargs)
     return MockLogFunc
 
+@pytest.fixture()
+def mock_sprun():
+    class MockSPrun:
+        called = False
+        args = []
+        def __call__(self, *args, **kwargs):
+            MockSPrun.called = True
+            MockSPrun.args = args
+            return self
+        @property
+        def stdout(self):
+            return b'test'
+        @property
+        def stderr(self):
+            return b'error!!'
+    return MockSPrun
+
 @pytest.fixture(autouse=True, scope='function')
 def tmp_base_dir(tmp_path, monkeypatch):
     """Set the base directory to a temporary directory."""
@@ -228,13 +245,40 @@ def test_overrides_decorator_only_kwargs():
 
     assert test_func('cls', 'name', 3, somekw=1) == ('cls',)
 
-def test_pip_install_raisee(monkeypatch, mock_called):
+def test_pip_install_raise_retries_ok(monkeypatch, mock_sprun, mock_called):
     """Test pip install with raise call."""
+    attempts = 2
     def raise_func(*args, **kwargs):
+        nonlocal attempts
+        if attempts == 0:
+            return mock_sprun()
+        attempts -= 1
         exc = pm.subprocess.CalledProcessError(1, 'test')
         exc.stdout = b'test stdout'
         exc.stderr = b'test stderr'
         raise exc
+    monkeypatch.setattr(pm.time, 'sleep', lambda x: None)  # No need to sleep for test
+    monkeypatch.setattr(pm.subprocess, 'run', raise_func)
+    monkeypatch.setattr(pm.logger, 'error', mock_called)
+
+    # with pytest.raises(pm.subprocess.CalledProcessError):
+    pm._pip_install('test', '.')
+    assert mock_called.called
+    # assert mock_called.args[0] == 'test stderr'
+
+def test_pip_install_raise_retries_fail(monkeypatch, mock_sprun, mock_called):
+    """Test pip install with raise call."""
+    attempts = 5
+    def raise_func(*args, **kwargs):
+        nonlocal attempts
+        if attempts == 0:
+            return mock_sprun()
+        attempts -= 1
+        exc = pm.subprocess.CalledProcessError(1, 'test')
+        exc.stdout = b'test stdout'
+        exc.stderr = b'test stderr'
+        raise exc
+    monkeypatch.setattr(pm.time, 'sleep', lambda x: None)  # No need to sleep for test
     monkeypatch.setattr(pm.subprocess, 'run', raise_func)
     monkeypatch.setattr(pm.logger, 'error', mock_called)
 
@@ -243,56 +287,28 @@ def test_pip_install_raisee(monkeypatch, mock_called):
     assert mock_called.called
     assert mock_called.args[0] == 'test stderr'
 
-def test_pip_install_extras_none(monkeypatch):
+def test_pip_install_extras_none(monkeypatch, mock_sprun):
     """Test pip install with no extras."""
-    class MockCalled:
-        called = False
-        args = []
-        def __call__(self, *args, **kwargs):
-            MockCalled.called = True
-            MockCalled.args = args
-            return self
-        @property
-        def stdout(self):
-            return b'test'
-    monkeypatch.setattr(pm.subprocess, 'run', MockCalled())
+    monkeypatch.setattr(pm.subprocess, 'run', mock_sprun())
     pm._pip_install('test', '.')
-    assert MockCalled.called
-    assert MockCalled.args[0][-1] == '--prefix=.'
+    assert mock_sprun.called
+    assert mock_sprun.args[0][-1] == '--prefix=.'
 
-def test_pip_install_extras_empty(monkeypatch):
+def test_pip_install_extras_empty(monkeypatch, mock_sprun, mock_called):
     """Test pip install with no extras."""
-    class MockCalled:
-        called = False
-        args = []
-        def __call__(self, *args, **kwargs):
-            MockCalled.called = True
-            MockCalled.args = args
-            return self
-        @property
-        def stdout(self):
-            return b'test'
-    monkeypatch.setattr(pm.subprocess, 'run', MockCalled())
+    monkeypatch.setattr(pm.subprocess, 'run', mock_sprun())
+    monkeypatch.setattr(pm.logger, 'error', mock_called)
     pm._pip_install('test', '.', [])
-    assert MockCalled.called
-    assert MockCalled.args[0][-1] == '--prefix=.'
+    assert mock_sprun.called
+    assert mock_sprun.args[0][-1] == '--prefix=.'
+    assert not hasattr(mock_called, 'called')
 
-def test_pip_install_extras(monkeypatch):
+def test_pip_install_extras(monkeypatch, mock_sprun):
     """Test pip install with no extras."""
-    class MockCalled:
-        called = False
-        args = []
-        def __call__(self, *args, **kwargs):
-            MockCalled.called = True
-            MockCalled.args = args
-            return self
-        @property
-        def stdout(self):
-            return b'test'
-    monkeypatch.setattr(pm.subprocess, 'run', MockCalled())
+    monkeypatch.setattr(pm.subprocess, 'run', mock_sprun())
     pm._pip_install('test', '.', ['123'])
-    assert MockCalled.called
-    assert MockCalled.args[0][-1] == '123'
+    assert mock_sprun.called
+    assert mock_sprun.args[0][-1] == '123'
 
 def test_manager_singleton():
     """Test that the manager is a singleton."""
@@ -675,7 +691,6 @@ def test_uninstall_plugin_thread_lock(monkeypatch, mock_plugin_data, mock_called
 
 def test_install_package_unkown_scope(monkeypatch, mock_called):
     """Test plugin manager installing a package with unknown scope."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -686,14 +701,12 @@ def test_install_package_unkown_scope(monkeypatch, mock_called):
 
 def test_find_site_packages_none():
     """Test plugin manager finding site packages not existing."""
-    # django.setup()
     pmng = pm.PluginManager()
     # sp_dir = pmng.plugin_dir / 'test123' / 'site-packages'
     assert pm.find_site_packages(pmng.plugin_dir) is None
 
 def test_find_site_packages_exists():
     """Test plugin manager finding site packages existing."""
-    # django.setup()
     pmng = pm.PluginManager()
     sp_dir = pmng.plugin_dir / 'test123' / 'site-packages'
     sp_dir.mkdir(parents=True, exist_ok=True)
@@ -701,7 +714,6 @@ def test_find_site_packages_exists():
 
 def test_install_package_unkown_system(monkeypatch, mock_called):
     """Test plugin manager installing a package with unknown system."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -712,7 +724,6 @@ def test_install_package_unkown_system(monkeypatch, mock_called):
 
 def test_install_package_nospdir(monkeypatch, mock_called):
     """Test plugin manager installing a package without any file created."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -723,7 +734,6 @@ def test_install_package_nospdir(monkeypatch, mock_called):
 
 def test_install_package_install_file_dirs(monkeypatch, mock_called):
     """Test plugin manager installing a package with file created."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -751,7 +761,6 @@ def test_install_package_install_file_dirs(monkeypatch, mock_called):
 
 def test_install_package_install_file_overwrite(monkeypatch, mock_called):
     """Test plugin manager installing a package with overwriting existing file."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -779,7 +788,6 @@ def test_install_package_install_file_overwrite(monkeypatch, mock_called):
 
 def test_install_package_install_dir_merge(monkeypatch, mock_called):
     """Test plugin manager installing a package with dir merging."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -807,7 +815,6 @@ def test_install_package_install_dir_merge(monkeypatch, mock_called):
 
 def test_install_package_install_twice(monkeypatch, mock_called):
     """Test plugin manager installing an already installed package."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -826,7 +833,6 @@ def test_install_package_install_twice(monkeypatch, mock_called):
 
 def test_install_package_overwrite_version(monkeypatch, mock_called):
     """Test plugin manager installing an already installed package with different version."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -848,7 +854,6 @@ def test_install_package_overwrite_version(monkeypatch, mock_called):
 
 def test_install_package_list_extras(monkeypatch, mock_called):
     """Test plugin manager installing with `list` extras."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -862,7 +867,6 @@ def test_install_package_list_extras(monkeypatch, mock_called):
 
 def test_install_package_str_extras(monkeypatch, mock_called):
     """Test plugin manager installing with `str` extras."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -876,7 +880,6 @@ def test_install_package_str_extras(monkeypatch, mock_called):
 
 def test_install_package_env_override_version(monkeypatch, mock_called):
     """Test plugin manager installing overriding using envvar: version."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
@@ -894,7 +897,6 @@ def test_install_package_env_override_version(monkeypatch, mock_called):
 
 def test_install_package_env_override_extras(monkeypatch, mock_called):
     """Test plugin manager installing overriding using envvar: extras."""
-    # django.setup()
     pmng = pm.PluginManager()
     monkeypatch.setattr(pm, '_pip_install', mock_called)
     name = 'test'
