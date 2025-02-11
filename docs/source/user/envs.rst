@@ -53,6 +53,18 @@ Variables used by the application.
     * - Variable
       - Default
       - Usage
+    * - :code:`OCT_VERSION`
+      - Downloaded release version (eg :code:`0.6.1` if you donwloaded 0.6.1)
+      - Version the :code:`run_server.py` script will attempt to install/update to.
+
+        Can be either a version number (:code:`A.B.C` eg :code:`0.6.1``) or last/latest.
+
+    * - :code:`OCT_AUTOUPDATE`
+      - false
+      - If true, the server will attempt to update the main package to the version
+
+        specified by :code:`OCT_VERSION`
+
     * - :code:`OCT_BASE_DIR`
       - false
       - Path to the base directory of the project.
