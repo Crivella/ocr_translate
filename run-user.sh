@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# export OCT_VERSION=
+# export OCT_AUTOUPDATE=
+
 # export LOAD_ON_START=
 
 export DEVICE=cpu

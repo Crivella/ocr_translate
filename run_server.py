@@ -17,19 +17,39 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Run the django migrations and start the server."""
-# pylint: disable=import-outside-toplevel,too-many-statements,invalid-name
+# pylint: disable=import-outside-toplevel,too-many-statements,invalid-name,wrong-import-position
 
 import importlib
 import os
 import subprocess
+import sys
 from pathlib import Path
+
+req_version = os.environ.get('OCT_VERSION', '0.6.1').lower()
+
+def install_upgrade(upgrade=False):
+    """Install or upgrade the ocr_translate package."""
+    cmd = ['pip', 'install']
+    if upgrade:
+        print(f'Upgrading ocr_translate to {req_version}...')
+        cmd.append('--upgrade')
+    else:
+        print(f'Installing ocr_translate {req_version}...')
+    if req_version in ['latest', 'last']:
+        cmd.append('django-ocr_translate')
+    else:
+        cmd.append(f'django-ocr_translate=={req_version}')
+    subprocess.run(cmd, check=True)
+    print('...done')
+
+if os.environ.get('OCT_AUTOUPDATE', 'false').lower() in ['true', 't', '1']:
+    install_upgrade(upgrade=True)
 
 try:
     import django
 except ImportError:
     print('Django not found: installing django-ocr_translate...')
-    subprocess.run(['pip', 'install', 'django-ocr_translate==0.6.0'], check=True)
-    # subprocess.run(['pip', 'install', '../..'], check=True)
+    install_upgrade()
     import django
 
 from django.core.management import call_command
@@ -37,6 +57,12 @@ from django.core.management import call_command
 import ocr_translate.plugin_manager as pm
 from ocr_translate import __version__
 
+if __version__ != req_version:
+    print(f'Warning: version mismatch, expected OCT_VERSION={req_version} but found {__version__}')
+    print('  If you are using a new release with a previously existing virtual environment,')
+    print('  please run the server with OCT_AUTOUPDATE set to "true" to update the environment.')
+    print('  Alternatively set OCT_VERSION to the desired version to run the server with that version.')
+    sys.exit(1)
 
 def banner():
     """Print the banner."""
@@ -88,7 +114,7 @@ def cuda_check():
 
     try:
         # The version of torch found depends on the current scope.
-        # This check is still useful to se if a CUDA capale torch is installed but a GPU is not available.
+        # This check is still useful to se if a CUDA capable torch is installed but a GPU is not available.
         pm.PluginManager()  # Make sure the plugin manager is initialized to have installed plugins libs in path
         importlib.import_module('torch')
     except ModuleNotFoundError:

@@ -1,5 +1,8 @@
 @echo off
 
+set OCT_VERSION=
+set OCT_AUTOUPDATE=
+
 set LOAD_ON_START=
 
 set DEVICE=cpu
