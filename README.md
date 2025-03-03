@@ -82,6 +82,6 @@ If all else fails, please open an issue on the [backend server](https://github.c
 
 ## Possible problems
 
-- [Issue 25](/../../issues/25) Using uBlock origin (or possibly other extension capable of blocking content) could stop the extension from sending requests to the server. This can be recognized if the popup for setting the language and models works fine but than the translations fails without producing any new log in the server windows. (WIP long term fix in the extension)
+- [Issue 25](/../../issues/25) Using uBlock origin (or possibly other extension capable of blocking content) could stop the extension from sending requests to the server. This can be recognized if the popup for setting the language and models works fine but then the translations fails without producing any new log in the server windows. (WIP long term fix in the extension)
 
 - [Issue 27](/../../issues/27) Having non latin characters in the model's path can cause HuggingFace `transformers` to fail loading them
