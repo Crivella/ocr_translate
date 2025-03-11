@@ -100,6 +100,12 @@ LOGGING = {
     },
 }
 
+def parse_list(s, sep=';'):
+    if s.startswith('"') and s.endswith('"'):
+        s = s[1:-1]
+    if s.startswith("'") and s.endswith("'"):
+        s = s[1:-1]
+    return s.split(sep)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -111,17 +117,17 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-7h+*^e963rdi*2
 DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-ALLOWED_HOSTS += os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(';')
+ALLOWED_HOSTS += parse_list(os.environ.get('DJANGO_ALLOWED_HOSTS', ''))
 
 ###################################################################################
 # CORS
 USE_CORS_HEADERS = os.environ.get('USE_CORS_HEADERS', 'false').lower() in ['true', 't', '1', 'yes', 'y']
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(';')
+CORS_ALLOWED_ORIGINS = parse_list(os.environ.get('CORS_ALLOWED_ORIGINS', ''))
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 if 'CORS_ALLOW_METHODS' in os.environ:
-    CORS_ALLOW_METHODS = os.environ.get('CORS_ALLOW_METHODS', '').split(';')
+    CORS_ALLOW_METHODS = parse_list(os.environ.get('CORS_ALLOW_METHODS', ''))
 if 'CORS_ALLOW_HEADERS' in os.environ:
-    CORS_ALLOW_HEADERS = os.environ.get('CORS_ALLOW_HEADERS', '').split(';')
+    CORS_ALLOW_HEADERS = parse_list(os.environ.get('CORS_ALLOW_HEADERS', ''))
 
 
 # Application definition
