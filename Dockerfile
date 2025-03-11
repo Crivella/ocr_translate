@@ -8,6 +8,7 @@ RUN mkdir -p /src
 COPY ocr_translate /src/ocr_translate
 COPY pyproject.toml /src/
 COPY README.md /src/
+COPY LICENSE.txt /src/
 
 RUN mkdir -p /pip_cache
 RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache /src/[mysql,postgres]
