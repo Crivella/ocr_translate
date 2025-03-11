@@ -2,6 +2,18 @@
 
 List of changes between versions
 
+## 0.6.2
+
+Changes
+
+- Added capability to use `django-cors-headers` to set CORS headers in server responses
+- Added capability to set `CSRF_TRUSTED_ORIGINS` to make admin interface properly work from a docker container
+- Documented new environment variables
+
+Fixes:
+
+- Fix #45 (Mishandling of empty string environment variables in run_server.py)
+
 ## 0.6.1
 
 - Ensure changing an option for only a step of the pipeline will not cause the other steps to also be re-triggered
