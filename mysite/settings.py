@@ -113,6 +113,16 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 ALLOWED_HOSTS += os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(';')
 
+###################################################################################
+# CORS
+USE_CORS_HEADERS = os.environ.get('USE_CORS_HEADERS', 'false').lower() in ['true', 't', '1', 'yes', 'y']
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(';')
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+if 'CORS_ALLOW_METHODS' in os.environ:
+    CORS_ALLOW_METHODS = os.environ.get('CORS_ALLOW_METHODS', '').split(';')
+if 'CORS_ALLOW_HEADERS' in os.environ:
+    CORS_ALLOW_HEADERS = os.environ.get('CORS_ALLOW_HEADERS', '').split(';')
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -122,12 +132,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ocr_translate',
-] + PMNG.plugins
+]
+if USE_CORS_HEADERS:
+    INSTALLED_APPS.append('corsheaders')
+INSTALLED_APPS.append('ocr_translate')
+INSTALLED_APPS += PMNG.plugins
 
+# Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+]
+if USE_CORS_HEADERS:
+    MIDDLEWARE.append('corsheaders.middleware.CorsMiddleware')
+MIDDLEWARE += [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
