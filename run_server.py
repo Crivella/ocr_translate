@@ -147,8 +147,8 @@ def init():
 def superuser():
     """Create a superuser if it does not exist and check for default password."""
     default_su_password = 'password'
-    su_name = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
-    su_pass = os.environ.get('DJANGO_SUPERUSER_PASSWORD', default_su_password)
+    su_name = os.environ.get('DJANGO_SUPERUSER_USERNAME', '') or 'admin'
+    su_pass = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '') or default_su_password
     if su_name and su_pass:
         from django.contrib.auth import get_user_model
         User = get_user_model()
