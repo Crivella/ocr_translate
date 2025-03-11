@@ -54,8 +54,10 @@ Variables used by the application.
       - Default
       - Usage
     * - :code:`OCT_VERSION`
-      - Downloaded release version (eg :code:`0.6.1` if you donwloaded 0.6.1)
-      - Version the :code:`run_server.py` script will attempt to install/update to.
+      -
+      - Default set to the downloaded release version
+
+        Version the :code:`run_server.py` script will attempt to install/update to.
 
         Can be either a version number (:code:`A.B.C` eg :code:`0.6.1``) or last/latest.
 
@@ -145,6 +147,28 @@ This includes the windows release file and docker image that are based on the sa
     * - :code:`DJANGO_SUPERUSER_PASSWORD`
       - password
       - Password for the superuser to be created
+    * - :code:`USE_CORS_HEADERS`
+      - false
+      - Allow setting of CORS headers in the server responses
+    * - :code:`CORS_ALLOWED_ORIGINS`
+      -
+      - List of semi-colon :code:`;` separated URLs that are allowed to access the server
+
+        CSRF_TRUSTED_ORIGINS is set to the same value (can use this with USE_CORS_HEADERS=false)
+
+        to set CSRF_TRUSTED_ORIGINS only
+
+        EXAMPLE: :code:`CORS_ALLOWED_ORIGINS="http://localhost:4000;http://127.0.0.1:4000"`
+    * - :code:`CORS_ALLOW_METHODS`
+      - LIB default
+      - List of semi-colon :code:`;` separated HTTP methods that are allowed to be used
+
+        EXAMPLE: :code:`CORS_ALLOW_METHODS="GET;POST;PUT;DELETE;OPTIONS;PATCH"`
+    * - :code:`CORS_ALLOW_HEADERS`
+      - LIB default
+      - List of semi-colon :code:`;` separated HTTP headers that are allowed to be used
+
+        EXAMPLE: :code:`CORS_ALLOW_HEADERS="Content-Type;Authorization;X-CSRFToken"`
     * - :code:`OCT_DJANGO_BIND_ADDRESS`
       - 127.0.0.1
       - Address to bind the server to
