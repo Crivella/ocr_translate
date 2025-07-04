@@ -44,7 +44,7 @@ This is an example of using :code:`docker compose` to run the server with a post
     services:
       server:
         container_name: oct_server
-        image: crivella1/ocr_translate:0.6.0
+        image: crivella1/ocr_translate:${OCT_VERSION:-latest}
         volumes:
           - ${PLUGINS_LOCATION}:/plugin_data
           - ${MODELS_LOCATION}:/models
