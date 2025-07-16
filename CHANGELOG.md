@@ -2,6 +2,13 @@
 
 List of changes between versions
 
+## 0.6.3
+
+Changes
+
+- Bumped version of `ocr_translate_ollama` plugin to `0.2.0` in order to allow using newer versions of `ollama` (> 0.5.5)
+
+
 ## 0.6.2
 
 Changes

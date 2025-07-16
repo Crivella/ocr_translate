@@ -18,5 +18,5 @@
 ###################################################################################
 """OCR and translation of images."""
 
-__version__ = '0.6.2'
+__version__ = '0.6.3'
 __version__array__ = [int(_) for _ in __version__.split('.')]

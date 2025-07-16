@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-req_version = os.environ.get('OCT_VERSION', '0.6.2').lower()
+req_version = os.environ.get('OCT_VERSION', '0.6.3').lower()
 
 def install_upgrade(upgrade=False):
     """Install or upgrade the ocr_translate package."""
