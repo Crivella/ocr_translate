@@ -1063,7 +1063,7 @@
     "package": "ocr_translate_ollama",
     "description": "This is a plugin for ocr_translate that implements translations through ollama using Large Language Models (LLM)s.",
     "warning": "This plugin requires a running ollama server that is not include with the project. See the homepage for more details",
-    "version": "0.1.4",
+    "version": "0.2.0",
     "homepage": "https://github.com/Crivella/ocr_translate-ollama",
     "dependencies": [
       {
