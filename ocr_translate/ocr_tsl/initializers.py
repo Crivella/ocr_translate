@@ -199,3 +199,32 @@ def ensure_plugins():
     for plugin in known:
         if plugin in installed:
             pmng.install_plugin(plugin)
+def auto_create_box():
+    """Create OCRBoxModel objects from entrypoints."""
+    for box in load_ept_data('ocr_translate.box_data'):
+        model = add_box_model(box)
+        model.active = True
+        model.save()
+
+def auto_create_ocr():
+    """Create OCRModel objects from entrypoints."""
+    for ocr in load_ept_data('ocr_translate.ocr_data'):
+        model = add_ocr_model(ocr)
+        model.active = True
+        model.save()
+
+def auto_create_tsl():
+    """Create TSLModel objects from entrypoints."""
+    for tsl in load_ept_data('ocr_translate.tsl_data'):
+        model = add_tsl_model(tsl)
+        model.active = True
+        model.save()
+
+def auto_create_models():
+    """Create OCR and TSL models from json file. Also create default OptionDict"""
+    logger.info('Creating default models')
+    auto_create_box()
+    auto_create_ocr()
+    auto_create_tsl()
+
+    m.OptionDict.objects.get_or_create(options={})

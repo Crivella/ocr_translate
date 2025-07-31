@@ -23,7 +23,8 @@ from typing import Callable
 
 from django.db.utils import OperationalError
 
-from .initializers import auto_create_languages, init_last_used, init_most_used
+from .initializers import (auto_create_languages, auto_create_models,
+                           init_last_used, init_most_used)
 
 FAIL = False
 
@@ -32,17 +33,30 @@ def run_on_env(env_name: str, func_map: dict[str, Callable], value: str = 'true'
     global FAIL
     if env_name in os.environ:
         value = os.environ.get(env_name).lower()
-        if value in func_map:
-            try:
-                func = func_map[value]
-                func()
-                print(f'INFO: Ran `{func.__name__}` based on environment variable `{env_name}`')
-            except OperationalError as exc:
-                FAIL = True
-                print(f'WARNING: Ignoring environment variable `{env_name}` as the database is not ready/migrated.')
-                print(f'WARNING: {exc}')
+        for key, func in func_map.items():
+            if isinstance(key, str):
+                key = key.lower()
+                if key == value:
+                    break
+            elif isinstance(key, tuple):
+                if any(k.lower() == value for k in key):
+                    break
+            else:
+                raise ValueError(f'Invalid use of `run_on_env`: key `{key}` is not a string or tuple')
         else:
-            print('Unknown value for environment variable `{env_name}`: {value}')
+            print('Unknown value for environment variable `{env_name}`: {value}... Doing nothing')
+            func = None
+
+        if func is None:
+            return
+
+        try:
+            func()
+            print(f'INFO: Ran `{func.__name__}` based on environment variable `{env_name}`')
+        except OperationalError as exc:
+            FAIL = True
+            print(f'WARNING: Ignoring environment variable `{env_name}` as the database is not ready/migrated.')
+            print(f'WARNING: {exc}')
 
 def deprecate_los_true():
     """Deprecate the environment variable `LOAD_ON_START=true`."""
@@ -53,8 +67,16 @@ def deprecate_los_true():
 run_on_env(
     'AUTOCREATE_LANGUAGES',
     {
-        'true': auto_create_languages,
-        'false': lambda: None
+        ('true', 't', '1'): auto_create_languages,
+        ('false', 'f', '0'): None,
+    }
+)
+# Re-added to give a way to install plugin independently and still add the models from the entrypoints
+run_on_env(
+    'AUTOCREATE_MODELS',
+    {
+        ('true', 't', '1'): auto_create_models,
+        ('false', 'f', '0'): None,
     }
 )
 run_on_env(
@@ -63,7 +85,7 @@ run_on_env(
         'most': init_most_used,
         'last': init_last_used,
         'true': deprecate_los_true,
-        'false': lambda: None
+        'false': None
     }
 )
 
