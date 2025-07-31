@@ -32,11 +32,11 @@ keywords = ["django", "ocr", "translation"]
 requires-python = ">=3.10"
 dependencies = [
     "wheel",
-    "numpy~=1.24.1",
-    "Django~=5.1",
-    "django-cors-headers~=4.7.0",
-    "Pillow~=10.4.0",
-    "opencv-python-headless~=4.8.0.76"
+    "numpy",
+    "Django",
+    "django-cors-headers",
+    "Pillow",
+    "opencv-python-headless"
 ]
 
 [project.urls]
@@ -44,10 +44,10 @@ Source = "https://github.com/crivella/ocr_translate"
 
 [project.optional-dependencies]
 mysql = [
-    "pymysql==1.1.0",
+    "pymysql",
 ]
 postgres = [
-    "psycopg[binary]==3.1.9",
+    "psycopg[binary]",
 ]
 docs = [
     "docutils==0.20.1",
