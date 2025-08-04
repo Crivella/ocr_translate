@@ -127,7 +127,7 @@ def post_data_deserializer(expected_keys: list[str], strict: bool = True, requir
                     return JsonResponse({'error': f'{key} not found in POST data'}, status=400)
                 data[key] = _data.pop(key, None)
             if strict and _data:
-                return JsonResponse({'error': f'Unexpected keys: {", ".join(_data.keys())}'}, status=400)
+                return JsonResponse({'error': f'Unexpected keys: {', '.join(_data.keys())}'}, status=400)
             return func(*args, **kwargs, **data)
         return wrapper
     return decorator
@@ -151,7 +151,7 @@ def get_data_deserializer(expected_keys: list[str], strict: bool = True, require
                     return JsonResponse({'error': f'{key} not found in GET data'}, status=400)
                 data[key] = _data.pop(key, None)
             if strict and _data:
-                return JsonResponse({'error': f'Unexpected keys: {", ".join(_data.keys())}'}, status=400)
+                return JsonResponse({'error': f'Unexpected keys: {', '.join(_data.keys())}'}, status=400)
             return func(*args, **kwargs, **data)
         return wrapper
     return decorator

@@ -17,8 +17,8 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Tests for full module."""
+# pylint: disable=too-many-positional-arguments,too-many-arguments
 
-#pylint: disable=too-many-arguments
 
 import pytest
 

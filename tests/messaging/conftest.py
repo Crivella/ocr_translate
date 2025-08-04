@@ -47,6 +47,8 @@ def batch_message(request):
                 bsize = len(args[batch_args[0]])
             elif batch_kwargs:
                 bsize = len(kwargs[batch_kwargs[0]])
+            else:
+                bsize = 1
         except TypeError:
             # Batch handler are supposed to work also with non-batched messages
             return args, kwargs

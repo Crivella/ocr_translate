@@ -21,7 +21,8 @@ import logging
 import queue
 import threading
 import time
-from typing import Callable, Hashable, Iterable, Union
+from collections.abc import Hashable, Iterable
+from typing import Callable, Union
 
 logger = logging.getLogger('ocr.worker')
 

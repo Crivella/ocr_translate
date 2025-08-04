@@ -17,7 +17,7 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Tests for the database models."""
-#pylint: disable=protected-access
+#pylint: disable=protected-access,too-many-positional-arguments,too-many-arguments
 
 from dataclasses import dataclass
 
@@ -608,7 +608,7 @@ def test_tsl_run_lazy(text: m.Text, language: m.Language, tsl_model: m.TSLModel,
         next(gen)
 
 @pytest.mark.parametrize('mock_called', [['test_text_ocred']], indirect=True)
-def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
+def test_ocr_tsl_work_single_ocr_plus_lazy(
         monkeypatch, image_pillow: PILImage, mock_called,
         image: m.Image, text: m.Text, bbox: m.BBox, bbox_single: m.BBox, language: m.Language,
         box_model: m.OCRBoxModel, ocr_model_single: m.OCRModel, tsl_model: m.TSLModel, option_dict: m.OptionDict

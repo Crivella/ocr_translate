@@ -89,7 +89,7 @@ def dir_check():
     base.mkdir(exist_ok=True, parents=True)
 
     if not 'DATABASE_NAME' in os.environ:
-        print(f'DATABASE_NAME not set:  Using "{base / "db.sqlite3"}" as database')
+        print(f'DATABASE_NAME not set:  Using "{base / 'db.sqlite3'}" as database')
         os.environ['DATABASE_NAME'] = (base / 'db.sqlite3').as_posix()
         base.mkdir(exist_ok=True, parents=True)
     elif (db_name := os.environ['DATABASE_NAME']).endswith('.sqlite3'):
@@ -124,11 +124,11 @@ def cuda_check():
         print('Torch found, using it for CUDA availability check...')
         import torch
         if not torch.cuda.is_available():
-            print('CUDA is not available, falling back to using CPU')
+            print('TORCH: CUDA is not available, falling back to using CPU')
             os.environ['DEVICE'] = 'cpu'
         else:
             os.environ.setdefault('DEVICE', 'cuda')
-            print('CUDA is available, using GPU')
+            print('TORCH: CUDA is available, using GPU')
         importlib.reload(pm)  # Reload the plugin manager to have the correct DEVICE set
 
 def init():

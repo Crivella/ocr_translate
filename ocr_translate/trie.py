@@ -200,8 +200,7 @@ class Trie:
         Returns:
             list[str]: List of all possible substitutions.
         """
-        if max_num > len(word):
-            max_num = len(word)
+        max_num = min(max_num, len(word))
 
         res = self._get_all_substitutions(word, max_num)
         res = list(set(res))
@@ -246,8 +245,7 @@ class Trie:
         Returns:
             list[str]: List of all possible deletions.
         """
-        if max_num > len(word):
-            max_num = len(word)
+        max_num = min(max_num, len(word))
 
         res = self._get_all_deletions(word, max_num)
         res = list(set(res))
