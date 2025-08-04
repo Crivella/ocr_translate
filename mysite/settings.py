@@ -143,6 +143,12 @@ if USE_CORS_HEADERS:
     INSTALLED_APPS.append('corsheaders')
 INSTALLED_APPS.append('ocr_translate')
 INSTALLED_APPS += PMNG.plugins
+INSTALLED_APPS += [
+    'ocr_translate_hugging_face',
+    'ocr_translate_easyocr',
+    'ocr_translate_paddle',
+    'ocr_translate_google',
+]
 
 # Middleware
 MIDDLEWARE = [
