@@ -22,14 +22,14 @@ nginx
 
 su ${USER}
 
-export OCT_DJANGO_PORT=4010
-export OCT_BASE_DIR="/plugin_data"
-export TRANSFORMERS_CACHE="/models/huggingface"
-export TRANSFORMERS_OFFLINE="0"
-export EASYOCR_MODULE_PATH="/models/easyocr"
-export TESSERACT_PREFIX="/models/tesseract"
-export TESSERACT_ALLOW_DOWNLOAD="true"
-export PADDLEOCR_PREFIX="/models/paddleocr"
+export OCT_DJANGO_PORT=${OCT_DJANGO_PORT:-4010}
+export OCT_BASE_DIR=${OCT_BASE_DIR:-"/plugin_data"}
+export TRANSFORMERS_CACHE=${TRANSFORMERS_CACHE:-"/models/huggingface"}
+export TRANSFORMERS_OFFLINE=${TRANSFORMERS_OFFLINE:-"0"}
+export EASYOCR_MODULE_PATH=${EASYOCR_MODULE_PATH:-"/models/easyocr"}
+export TESSERACT_PREFIX=${TESSERACT_PREFIX:-"/models/tesseract"}
+export TESSERACT_ALLOW_DOWNLOAD=${TESSERACT_ALLOW_DOWNLOAD:-"true"}
+export PADDLEOCR_PREFIX=${PADDLEOCR_PREFIX:-"/models/paddleocr"}
 
 source /venv/bin/activate
 python run_server.py
