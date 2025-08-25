@@ -234,4 +234,12 @@ Variables used specifically by the DJANGO server.
       - optional
       - Probably required if using another db back-end
 
+Docker exceptions
+-------------------------
+
+In Docker environments, the values of :code:`OCT_DJANGO_PORT` and :code:`OCT_BASE_DIR` are overridden and cannot be customized.
+
+To persist data, bind mount the container path :code:`/plugin_data`. The server listens on port :code:`4000`, which should be mapped to the desired host port.
+
+
 .. _logging_docs: https://docs.python.org/3/library/logging.html#logging-levels
