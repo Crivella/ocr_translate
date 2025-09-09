@@ -2,6 +2,26 @@
 
 List of changes between versions
 
+## 0.7.0
+
+- Major dependencies updates
+  - [ ] `python`: support for `<=3.11` updated to `<=3.14`
+  - [X] `CUDA`: from `11.8` updated to `12.8`
+  - [X] `torch`: from `2.2.1` updated to `2.8.0`
+  - [X] `easyocr`: from `1.7.1` updated to `1.7.2`
+  - [ ] `paddleocr`: from `2.8.1` updated to `3.2.0` (also now running GPU version if CUDA is available)
+- Improved logging of the server using `rich`
+
+- Minor improvements to the details printed by the `run_server.py` script
+
+### TODO
+
+- [ ] Test if also python 3.10 and 3.11 still work
+- [ ] Test if python 3.12 works
+- [X] Test if python 3.13 works
+- [ ] Test if python 3.14 works
+- [ ] Make sure staka model works with newer deps
+
 ## 0.6.3
 
 Changes

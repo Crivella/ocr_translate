@@ -494,10 +494,15 @@ def get_plugin_data(request: HttpRequest) -> JsonResponse:
 def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonResponse:
     """Handle a POST request to install a plugin."""
     logger.debug(f'Manage plugins: {plugins}')
-    with ep_manager():
-        for plugin, present in plugins.items():
-            if present:
-                PMNG.install_plugin(plugin)
-            else:
-                PMNG.uninstall_plugin(plugin)
-    return JsonResponse({})
+    try:
+        with ep_manager():
+            for plugin, present in plugins.items():
+                if present:
+                    PMNG.install_plugin(plugin)
+                else:
+                    PMNG.uninstall_plugin(plugin)
+    except Exception as exc:
+        msg = str(exc)[0:100]
+        logger.error(f'Failed to manage plugins: {msg}')
+        return JsonResponse({'error': msg}, status=502)
+    return JsonResponse({'status': 'success'})

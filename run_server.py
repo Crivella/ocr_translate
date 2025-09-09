@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-req_version = os.environ.get('OCT_VERSION', '0.6.3').lower()
+req_version = os.environ.get('OCT_VERSION', '0.7.0').lower()
 
 def install_upgrade(upgrade=False):
     """Install or upgrade the ocr_translate package."""
@@ -99,7 +99,7 @@ def cuda_check():
     """Check if cuda is available and set the environment variable DEVICE."""
     print('Checking for CUDA availability...')
     if 'DEVICE' in os.environ:
-        device = os.environ['DEVICE']
+        device = os.environ['DEVICE'].lower()
         print(f'Device set via environment variable to: `{device}`')
         if device == 'cpu':
             return
@@ -116,13 +116,13 @@ def cuda_check():
         # The version of torch found depends on the current scope.
         # This check is still useful to se if a CUDA capable torch is installed but a GPU is not available.
         pm.PluginManager()  # Make sure the plugin manager is initialized to have installed plugins libs in path
-        importlib.import_module('torch')
+        torch = importlib.import_module('torch')
     except ModuleNotFoundError:
         print('Torch not found: cannot check for CUDA availability explicitly.')
         print('In case of errors try setting the DEVICE environment variable to "cpu"')
     else:
-        print('Torch found, using it for CUDA availability check...')
-        import torch
+        print(f'Torch found `{torch.__path__}`')
+        print('Using it for CUDA availability check...')
         if not torch.cuda.is_available():
             print('TORCH: CUDA is not available, falling back to using CPU')
             os.environ['DEVICE'] = 'cpu'

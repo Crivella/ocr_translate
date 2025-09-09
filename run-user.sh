@@ -9,6 +9,7 @@ export DEVICE=cpu
 # export OCT_BASE_DIR=
 # export DATABASE_NAME=
 
+export USE_RICH_LOGGING=true
 export DJANGO_DEBUG=true
 export DJANGO_LOG_LEVEL=INFO
 

@@ -38,6 +38,28 @@ PMNG = PluginManager()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() in ['true', 't', '1', 'yes', 'y']
+DJANGO_LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'INFO').upper()
+
+STREAM_HANDLER = 'logging.StreamHandler'
+STREAM_HANDLER_KWARGS = {}
+MEDIUM_FMT_STR = '{asctime} - {levelname:>7s} - {name:>15s}:{module:<15s} - {message}'
+
+USE_RICH_LOGGING = os.environ.get('USE_RICH_LOGGING', '1').lower() in ['true', 't', '1', 'yes', 'y']
+if USE_RICH_LOGGING:
+    try:
+        from rich.logging import RichHandler
+    except:
+        pass
+    else:
+        STREAM_HANDLER = 'rich.logging.RichHandler'
+        STREAM_HANDLER_KWARGS = {
+            'rich_tracebacks': True,
+            'tracebacks_suppress': ['django', 'logging', 'rich'],
+        }
+        MEDIUM_FMT_STR = '{message}'
+
 # Logging
 LOGGING = {
     'version': 1,
@@ -48,7 +70,7 @@ LOGGING = {
             'style': '{',
             },
         'medium': {
-            'format': '{asctime} - {levelname:>7s} - {name:>15s}:{module:<15s} - {message}',
+            'format': MEDIUM_FMT_STR,
             'style': '{',
             },
         'simple': {
@@ -63,10 +85,11 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO').upper(),
+            'level': DJANGO_LOG_LEVEL,
             'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
+            'class': STREAM_HANDLER,
             'formatter': 'medium',
+            **STREAM_HANDLER_KWARGS,
         },
     },
     'loggers': {
@@ -113,9 +136,6 @@ def parse_list(s, sep=';'):
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-7h+*^e963rdi*2jbdlhqvmg%xnx$9@s*ccgcfae@t219$#!)vu')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
-
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 ALLOWED_HOSTS += parse_list(os.environ.get('DJANGO_ALLOWED_HOSTS', ''))
 
@@ -144,10 +164,10 @@ if USE_CORS_HEADERS:
 INSTALLED_APPS.append('ocr_translate')
 INSTALLED_APPS += PMNG.plugins
 INSTALLED_APPS += [
-    'ocr_translate_hugging_face',
-    'ocr_translate_easyocr',
-    'ocr_translate_paddle',
-    'ocr_translate_google',
+    # 'ocr_translate_hugging_face',
+    # 'ocr_translate_easyocr',
+    # 'ocr_translate_paddle',
+    # 'ocr_translate_google',
 ]
 
 # Middleware
