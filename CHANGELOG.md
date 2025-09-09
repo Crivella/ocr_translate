@@ -21,6 +21,7 @@ List of changes between versions
 - [X] Test if python 3.13 works
 - [ ] Test if python 3.14 works
 - [ ] Make sure staka model works with newer deps
+- [ ] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
 
 ## 0.6.3
 

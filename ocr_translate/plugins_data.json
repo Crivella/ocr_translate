@@ -36,7 +36,7 @@
       },
       {
         "name": "torchvision",
-        "version": "0.17.1",
+        "version": "0.23.0",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
         "scope": "cpu"
       },
@@ -48,7 +48,7 @@
       },
       {
         "name": "torch",
-        "version": "2.2.1",
+        "version": "2.8.0",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
         "scope": "cpu"
       },
@@ -293,7 +293,7 @@
       },
       {
         "name": "torchvision",
-        "version": "0.17.1",
+        "version": "0.23.0",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
         "scope": "cpu"
       },
@@ -305,7 +305,7 @@
       },
       {
         "name": "torch",
-        "version": "2.2.1",
+        "version": "2.8.0",
         "extras": "--index-url https://download.pytorch.org/whl/cpu",
         "scope": "cpu"
       },
