@@ -16,12 +16,18 @@ List of changes between versions
 
 ### TODO
 
+- [ ] Add null/passthrough OCR model (how should it be designed to report  both the boxes and the OCR step?)
 - [ ] Test if also python 3.10 and 3.11 still work
 - [ ] Test if python 3.12 works
 - [X] Test if python 3.13 works
 - [ ] Test if python 3.14 works
 - [ ] Make sure staka model works with newer deps
-- [ ] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
+- [X] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
+
+### MAYBE TODO
+
+- [ ] Add way to control server natively without the extension (e.g. through the admin page or another view)
+- [ ] Add rotating file logging (possibly controlled via env var)
 
 ## 0.6.3
 

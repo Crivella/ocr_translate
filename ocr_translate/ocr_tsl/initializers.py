@@ -19,10 +19,13 @@
 """Initialize the server based on environment variables."""
 import json
 import logging
+import os
 from importlib import resources
 from importlib.metadata import entry_points
+from typing import Callable
 
 from django.db.models import Count
+from django.db.utils import OperationalError
 
 from .. import models as m
 from ..plugin_manager import PluginManager
@@ -32,6 +35,34 @@ from .ocr import load_ocr_model
 from .tsl import load_tsl_model
 
 logger = logging.getLogger('ocr.general')
+
+def run_on_env(env_name: str, func_map: dict[str, Callable], value: str = 'true'):
+    """Run a function if the environment variable is set."""
+    if env_name in os.environ:
+        value = os.environ.get(env_name).lower()
+        for key, func in func_map.items():
+            if isinstance(key, str):
+                key = key.lower()
+                if key == value:
+                    break
+            elif isinstance(key, tuple):
+                if any(k.lower() == value for k in key):
+                    break
+            else:
+                raise ValueError(f'Invalid use of `run_on_env`: key `{key}` is not a string or tuple')
+        else:
+            print('Unknown value for environment variable `{env_name}`: {value}... Doing nothing')
+            func = None
+
+        if func is None:
+            return
+
+        try:
+            func()
+            logger.info(f'Ran `{func.__name__}` based on environment variable `{env_name}`')
+        except OperationalError:
+            msg = f'Ignoring environment variable `{env_name}` as the database is not ready/migrated.'
+            logger.warning(msg)
 
 def init_most_used():
     """Initialize the server with the most used languages and models."""
@@ -228,3 +259,32 @@ def auto_create_models():
     auto_create_tsl()
 
     m.OptionDict.objects.get_or_create(options={})
+
+def deprecate_los_true():
+    """Deprecate the environment variable `LOAD_ON_START=true`."""
+    print('WARNING: The environment variable `LOAD_ON_START=true` is deprecated (defaults to `most`).')
+    print('WARNING: Use `LOAD_ON_START=most` or `LOAD_ON_START=last` instead.')
+    init_most_used()
+
+RUN_ON_ENV_INIT = {
+    'AUTOCREATE_LANGUAGES': {
+        ('true', 't', '1'): auto_create_languages,
+        ('false', 'f', '0'): None,
+    },
+    # Re-added to give a way to install plugin independently and still add the models from the entrypoints
+    'AUTOCREATE_MODELS': {
+        ('true', 't', '1'): auto_create_models,
+        ('false', 'f', '0'): None,
+    },
+    'LOAD_ON_START': {
+        'most': init_most_used,
+        'last': init_last_used,
+        'true': deprecate_los_true,
+        'false': None
+    }
+}
+
+def env_var_init():
+    """Run initializations based on environment variables."""
+    for env, func_map in RUN_ON_ENV_INIT.items():
+        run_on_env(env, func_map)
