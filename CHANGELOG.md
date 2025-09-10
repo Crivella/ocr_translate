@@ -27,7 +27,7 @@ List of changes between versions
 ### MAYBE TODO
 
 - [ ] Add way to control server natively without the extension (e.g. through the admin page or another view)
-- [ ] Add rotating file logging (possibly controlled via env var)
+- [X] Add rotating file logging (possibly controlled via env var)
 
 ## 0.6.3
 

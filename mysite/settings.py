@@ -36,7 +36,8 @@ from ocr_translate.plugin_manager import PluginManager
 PMNG = PluginManager()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(os.getenv('OCT_BASE_DIR', ''))
+PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() in ['true', 't', '1', 'yes', 'y']
@@ -60,13 +61,33 @@ if USE_RICH_LOGGING:
         }
         MEDIUM_FMT_STR = '{message}'
 
+LOGFILE = os.environ.get('OCT_LOGFILE', '')
+
+handlers_list = ['console']
+file_handler = {}
+if LOGFILE:
+    if LOGFILE.lower() in ['true', 't', '1', 'yes', 'y']:
+        LOGFILE = BASE_DIR / 'ocr_translate.log'
+    file_handler = {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGFILE,
+            'formatter': 'verbose',
+            'maxBytes': 10*1024*1024,  # 10 MB
+            'backupCount': 5,
+            'encoding': 'utf8',
+        }
+    }
+    handlers_list.append('file')
+
 # Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} - {asctime} - {module} - {process:d} - {thread:d} - {message}',
+            'format': '{levelname} - {asctime} - {module}:{funcName}:{lineno} - {process:d} - {thread:d} - {message}',
             'style': '{',
             },
         'medium': {
@@ -91,6 +112,7 @@ LOGGING = {
             'formatter': 'medium',
             **STREAM_HANDLER_KWARGS,
         },
+        **file_handler
     },
     'loggers': {
         'django': {
@@ -103,19 +125,19 @@ LOGGING = {
             'propagate': False,
         },
         'ocr.general': {
-            'handlers': ['console'],
+            'handlers': handlers_list,
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'propagate': False,
         },
         'ocr.worker': {
-            'handlers': ['console'],
+            'handlers': handlers_list,
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'propagate': False,
         },
         'plugin': {
-            'handlers': ['console'],
+            'handlers': handlers_list,
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'propagate': False,
@@ -210,7 +232,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASE_ENGINE = os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3')
-DATABASE_NAME = os.environ.get('DATABASE_NAME', os.path.join(BASE_DIR, 'db.sqlite3'))
+DATABASE_NAME = os.environ.get('DATABASE_NAME', os.path.join(PROJECT_DIR, 'db.sqlite3'))
 
 DATABASE = {
     'ENGINE': DATABASE_ENGINE,
@@ -283,8 +305,8 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(PROJECT_DIR, 'static'),
     )
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(PROJECT_DIR, 'media')
