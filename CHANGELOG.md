@@ -14,6 +14,9 @@ List of changes between versions
 
 - Minor improvements to the details printed by the `run_server.py` script
 
+- Ensure plugins data is re-added to the database if missing on start-up
+  EG using a previous plugin setup with a new database
+
 ### TODO
 
 - [ ] Add null/passthrough OCR model (how should it be designed to report  both the boxes and the OCR step?)

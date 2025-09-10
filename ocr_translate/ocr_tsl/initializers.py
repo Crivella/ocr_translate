@@ -223,13 +223,17 @@ def add_tsl_model(ep_dict: dict) -> m.TSLModel:
 def ensure_plugins():
     """Ensure that all plugins are installed on initialization.
     This is used to make sure that running the server with a new DEVICE will have the correct dependencies installed."""
+    #pylint: disable=import-outside-toplevel
+    from ..entrypoint_manager import ep_manager
     logger.info('Ensuring that all plugins are loaded')
     pmng = PluginManager()
     known = set(_['name'] for _ in pmng.plugins_data)
     installed = set(pmng.plugins)
     for plugin in known:
         if plugin in installed:
-            pmng.install_plugin(plugin)
+            with ep_manager():
+                pmng.install_plugin(plugin)
+
 def auto_create_box():
     """Create OCRBoxModel objects from entrypoints."""
     for box in load_ept_data('ocr_translate.box_data'):
