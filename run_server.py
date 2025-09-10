@@ -89,8 +89,9 @@ def dir_check():
     base.mkdir(exist_ok=True, parents=True)
 
     if not 'DATABASE_NAME' in os.environ:
-        print(f'DATABASE_NAME not set:  Using "{base / 'db.sqlite3'}" as database')
-        os.environ['DATABASE_NAME'] = (base / 'db.sqlite3').as_posix()
+        db_path = base / 'db.sqlite3'
+        print(f'DATABASE_NAME not set:  Using "{db_path}" as database')
+        os.environ['DATABASE_NAME'] = (db_path).as_posix()
         base.mkdir(exist_ok=True, parents=True)
     elif (db_name := os.environ['DATABASE_NAME']).endswith('.sqlite3'):
         Path(db_name).parent.mkdir(exist_ok=True, parents=True)

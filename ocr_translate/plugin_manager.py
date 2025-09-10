@@ -292,7 +292,8 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
                 if self.installed_pkgs[scoped_name]['version'] == version:
                     logger.debug(f'{scoped_name}=={version} already installed')
                     return
-                logger.debug(f'Uninstalling {scoped_name}=={self.installed_pkgs[scoped_name]['version']}')
+                old_version = self.installed_pkgs[scoped_name]['version']
+                logger.debug(f'Uninstalling {scoped_name}=={old_version}')
                 self._uninstall_package(scoped_name)
 
             ptr = {}
