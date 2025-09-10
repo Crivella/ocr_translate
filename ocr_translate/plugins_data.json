@@ -281,11 +281,11 @@
       },
       {
         "name": "tifffile",
-        "version": "2025.8.28"
+        "version": "2025.5.10"
       },
       {
         "name": "scipy",
-        "version": "1.16.1"
+        "version": "1.15.3"
       },
       {
         "name": "shapely",
@@ -642,11 +642,11 @@
       },
       {
         "name": "scipy",
-        "version": "1.16.1"
+        "version": "1.15.3"
       },
       {
         "name": "tifffile",
-        "version": "2025.8.28"
+        "version": "2025.5.10"
       },
       {
         "name": "shapely",

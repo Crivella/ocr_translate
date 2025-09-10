@@ -20,11 +20,12 @@ List of changes between versions
 ### TODO
 
 - [ ] Add null/passthrough OCR model (how should it be designed to report  both the boxes and the OCR step?)
-- [ ] Test if also python 3.10 and 3.11 still work
+- [X] Test if python 3.10 still works (tested with HF and EOCR only)
+- [X] Test if python 3.11 still works (tested with HF and EOCR only)
 - [ ] Test if python 3.12 works
-- [X] Test if python 3.13 works
+- [X] Test if python 3.13 works (tested with HF and EOCR only)
 - [ ] Test if python 3.14 works
-- [ ] Make sure staka model works with newer deps
+- [ ] Make sure staka model works with newer deps (for now it is working but outputting gibberish)
 - [X] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
 
 ### MAYBE TODO
