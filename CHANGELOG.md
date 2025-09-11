@@ -5,8 +5,8 @@ List of changes between versions
 ## 0.7.0
 
 - Major dependencies updates
-  - [X] `python`: support for `>=3.10, <=3.11` updated to `>=3.10, <=3.14`
-  - [X] `CUDA`: from `11.8` updated to `12.8`
+  - [X] `python`: support for `>=3.10, <=3.11` extended to `>=3.10, <=3.14`
+  - [X] `CUDA`: from `11.8` updated to `12.8` (allow using `sm_120` GPUs like the RTX 5000 series)
   - [X] `torch`: from `2.2.1` updated to `2.8.0`
   - [X] `easyocr`: from `1.7.1` updated to `1.7.2`
   - [X] `paddleocr`: from `2.8.1` updated to `3.2.0`
@@ -16,6 +16,10 @@ List of changes between versions
 
 - Ensure plugins data is re-added to the database if missing on start-up
   EG using a previous plugin setup with a new database
+
+### Fixes
+
+- Fix #55
 
 ### TODO
 
@@ -31,8 +35,10 @@ List of changes between versions
 
 ### MAYBE TODO
 
+- [ ] Possibly move to CUDA 12.9 and check if paddleocr can work also with the gpu version
 - [ ] Add way to control server natively without the extension (e.g. through the admin page or another view)
 - [X] Add rotating file logging (possibly controlled via env var)
+- [ ] Make PMNG aware of manually installed plugins and gray them out in the extension
 
 ## 0.6.3
 
