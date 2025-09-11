@@ -5,11 +5,11 @@ List of changes between versions
 ## 0.7.0
 
 - Major dependencies updates
-  - [ ] `python`: support for `<=3.11` updated to `<=3.14`
+  - [X] `python`: support for `>=3.10, <=3.11` updated to `>=3.10, <=3.14`
   - [X] `CUDA`: from `11.8` updated to `12.8`
   - [X] `torch`: from `2.2.1` updated to `2.8.0`
   - [X] `easyocr`: from `1.7.1` updated to `1.7.2`
-  - [ ] `paddleocr`: from `2.8.1` updated to `3.2.0` (also now running GPU version if CUDA is available)
+  - [X] `paddleocr`: from `2.8.1` updated to `3.2.0`
 - Improved logging of the server using `rich`
 
 - Minor improvements to the details printed by the `run_server.py` script
@@ -26,6 +26,7 @@ List of changes between versions
 - [X] Test if python 3.13 works (tested with HF and EOCR only)
 - [ ] Test if python 3.14 works
 - [ ] Make sure staka model works with newer deps (for now it is working but outputting gibberish)
+- [ ] Properly extract output from paddleocr to place textboxes over text
 - [X] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
 
 ### MAYBE TODO
