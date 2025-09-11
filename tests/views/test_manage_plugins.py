@@ -25,6 +25,8 @@ from django.urls import reverse
 from ocr_translate import entrypoint_manager as epm
 from ocr_translate.plugin_manager import PluginManager
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture()
 def post_kwargs():
