@@ -51,7 +51,6 @@ def ep_manager():
     before: dict[str, set] = {}
     for grp in GROUPS:
         before[grp] = get_group_entrypoints(grp)
-
     yield
 
     after: dict[str, set] = {}

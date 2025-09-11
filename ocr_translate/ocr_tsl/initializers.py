@@ -36,14 +36,14 @@ from .tsl import load_tsl_model
 
 logger = logging.getLogger('ocr.general')
 
-def run_on_env(env_name: str, func_map: dict[str, Callable], value: str = 'true'):
+def run_on_env(env_name: str, func_map: dict[str, Callable]):
     """Run a function if the environment variable is set."""
     if env_name in os.environ:
         value = os.environ.get(env_name).lower()
         for key, func in func_map.items():
             if isinstance(key, str):
                 key = key.lower()
-                if key == value:
+                if key.lower() == value:
                     break
             elif isinstance(key, tuple):
                 if any(k.lower() == value for k in key):
@@ -51,7 +51,7 @@ def run_on_env(env_name: str, func_map: dict[str, Callable], value: str = 'true'
             else:
                 raise ValueError(f'Invalid use of `run_on_env`: key `{key}` is not a string or tuple')
         else:
-            print('Unknown value for environment variable `{env_name}`: {value}... Doing nothing')
+            logger.warning('Unknown value for environment variable `{env_name}`: {value}... Doing nothing')
             func = None
 
         if func is None:
@@ -223,7 +223,7 @@ def add_tsl_model(ep_dict: dict) -> m.TSLModel:
 def ensure_plugins():
     """Ensure that all plugins are installed on initialization.
     This is used to make sure that running the server with a new DEVICE will have the correct dependencies installed."""
-    #pylint: disable=import-outside-toplevel
+    #pylint: disable=import-outside-toplevel,cyclic-import
     from ..entrypoint_manager import ep_manager
     logger.info('Ensuring that all plugins are loaded')
     pmng = PluginManager()
@@ -266,25 +266,27 @@ def auto_create_models():
 
 def deprecate_los_true():
     """Deprecate the environment variable `LOAD_ON_START=true`."""
-    print('WARNING: The environment variable `LOAD_ON_START=true` is deprecated (defaults to `most`).')
-    print('WARNING: Use `LOAD_ON_START=most` or `LOAD_ON_START=last` instead.')
+    logger.warning('The environment variable `LOAD_ON_START=true` is deprecated (defaults to `most`).')
+    logger.warning('Use `LOAD_ON_START=most` or `LOAD_ON_START=last` instead.')
     init_most_used()
 
+TRUE_VALUES = ('true', 't', '1')
+FALSE_VALUES = ('false', 'f', '0')
 RUN_ON_ENV_INIT = {
     'AUTOCREATE_LANGUAGES': {
-        ('true', 't', '1'): auto_create_languages,
-        ('false', 'f', '0'): None,
+        TRUE_VALUES: auto_create_languages,
+        FALSE_VALUES: None,
     },
     # Re-added to give a way to install plugin independently and still add the models from the entrypoints
     'AUTOCREATE_MODELS': {
-        ('true', 't', '1'): auto_create_models,
-        ('false', 'f', '0'): None,
+        TRUE_VALUES: auto_create_models,
+        FALSE_VALUES: None,
     },
     'LOAD_ON_START': {
         'most': init_most_used,
         'last': init_last_used,
-        'true': deprecate_los_true,
-        'false': None
+        TRUE_VALUES: deprecate_los_true,
+        FALSE_VALUES: None
     }
 }
 

@@ -32,8 +32,6 @@ def test_loadable():
     """Test that all json files are valide and loadable."""
     all_jsons = resources.files('ocr_translate').glob('**/*.json')
     for pth in all_jsons:
-        print('-'*80)
-        print(pth)
         with pth.open(encoding='utf-8') as f:
             json.load(f)
 

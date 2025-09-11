@@ -338,7 +338,6 @@ class Trie:
         # Also add all possible combinations of substitutions + deletion/insertion
         for i in range(1, max_num):
             for sub in  self._get_all_substitutions(word, i, invalid_ok=True):
-                print(f'{sub = }')
                 results.extend(self._get_all_deletions(sub, max_num-i))
                 results.extend(self._get_all_insertions(sub, max_num-i))
 
