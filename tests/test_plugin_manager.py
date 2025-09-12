@@ -17,12 +17,13 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Test plugin manager."""
-
-import json
 # pylint: disable=missing-class-docstring,protected-access,missing-function-docstring,import-outside-toplevel
 # pylint: disable=too-many-lines
+
+import json
 import threading
 import time
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
@@ -31,7 +32,6 @@ from ocr_translate import entrypoint_manager as epm
 from ocr_translate import plugin_manager as pm
 from ocr_translate.ocr_tsl.initializers import ensure_plugins
 
-pytestmark = pytest.mark.django_db
 
 @pytest.fixture()
 def mock_log_called():
@@ -66,6 +66,13 @@ def tmp_base_dir(tmp_path, monkeypatch):
     """Set the base directory to a temporary directory."""
     monkeypatch.setenv('OCT_BASE_DIR', str(tmp_path))
     return tmp_path
+
+# Avoid running entrypoint manager together with plugin manager to test without DB access
+# as reloading the apps does not play nice with `pytest.mark.django_db`
+@pytest.fixture(autouse=True)
+def mock_ep_manager(monkeypatch):
+    """Mock the entrypoint manager."""
+    monkeypatch.setattr(epm, 'ep_manager', nullcontext)
 
 @pytest.fixture()
 def disabled(monkeypatch):
@@ -1045,10 +1052,7 @@ def test_uninstall_package_thread_lock(monkeypatch, mock_installed_file):
 
 def test_ensure_plugins(monkeypatch, mock_called, tmp_base_dir, mock_plugin_file, mock_plugin_data):
     """Test initializer ensure plugins."""
-    from contextlib import nullcontext
     pmng = pm.PluginManager()
-    # Avoid pmng being aware of any user installed plugins
-    monkeypatch.setattr(epm, 'ep_manager', nullcontext)
     monkeypatch.setattr(pmng, 'install_plugin', mock_called)
     ensure_plugins()
     assert mock_called.called
