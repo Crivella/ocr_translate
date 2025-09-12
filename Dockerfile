@@ -57,9 +57,9 @@ ENV \
     DATABASE_ENGINE="django.db.backends.sqlite3" \
     DATABASE_NAME="/db_data/db.sqlite3"
 
-VOLUME /plugin_data
-VOLUME /models
-VOLUME /db_data
+RUN mkdir -p /plugin_data
+RUN mkdir -p /models
+RUN mkdir -p /db_data
 
 WORKDIR /opt/app
 
