@@ -82,26 +82,33 @@ def dir_check():
     """Check if required directories exist and create them if needed."""
     if not 'OCT_BASE_DIR' in os.environ:
         base = Path.home()  / '.ocr_translate'
-        print(f'OCT_BASE_DIR not set:  Using "{base}" as base dir for ocr_translate')
+        print(f'OCT_BASE_DIR not set:  Using default "{base}" as base dir for ocr_translate')
         os.environ['OCT_BASE_DIR'] = base.as_posix()
     else:
         base = Path(os.environ['OCT_BASE_DIR'])
+        print(f'OCT_BASE_DIR: Using "{base.as_posix()}" as base dir for ocr_translate')
     base.mkdir(exist_ok=True, parents=True)
 
     if not 'DATABASE_NAME' in os.environ:
         db_path = base / 'db.sqlite3'
-        print(f'DATABASE_NAME not set:  Using "{db_path}" as database')
+        print(f'DATABASE_NAME not set:  Using default "{db_path}" as database')
         os.environ['DATABASE_NAME'] = (db_path).as_posix()
         base.mkdir(exist_ok=True, parents=True)
     elif (db_name := os.environ['DATABASE_NAME']).endswith('.sqlite3'):
         Path(db_name).parent.mkdir(exist_ok=True, parents=True)
+        print(f'DATABASE_NAME: Using "{db_name}" as database')
 
 def cuda_check():
     """Check if cuda is available and set the environment variable DEVICE."""
     print('Checking for CUDA availability...')
     if 'DEVICE' in os.environ:
         device = os.environ['DEVICE'].lower()
-        print(f'Device set via environment variable to: `{device}`')
+        if device not in ['cpu', 'cuda']:
+            print(f'Invalid DEVICE environment variable value `{device}`: defaulting to `cpu`')
+            os.environ['DEVICE'] = 'cpu'
+            device = 'cpu'
+        else:
+            print(f'Device set via environment variable to: `{device}`')
         if device == 'cpu':
             return
     else:
