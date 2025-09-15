@@ -23,11 +23,10 @@ List of changes between versions
 
 ### TODO
 
-- [ ] Add null/passthrough OCR model (how should it be designed to report  both the boxes and the OCR step?)
-- [X] Test if python 3.10 still works (tested with HF and EOCR only)
-- [X] Test if python 3.11 still works (tested with HF and EOCR only)
-- [ ] Test if python 3.12 works
-- [X] Test if python 3.13 works (tested with HF and EOCR only)
+- [X] Test if python 3.10 still works
+- [X] Test if python 3.11 still works
+- [X] Test if python 3.12 works
+- [X] Test if python 3.13 works
 - [ ] Test if python 3.14 works
 - [ ] Make sure staka model works with newer deps (for now it is working but outputting gibberish)
 - [ ] Properly extract output from paddleocr to place textboxes over text
@@ -35,6 +34,7 @@ List of changes between versions
 
 ### MAYBE TODO
 
+- [ ] Add null/passthrough OCR model (how should it be designed to report  both the boxes and the OCR step?)
 - [ ] Possibly move to CUDA 12.9 and check if paddleocr can work also with the gpu version
 - [ ] Add way to control server natively without the extension (e.g. through the admin page or another view)
 - [X] Add rotating file logging (possibly controlled via env var)
