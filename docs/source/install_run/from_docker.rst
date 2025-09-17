@@ -61,6 +61,7 @@ This is an example of using :code:`docker compose` to run the server with a post
           - 4000:4000
         depends_on:
           - database
+        tty: true
         restart: unless-stopped
 
       database:
