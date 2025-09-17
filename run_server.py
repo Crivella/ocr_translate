@@ -120,14 +120,20 @@ def cuda_check():
             print('`nvidia-smi` is available, setting DEVICE to `cuda`')
             os.environ['DEVICE'] = 'cuda'
 
+    pmng = pm.PluginManager()  # Make sure the plugin manager is initialized to have installed plugins libs in path
     try:
         # The version of torch found depends on the current scope.
         # This check is still useful to se if a CUDA capable torch is installed but a GPU is not available.
-        pm.PluginManager()  # Make sure the plugin manager is initialized to have installed plugins libs in path
         torch = importlib.import_module('torch')
     except ModuleNotFoundError:
         print('Torch not found: cannot check for CUDA availability explicitly.')
         print('In case of errors try setting the DEVICE environment variable to "cpu"')
+    except ImportError:
+        print('Torch found but cannot be imported: probably using a newer version of python with an old plugin')
+        print('installation directory. The tool will attempt to update the plugins.')
+        print('In case of errors please try to manually delete the following:')
+        print(' - ', pmng.plugin_dir)
+        print(' - ', pmng.plugin_list_file)
     else:
         print(f'Torch found `{torch.__path__}`')
         print('Using it for CUDA availability check...')
