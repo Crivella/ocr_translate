@@ -12,7 +12,4 @@ server {
     location /static {
         root /opt/app;
     }
-    location /media {
-        root /opt/app;
-    }
 }
