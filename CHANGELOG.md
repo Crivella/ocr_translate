@@ -17,6 +17,7 @@ List of changes between versions
   - [X] `torch`: from `2.2.1` updated to `2.8.0`
   - [X] `easyocr`: from `1.7.1` updated to `1.7.2`
   - [X] `paddleocr`: from `2.8.1` updated to `3.2.0`
+    Different models and much ampler languages supported
 - Improved logging of the server using `rich`
 
 - Minor improvements to the details printed by the `run_server.py` script
@@ -39,7 +40,8 @@ List of changes between versions
   - Issue related to https://github.com/huggingface/transformers/issues/24657#issuecomment-3303054186
   - Unfortunately the version of transformers/tokenizers can't be lowered below `4.48.0/0.20.2`
     as tokenizers does not support python 3.13 before https://github.com/huggingface/tokenizers/releases/tag/v0.20.2
-- [ ] Properly extract output from paddleocr to place textboxes over text
+- [X] Properly extract output from paddleocr to place textboxes over text
+  Or just use it as an OCR model so this is not a problem
 - [X] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
 
 ### MAYBE TODO
