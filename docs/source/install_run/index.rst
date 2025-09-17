@@ -15,9 +15,7 @@ General info
 
 NOTE!!: Since version `v0.6`, `python` (or at least) `pip` needs to be installed on the system. (See https://www.python.org/downloads/)
 
-NOTE!!: Use python `3.10` or `3.11` (Currently `3.12` is incompatible due to the version of numpy used)
-
-Most of the server behavior the behavior of the server (eg: model/plugin/db install locations and allowed hosts) can be customized using :doc:`Environment variables <../user/envs>`
+Most of the server behavior (eg: model/plugin/db install locations and allowed hosts) can be customized using :doc:`Environment variables <../user/envs>`
 
 SuperUser
 ---------

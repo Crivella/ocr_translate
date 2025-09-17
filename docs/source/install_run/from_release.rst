@@ -3,9 +3,10 @@ From Release File (Windows)
 
 Tested for Windows11
 
-- Make sure to have `python <https://www.python.org/downloads/windows/>`_ (3.10 or 3.11) (Currently 3.12 is incompatible due to the version of numpy used) installed on your system and available in the PATH (There is a checkbox that you need to tick as soon as you run the installer to automatically do this).
-  (If you have multiple version of python installed (including 3.12), make sure the first to appear in the PATH is a compatible version or
-  set the `PYTHON` environment variable to the path of the compatible version in `run-user.bat`)
+- Make sure to have `python <https://www.python.org/downloads/windows/>`_ installed on your system and available in the PATH (There is a checkbox that you need to tick as soon as you run the installer to automatically do this).
+  For server versions :code:`< v0.7` only python 3.10 and 3.11 were supported, for :code:`>=v0.7` any python versions 3.10, 3.11, 3.12, 3.13 and 3.14 have been tested and should work.
+  If you have multiple versions of python installed, the first one found in PATH will be used.
+  You can force a specific version by setting the `PYTHON` environment variable in `run-user.bat` to the full path of the python executable you want to use.
 
 .. image:: windows_python_install.png
     :alt: Python installer
