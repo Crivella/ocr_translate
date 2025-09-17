@@ -136,6 +136,9 @@ class BaseModel(models.Model):
     #  - description: A description of the option
     ALLOWED_OPTIONS = {}
 
+    # Needed to run load tests on plugins without triggering load events
+    DISABLE_LOAD_EVENTS = False
+
     entrypoint_namespace = None
 
     name = models.CharField(max_length=128)
@@ -164,7 +167,9 @@ class BaseModel(models.Model):
 
     def __getattribute__(self, name):
         res = super().__getattribute__(name)
-        if name == 'load':
+        if name == 'DISABLE_LOAD_EVENTS':
+            return res
+        if not self.DISABLE_LOAD_EVENTS and name == 'load':
             def wrapped():
                 _res = res()
                 self.load_events.create(description=f'Loading model {self.name}')
