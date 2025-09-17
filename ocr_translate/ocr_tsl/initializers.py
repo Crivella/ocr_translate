@@ -229,10 +229,27 @@ def ensure_plugins():
     pmng = PluginManager()
     known = set(_['name'] for _ in pmng.plugins_data)
     installed = set(pmng.plugins)
-    for plugin in known:
-        if plugin in installed:
-            with ep_manager():
-                pmng.install_plugin(plugin)
+    for plugin in known & installed:
+        with ep_manager():
+            pmng.install_plugin(plugin)
+
+    for cls, group in [
+        (m.OCRBoxModel, 'ocr_translate.box_data'),
+        (m.OCRModel, 'ocr_translate.ocr_data'),
+        (m.TSLModel, 'ocr_translate.tsl_data'),
+        ]:
+        q = cls.objects.filter(active=True)
+        names_db = set(q.values_list('name', flat=True))
+        names_ep = set(_['name'] for _ in load_ept_data(group))
+        removed = names_db - names_ep
+        for name in removed:
+            try:
+                model = cls.objects.get(name=name)
+                model.active = False
+                model.save()
+                logger.info(f'Deactivated box model `{name}` as its entrypoint is no longer available')
+            except m.OCRBoxModel.DoesNotExist:
+                continue
 
 def auto_create_box():
     """Create OCRBoxModel objects from entrypoints."""
