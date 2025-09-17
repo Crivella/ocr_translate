@@ -30,7 +30,7 @@ import pytest
 
 from ocr_translate import entrypoint_manager as epm
 from ocr_translate import plugin_manager as pm
-from ocr_translate.ocr_tsl.initializers import ensure_plugins
+from ocr_translate.ocr_tsl import initializers as ini
 
 
 @pytest.fixture()
@@ -1054,5 +1054,5 @@ def test_ensure_plugins(monkeypatch, mock_called, tmp_base_dir, mock_plugin_file
     """Test initializer ensure plugins."""
     pmng = pm.PluginManager()
     monkeypatch.setattr(pmng, 'install_plugin', mock_called)
-    ensure_plugins()
+    ini.ensure_plugins()
     assert mock_called.called

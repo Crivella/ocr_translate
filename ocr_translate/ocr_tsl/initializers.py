@@ -150,7 +150,7 @@ def add_box_model(ep_dict: dict) -> m.OCRBoxModel:
     """Create OCRBoxModel object from dict."""
     ep_dict = ep_dict.copy()
     logger.debug(f'Creating box model: {ep_dict}')
-    lang = ep_dict.pop('lang')
+    lang = ep_dict.pop('lang', [])
     lcode = ep_dict.pop('lang_code')
     entrypoint = ep_dict.pop('entrypoint')
     iso1_map = ep_dict.pop('iso1_map', {})
@@ -171,7 +171,7 @@ def add_ocr_model(ep_dict: dict) -> m.OCRModel:
     """Create OCRModel object from dict."""
     ep_dict = ep_dict.copy()
     logger.debug(f'Creating ocr model: {ep_dict}')
-    lang = ep_dict.pop('lang')
+    lang = ep_dict.pop('lang', [])
     lcode = ep_dict.pop('lang_code')
     ocr_mode = ep_dict.pop('ocr_mode', m.OCRModel.MERGED)
     entrypoint = ep_dict.pop('entrypoint')
@@ -233,6 +233,8 @@ def ensure_plugins():
         with ep_manager():
             pmng.install_plugin(plugin)
 
+def deactivate_missing_models():
+    """Deactivate models that are in the database but whose entrypoint is no longer available."""
     for cls, group in [
         (m.OCRBoxModel, 'ocr_translate.box_data'),
         (m.OCRModel, 'ocr_translate.ocr_data'),
@@ -243,13 +245,10 @@ def ensure_plugins():
         names_ep = set(_['name'] for _ in load_ept_data(group))
         removed = names_db - names_ep
         for name in removed:
-            try:
-                model = cls.objects.get(name=name)
-                model.active = False
-                model.save()
-                logger.info(f'Deactivated box model `{name}` as its entrypoint is no longer available')
-            except m.OCRBoxModel.DoesNotExist:
-                continue
+            model = cls.objects.get(name=name)
+            model.active = False
+            model.save()
+            logger.info(f'Deactivated box model `{name}` as its entrypoint is no longer available')
 
 def auto_create_box():
     """Create OCRBoxModel objects from entrypoints."""

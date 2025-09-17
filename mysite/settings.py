@@ -199,6 +199,7 @@ INSTALLED_APPS += [
     # 'ocr_translate_paddle',
     # 'ocr_translate_google',
     # 'ocr_translate_tesseract',
+    # 'ocr_translate_ollama',
 ]
 
 # Middleware

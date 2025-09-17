@@ -500,7 +500,6 @@ def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonRespon
                 else:
                     PMNG.uninstall_plugin(plugin)
     except Exception as exc:
-        msg = str(exc)[0:100]
-        logger.error(f'Failed to manage plugins: {msg}')
-        return JsonResponse({'error': msg}, status=502)
+        logger.error('Failed to manage plugins', exc_info=exc)
+        return JsonResponse({'error': str(exc)[0:100]}, status=502)
     return JsonResponse({'status': 'success'})

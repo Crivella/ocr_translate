@@ -31,6 +31,13 @@ from ocr_translate.ocr_tsl import lang, ocr, tsl
 
 pytestmark = pytest.mark.django_db
 
+@pytest.fixture(autouse=True)
+def reset_envs(monkeypatch):
+    """Reset environment variables."""
+    monkeypatch.delenv('LOAD_ON_START', raising=False)
+    monkeypatch.delenv('AUTOCREATE_MODELS', raising=False)
+    monkeypatch.delenv('AUTOCREATE_LANGUAGES', raising=False)
+
 # Tests for run_on_env
 def test_run_on_env_unkown(monkeypatch, mock_called):
     """Test call on env variable unkown."""
@@ -56,6 +63,34 @@ def test_run_on_env_true(monkeypatch, mock_called):
     assert not hasattr(mock_called, 'called')
     ini.run_on_env('TEST', {'true': mock_called})
     assert hasattr(mock_called, 'called')
+
+def test_run_on_env_tuple(monkeypatch, mock_called):
+    """Test call on env variable."""
+    assert not hasattr(mock_called, 'called')
+    monkeypatch.setenv('TEST', 'True')
+    ini.run_on_env('TEST', {('true', '1'): mock_called})
+    assert hasattr(mock_called, 'called')
+
+    delattr(mock_called, 'called')
+
+    assert not hasattr(mock_called, 'called')
+    monkeypatch.setenv('TEST', '1')
+    ini.run_on_env('TEST', {('true', '1'): mock_called})
+    assert hasattr(mock_called, 'called')
+
+    delattr(mock_called, 'called')
+
+    assert not hasattr(mock_called, 'called')
+    monkeypatch.setenv('TEST', 'tr')
+    ini.run_on_env('TEST', {('true', '1'): mock_called})
+    assert not hasattr(mock_called, 'called')
+
+def test_run_on_env_invalid_key(monkeypatch):
+    """Test call on env variable."""
+    monkeypatch.setenv('TEST', 'True')
+    with pytest.raises(ValueError) as excinfo:
+        ini.run_on_env('TEST', {123: lambda: None})
+    assert 'Invalid use of `run_on_env`' in str(excinfo.value)
 
 def test_run_on_env_notdef(mock_called):
     """Test call on env variable."""
@@ -314,6 +349,76 @@ def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     assert m.OCRBoxModel.objects.count() > 0
     assert m.OCRModel.objects.count() > 0
     assert m.TSLModel.objects.count() > 0
+
+@pytest.mark.django_db
+def test_deactivate_missing_models(box_model, ocr_model, tsl_model):
+    """Test initializer deactivate missing models."""
+    assert box_model.active
+    assert ocr_model.active
+    assert tsl_model.active
+    ini.deactivate_missing_models()
+    box_model.refresh_from_db()
+    ocr_model.refresh_from_db()
+    tsl_model.refresh_from_db()
+    assert not box_model.active
+    assert not ocr_model.active
+    assert not tsl_model.active
+
+@pytest.mark.django_db
+def test_deactivate_missing_models_box_found(monkeypatch, box_model, ocr_model, tsl_model):
+    """Test initializer deactivate missing models."""
+    assert box_model.active
+    monkeypatch.setattr(ini, 'load_ept_data', lambda x: [{ 'name': box_model.name }])
+    assert ocr_model.active
+    assert tsl_model.active
+    ini.deactivate_missing_models()
+    box_model.refresh_from_db()
+    ocr_model.refresh_from_db()
+    tsl_model.refresh_from_db()
+    assert box_model.active
+    assert not ocr_model.active
+    assert not tsl_model.active
+
+@pytest.mark.django_db
+def test_auto_create_models_box(monkeypatch, box_model_dict):
+    """Test initializer auto create models."""
+    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
+    box_model_dict['lang_code'] = box_model_dict.pop('language_format')
+    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [box_model_dict] if x.endswith('.box_data') else [])
+
+    assert m.OCRBoxModel.objects.count() == 0
+    ini.env_var_init()
+    assert m.OCRBoxModel.objects.count() == 1
+
+@pytest.mark.django_db
+def test_auto_create_models_ocr(monkeypatch, ocr_model_dict):
+    """Test initializer auto create models."""
+    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
+    ocr_model_dict['lang_code'] = ocr_model_dict.pop('language_format')
+    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [ocr_model_dict] if x.endswith('.ocr_data') else [])
+
+    assert m.OCRModel.objects.count() == 0
+    ini.env_var_init()
+    assert m.OCRModel.objects.count() == 1
+
+@pytest.mark.django_db
+def test_auto_create_models_tsl(monkeypatch, tsl_model_dict):
+    """Test initializer auto create models."""
+    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
+    tsl_model_dict['lang_code'] = tsl_model_dict.pop('language_format')
+    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [tsl_model_dict] if x.endswith('.tsl_data') else [])
+
+    assert m.TSLModel.objects.count() == 0
+    ini.env_var_init()
+    assert m.TSLModel.objects.count() == 1
+
+def test_load_on_start_true(monkeypatch, mock_called):
+    """Test initializer auto create models."""
+    monkeypatch.setenv('LOAD_ON_START', 'true')
+    monkeypatch.setattr(ini, 'init_most_used', mock_called)
+    assert not hasattr(mock_called, 'called')
+    ini.env_var_init()
+    assert hasattr(mock_called, 'called')
 
 def test_no_load_trie():
     """Test that the trie is not loaded when LOAD_TRIE is 'false'."""
