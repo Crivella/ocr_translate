@@ -81,6 +81,9 @@ if LOGFILE:
     }
     handlers_list.append('file')
 
+def skip_static_requests(record):
+    return not record.args[0].startswith('GET /static/')
+
 # Logging
 LOGGING = {
     'version': 1,
@@ -103,11 +106,15 @@ LOGGING = {
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue',
         },
+        'skip_static_requests': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': skip_static_requests,
+        }
     },
     'handlers': {
         'console': {
             'level': DJANGO_LOG_LEVEL,
-            'filters': ['require_debug_true'],
+            # 'filters': ['skip_static_requests'],
             'class': STREAM_HANDLER,
             'formatter': 'medium',
             **STREAM_HANDLER_KWARGS,
@@ -122,24 +129,25 @@ LOGGING = {
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',
+            'filters': ['skip_static_requests'],
             'propagate': False,
         },
         'ocr.general': {
             'handlers': handlers_list,
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
+            # 'filters': ['skip_static_requests'],
             'propagate': False,
         },
         'ocr.worker': {
             'handlers': handlers_list,
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
+            # 'filters': ['skip_static_requests'],
             'propagate': False,
         },
         'plugin': {
             'handlers': handlers_list,
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
+            # 'filters': ['skip_static_requests'],
             'propagate': False,
         },
     },
