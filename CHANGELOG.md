@@ -4,6 +4,13 @@ List of changes between versions
 
 ## 0.7.0
 
+### Breaking changes
+
+- `staka/fugumt-...` models has been removed as it is not working with the newer dependencies.
+  - Issue related to https://github.com/huggingface/transformers/issues/24657#issuecomment-3303054186
+  - Unfortunately the version of transformers/tokenizers can't be lowered below `4.48.0/0.20.2`
+    as tokenizers does not support python 3.13 before https://github.com/huggingface/tokenizers/releases/tag/v0.20.2
+
 - Major dependencies updates
   - [X] `python`: support for `>=3.10, <=3.11` extended to `>=3.10, <=3.14`
   - [X] `CUDA`: from `11.8` updated to `12.8` (allow using `sm_120` GPUs like the RTX 5000 series)
@@ -28,7 +35,10 @@ List of changes between versions
 - [X] Test if python 3.12 works
 - [X] Test if python 3.13 works
 - [ ] Test if python 3.14 works
-- [ ] Make sure staka model works with newer deps (for now it is working but outputting gibberish)
+- [X] Make sure staka model works with newer deps (for now it is working but outputting gibberish)
+  - Issue related to https://github.com/huggingface/transformers/issues/24657#issuecomment-3303054186
+  - Unfortunately the version of transformers/tokenizers can't be lowered below `4.48.0/0.20.2`
+    as tokenizers does not support python 3.13 before https://github.com/huggingface/tokenizers/releases/tag/v0.20.2
 - [ ] Properly extract output from paddleocr to place textboxes over text
 - [X] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
 
