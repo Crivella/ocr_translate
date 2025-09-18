@@ -51,6 +51,8 @@ List of changes between versions
 - [ ] Add way to control server natively without the extension (e.g. through the admin page or another view)
 - [X] Add rotating file logging (possibly controlled via env var)
 - [ ] Make PMNG aware of manually installed plugins and gray them out in the extension
+- [ ] Add <DETECT> language to allow either OCR or TSL models to detect the language automatically
+      (Both should easy, only one could be troublesome)
 
 ## 0.6.3
 
