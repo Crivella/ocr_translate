@@ -32,7 +32,7 @@ from .tries import get_trie_src
 
 logger = logging.getLogger('ocr.general')
 
-def get_or_create(model: Type[models.Model], strict: bool = False, **kwargs) -> models.Model:
+def safe_get_or_create(model: Type[models.Model], strict: bool = False, **kwargs) -> models.Model:
     """Get or create a model instance in a safe way.
 
     Args:
@@ -246,17 +246,13 @@ class BaseModel(models.Model):
             try:
                 langs[key] = data.pop(key)
             except KeyError as exc:
-                raise KeyError(f'Missing key {key} in data for {cls.__name__}') from exc
+                raise KeyError(f'Missing key {key} in data for {cls.__name__} {name}={data}') from exc
             if not isinstance(langs[key], (list, tuple)):
                 raise TypeError(f'Key {key} must be a list or tuple in data for {cls.__name__}')
 
-        create_defaults = {
-            'active': data.pop('active', True),
-        }
-
+        data.setdefault('active', True)
         obj, _ = cls.objects.update_or_create(
             name=name,
-            create_defaults=create_defaults,
             defaults=data,
         )
 
@@ -265,7 +261,7 @@ class BaseModel(models.Model):
 
             invalid = set(lang_list) - set(l.iso1 for l in lang_objs)
             if invalid:
-                raise ValueError(f'Invalid languages {invalid} for key {key} in data for {cls.__name__}')
+                raise ValueError(f'Invalid languages {invalid} for {cls.__name__} <- {data}')
 
             model_key = cls.CREATE_LANG_KEYS[key]
 
@@ -564,7 +560,7 @@ class OCRModel(BaseModel):
             if lang.iso1 in self._NO_SPACE_LANGUAGES:
                 text = text.replace(' ', '')
 
-            text_obj = get_or_create(Text, text=text)
+            text_obj = safe_get_or_create(Text, text=text)
             params[f'result_{self.ocr_mode}'] = text_obj
             ocr_run_obj = OCRRun.objects.create(**params)
         else:
@@ -973,7 +969,7 @@ class TSLModel(BaseModel):
             if not block:
                 yield new
             new = new.response()
-            text_obj = get_or_create(Text, text=new)
+            text_obj = safe_get_or_create(Text, text=new)
             params['result'] = text_obj
             tsl_run_obj = TranslationRun.objects.create(**params)
         else:

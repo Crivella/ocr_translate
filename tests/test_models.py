@@ -66,18 +66,22 @@ def test_language_eq_iso1(language: m.Language):
 
 def test_add_ocr_box_model(box_model_dict: dict, box_model: m.OCRBoxModel):
     """Test adding a new OCRBoxModel"""
+    box_model_dict.pop('lang')
     query = m.OCRBoxModel.objects.filter(**box_model_dict)
     assert query.exists()
     assert str(query.first()) == box_model_dict['name']
 
 def test_add_ocr_model(ocr_model_dict: dict, ocr_model: m.OCRModel):
     """Test adding a new OCRModel"""
+    ocr_model_dict.pop('lang')
     query = m.OCRModel.objects.filter(**ocr_model_dict)
     assert query.exists()
     assert str(query.first()) == ocr_model_dict['name']
 
 def test_add_tsl_model(tsl_model_dict: dict, tsl_model: m.TSLModel):
     """Test adding a new TSLModel"""
+    tsl_model_dict.pop('lang_src')
+    tsl_model_dict.pop('lang_dst')
     query = m.TSLModel.objects.filter(**tsl_model_dict)
     assert query.exists()
     assert str(query.first()) == tsl_model_dict['name']
@@ -90,18 +94,20 @@ def test_add_option_dict(option_dict: m.OptionDict):
 
 def test_goc_multiple_object_returned(box_model_dict: dict):
     """Test that `get_or_create` the first created object is returned when multiple objects are found."""
+    box_model_dict.pop('lang')
     assert m.OCRBoxModel.objects.count() == 0
     obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
     obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
     assert m.OCRBoxModel.objects.count() == 2
     assert obj1 is not obj2
 
-    res = m.get_or_create(m.OCRBoxModel, **box_model_dict)
+    res = m.safe_get_or_create(m.OCRBoxModel, **box_model_dict)
 
     assert res.id == obj1.id
 
 def test_goc_multiple_object_returned_strict(box_model_dict: dict):
     """Test that `get_or_create` raises  when multiple objects are found with strict."""
+    box_model_dict.pop('lang')
     assert m.OCRBoxModel.objects.count() == 0
     obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
     obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
@@ -109,7 +115,7 @@ def test_goc_multiple_object_returned_strict(box_model_dict: dict):
     assert obj1 is not obj2
 
     with pytest.raises(m.OCRBoxModel.MultipleObjectsReturned):
-        m.get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
+        m.safe_get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
 
 def test_lang_load_src(language: m.Language):
     """Test that loading a Language creates a respective src LoadEvent."""
@@ -494,6 +500,9 @@ def test_tsl_load(monkeypatch, tsl_model: m.TSLModel):
 def test_tsl_get_last_loaded(monkeypatch, tsl_model_dict: dict):
     """Test that get_last_loaded returns the last loaded TSLModel."""
     cls = m.TSLModel
+    tsl_model_dict.pop('lang_src')
+    tsl_model_dict.pop('lang_dst')
+    tsl_model_dict['active'] = True
     dct1 = tsl_model_dict.copy()
     dct2 = tsl_model_dict.copy()
     dct1['name'] = 'tsl1'

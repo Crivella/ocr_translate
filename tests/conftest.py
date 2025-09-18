@@ -68,7 +68,7 @@ def language_dict():
     }
 
 @pytest.fixture()
-def box_model_dict():
+def box_model_dict(language):
     """Dict defining an OCRBoxModel"""
     return {
         'name': 'test_box_model/id',
@@ -77,44 +77,46 @@ def box_model_dict():
         'iso1_map': {
             'ja': 'jap',
         },
-        'active': True
+        'lang': [language.iso1],
     }
 
 @pytest.fixture()
-def ocr_model_dict():
+def ocr_model_dict(language):
     """Dict defining an OCRModel"""
     return {
         'name': 'test_ocr_model/id',
         'language_format': 'iso1',
         'entrypoint': 'test_entrypoint.ocr',
-        'active': True
+        'lang': [language.iso1],
     }
 
 @pytest.fixture()
-def ocr_model_dict_single():
+def ocr_model_dict_single(language):
     """Dict defining an OCRModel working in single mode only"""
     return {
         'name': 'test_ocr_model/id',
         'language_format': 'iso1',
         'entrypoint': 'test_entrypoint.ocr',
         'ocr_mode': 'single',
-        'active': True
+        'lang': [language.iso1],
     }
 
 @pytest.fixture()
-def tsl_model_dict():
+def tsl_model_dict(language):
     """Dict defining a TSLModel"""
     return {
         'name': 'test_tsl_model/id',
         'language_format': 'iso1',
         'entrypoint': 'test_entrypoint.tsl',
-        'active': True
+        'lang_src': [language.iso1],
+        'lang_dst': [language.iso1],
     }
 
 @pytest.fixture()
 def option_dict():
     """OptionDict database object."""
-    return m.OptionDict.objects.create(options={})
+    res, _ = m.OptionDict.objects.get_or_create(options={})
+    return res
 
 @pytest.fixture()
 def language(language_dict):
@@ -144,37 +146,24 @@ def text():
     return m.Text.objects.create(text='test_text')
 
 @pytest.fixture()
-def box_model(language, box_model_dict):
+def box_model(box_model_dict):
     """OCRBoxModel database object."""
-    res = m.OCRBoxModel.objects.create(**box_model_dict)
-    res.languages.add(language)
-
-    return res
+    return m.OCRBoxModel.from_dct(box_model_dict)
 
 @pytest.fixture()
-def ocr_model(language, ocr_model_dict):
+def ocr_model(ocr_model_dict):
     """OCRModel database object."""
-    res = m.OCRModel.objects.create(**ocr_model_dict)
-    res.languages.add(language)
-
-    return res
+    return m.OCRModel.from_dct(ocr_model_dict)
 
 @pytest.fixture()
-def ocr_model_single(language, ocr_model_dict_single):
+def ocr_model_single(ocr_model_dict_single):
     """OCRModel database object."""
-    res = m.OCRModel.objects.create(**ocr_model_dict_single)
-    res.languages.add(language)
-
-    return res
+    return m.OCRModel.from_dct(ocr_model_dict_single)
 
 @pytest.fixture()
-def tsl_model(language, tsl_model_dict):
+def tsl_model(tsl_model_dict):
     """TSLModel database object."""
-    res = m.TSLModel.objects.create(**tsl_model_dict)
-    res.src_languages.add(language)
-    res.dst_languages.add(language)
-
-    return res
+    return m.TSLModel.from_dct(tsl_model_dict)
 
 @pytest.fixture()
 def box_model_loaded(monkeypatch, box_model):
@@ -249,6 +238,22 @@ def mock_loaded(monkeypatch, language, box_model, ocr_model, tsl_model):
     monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(lang, 'LANG_DST', language)
+
+@pytest.fixture(autouse=True)
+def reset_envs(monkeypatch):
+    """Reset environment variables."""
+    monkeypatch.delenv('LOAD_ON_START', raising=False)
+    monkeypatch.delenv('AUTOCREATE_MODELS', raising=False)
+    monkeypatch.delenv('AUTOCREATE_LANGUAGES', raising=False)
+
+@pytest.fixture(autouse=True)
+def reset_loaded_models(monkeypatch):
+    """Reset loaded models."""
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', None)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', None)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', None)
+    monkeypatch.setattr(lang, 'LANG_SRC', None)
+    monkeypatch.setattr(lang, 'LANG_DST', None)
 
 @pytest.fixture()
 def mock_loaders(monkeypatch):

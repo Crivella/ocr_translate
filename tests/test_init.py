@@ -30,13 +30,6 @@ from ocr_translate.ocr_tsl import lang
 
 pytestmark = pytest.mark.django_db
 
-@pytest.fixture(autouse=True)
-def reset_envs(monkeypatch):
-    """Reset environment variables."""
-    monkeypatch.delenv('LOAD_ON_START', raising=False)
-    monkeypatch.delenv('AUTOCREATE_MODELS', raising=False)
-    monkeypatch.delenv('AUTOCREATE_LANGUAGES', raising=False)
-
 # Tests for run_on_env
 def test_run_on_env_unkown(monkeypatch, mock_called):
     """Test call on env variable unkown."""
@@ -350,8 +343,11 @@ def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     assert m.TSLModel.objects.count() > 0
 
 @pytest.mark.django_db
-def test_deactivate_missing_models(box_model, ocr_model, tsl_model):
+def test_deactivate_missing_models(monkeypatch,box_model, ocr_model, tsl_model):
     """Test initializer deactivate missing models."""
+    def mock_load_ept_data(namespace):  # pylint: disable=unused-argument
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
     assert box_model.active
     assert ocr_model.active
     assert tsl_model.active
@@ -364,10 +360,15 @@ def test_deactivate_missing_models(box_model, ocr_model, tsl_model):
     assert not tsl_model.active
 
 @pytest.mark.django_db
-def test_deactivate_missing_models_box_found(monkeypatch, box_model, ocr_model, tsl_model):
+def test_deactivate_missing_models_box_found(monkeypatch, box_model_dict, box_model, ocr_model, tsl_model):
     """Test initializer deactivate missing models."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+
     assert box_model.active
-    monkeypatch.setattr(ini, 'load_ept_data', lambda x: [{ 'name': box_model.name }])
     assert ocr_model.active
     assert tsl_model.active
     ini.sync_models_epts()
@@ -385,6 +386,7 @@ def test_auto_create_models_raises(monkeypatch, box_model_dict):
     box_model_dict['lang_code'] = box_model_dict.pop('language_format')
     monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [box_model_dict] if x.endswith('.box_data') else [])
 
+    box_model_dict.pop('lang')
     with pytest.raises(KeyError):
         ini.env_var_init()
 

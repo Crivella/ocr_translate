@@ -126,7 +126,7 @@ def test_get_translations_init(client, monkeypatch, box_model_loaded):
 
 def test_get_translations_init_override_no(client, monkeypatch, box_model_loaded):
     """Test get_translations with GET request with non recognized attribute."""
-    opt = m.OptionDict.objects.create(options={})
+    opt, _ = m.OptionDict.objects.get_or_create(options={})
     monkeypatch.setattr(box_model_loaded, 'default_options', opt)
     dct = {'test': {
         'type': int, 'default': ('cascade', ['box_model'], 1), 'description': 'test'
