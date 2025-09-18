@@ -93,6 +93,28 @@ class Language(models.Model):
         self.load_events_dst.create(description=f'Loading DST Language {self.name}')
 
     @classmethod
+    def from_dct(cls, data: dict) -> 'Language':
+        """Create or update a language from a dictionary"""
+        logger.debug(f'Creating/Updating Language from dict: {data}')
+
+        data = data.copy()
+
+        def_opt = data.pop('default_options', {})
+
+        required = {'name', 'iso1', 'iso2t', 'iso2b', 'iso3'}
+        missing = required - set(data.keys())
+        if missing:
+            raise ValueError(f'Missing required keys {missing} in data for Language')
+
+        obj, _ = cls.objects.get_or_create(**data)
+        opt_obj, created = OptionDict.objects.get_or_create(options=def_opt)
+        if created:
+            logger.debug(f'Created new OptionDict for Language {obj.name}: {def_opt}')
+        obj.default_options = opt_obj
+        obj.save()
+        return obj
+
+    @classmethod
     def get_last_loaded_src(cls) -> 'Language':
         """Get the last loaded language"""
         res = cls.objects
@@ -138,6 +160,11 @@ class BaseModel(models.Model):
 
     # Needed to run load tests on plugins without triggering load events
     DISABLE_LOAD_EVENTS = False
+
+    # Map of key in model data to the related_name of the language field in the model
+    CREATE_LANG_KEYS: dict[str, str] = {}
+
+    LOADED_MODEL: 'BaseModel' = None
 
     entrypoint_namespace = None
 
@@ -199,7 +226,79 @@ class BaseModel(models.Model):
         return getattr(lang, self.language_format or 'iso1')
 
     @classmethod
-    def from_entrypoint(cls, name: str) -> Type['models.Model']:
+    def from_dct(cls, _data: dict) -> 'BaseModel':
+        """Create or update a model from a dictionary"""
+        logger.debug(f'Creating/Updating {cls.__name__} from dict: {_data}')
+
+        data = _data.copy()  # Avoid modifying the input dictionary
+        def_opt = data.pop('default_options', {})
+
+        if 'lang_code' in data:
+            lang_code = data.pop('lang_code')
+            if 'language_format' in data:
+                logger.warning(f"Ignoring 'lang_code' in favor of 'language_format' for {data}")
+            else:
+                data['language_format'] = lang_code
+
+        name = data.pop('name')
+        langs = {}
+        for key in cls.CREATE_LANG_KEYS:
+            try:
+                langs[key] = data.pop(key)
+            except KeyError as exc:
+                raise KeyError(f'Missing key {key} in data for {cls.__name__}') from exc
+            if not isinstance(langs[key], (list, tuple)):
+                raise TypeError(f'Key {key} must be a list or tuple in data for {cls.__name__}')
+
+        create_defaults = {
+            'active': data.pop('active', True),
+        }
+
+        obj, _ = cls.objects.update_or_create(
+            name=name,
+            create_defaults=create_defaults,
+            defaults=data,
+        )
+
+        for key, lang_list in langs.items():
+            lang_objs = Language.objects.filter(iso1__in=lang_list).all()
+
+            invalid = set(lang_list) - set(l.iso1 for l in lang_objs)
+            if invalid:
+                raise ValueError(f'Invalid languages {invalid} for key {key} in data for {cls.__name__}')
+
+            model_key = cls.CREATE_LANG_KEYS[key]
+
+            related: models.ManyToManyField[Language] = getattr(obj, model_key)
+
+            new = set(lang_objs)
+            prv = set(related.all())
+
+            to_add = new - prv
+            to_rmv = prv - new
+
+            if to_rmv:
+                related.remove(*to_rmv)
+            if to_add:
+                related.add(*to_add)
+
+            if to_add or to_rmv:
+                logger.debug(f'Updating {model_key} for OCRModel {name}:')
+                to_add = [l.iso1 for l in to_add]
+                to_rmv = [l.iso1 for l in to_rmv]
+                logger.debug(f'  + {to_add}')
+                logger.debug(f'  - {to_rmv}')
+
+        opt_obj, created = OptionDict.objects.get_or_create(options=def_opt)
+        if created:
+            logger.debug(f'Created new OptionDict for {cls.__name__} {name}: {def_opt}')
+        obj.default_options = opt_obj
+        obj.save()
+
+        return obj
+
+    @classmethod
+    def from_entrypoint(cls, name: str) -> 'BaseModel':
         """Get the entrypoint specific TSL model class from the entrypoint name"""
         if cls.entrypoint_namespace is None:
             raise ValueError('Cannot load base model class from entrypoint.')
@@ -224,8 +323,51 @@ class BaseModel(models.Model):
         """Placeholder method for unloading the model. To be implemented via entrypoint"""
         raise NotImplementedError('The base model class does not implement this method.')
 
+    @classmethod
+    def load_model(cls, model_name: str) -> 'BaseModel':
+        """Load a model by name and unload the current one if needed"""
+        current = cls.get_loaded_model()
+        if current is not None:
+            if current.name == model_name:
+                return current
+            current.unload()
+
+        logger.info(f'Loading {cls.__name__} model: {model_name}')
+        obj = cls.from_entrypoint(model_name)
+        obj.load()
+
+        cls.LOADED_MODEL = obj
+        return obj
+
+    @classmethod
+    def unload_model(cls):
+        """Unload the currently loaded model if it is this one"""
+        current = cls.get_loaded_model()
+        if current is None:
+            return
+        current.unload()
+        cls.LOADED_MODEL = None
+
+    @classmethod
+    def get_loaded_model(cls) -> 'BaseModel':
+        """Get the currently loaded model"""
+        return cls.LOADED_MODEL
+
+    def deactivate(self):
+        """Deactivate the model and unload it if it is currently loaded"""
+        cls = self.__class__
+
+        current = cls.get_loaded_model()
+        if self.active:
+            self.active = False
+            self.save()
+        if current is not None and current.name == self.name:
+            cls.unload_model()
+
 class OCRModel(BaseModel):
     """OCR model."""
+    CREATE_LANG_KEYS = {'lang': 'languages'}
+
     entrypoint_namespace = 'ocr_translate.ocr_models'
     # iso1 code for languages that do not use spaces to separate words
     _NO_SPACE_LANGUAGES = ['ja', 'zh', 'zht', 'lo', 'my']
@@ -442,9 +584,12 @@ class BoxDetectionResult(TypedDict):
     single: list[tuple[int, int, int, int]]
     merged: tuple[int, int, int, int]
 
+
 class OCRBoxModel(BaseModel):
     """OCR model for bounding boxes"""
     #pylint: disable=abstract-method
+    CREATE_LANG_KEYS = {'lang': 'languages'}
+
     entrypoint_namespace = 'ocr_translate.box_models'
 
     languages = models.ManyToManyField(Language, related_name='box_models')
@@ -607,6 +752,8 @@ class TSLModel(BaseModel):
                 ),
         },
     }
+    CREATE_LANG_KEYS = {'lang_src': 'src_languages', 'lang_dst': 'dst_languages'}
+
     entrypoint_namespace = 'ocr_translate.tsl_models'
 
     src_languages = models.ManyToManyField(Language, related_name='tsl_models_src')

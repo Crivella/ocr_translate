@@ -28,8 +28,7 @@ import pytest
 
 from ocr_translate import entrypoint_manager as epm
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import box, cached_lists
-from ocr_translate.ocr_tsl import initializers as ini
+from ocr_translate.ocr_tsl import cached_lists
 
 
 @pytest.fixture
@@ -92,9 +91,6 @@ def mock_ini(monkeypatch, mock_cls):
     ocr.prev68187471 = 'ocr'
     tsl = mock_cls()
     tsl.prev68187471 = 'tsl'
-    monkeypatch.setattr(ini, 'add_box_model', box)
-    monkeypatch.setattr(ini, 'add_ocr_model', ocr)
-    monkeypatch.setattr(ini, 'add_tsl_model', tsl)
     importlib.reload(epm)
 
 @pytest.fixture
@@ -125,6 +121,7 @@ def test_manager_no_change_empty(monkeypatch, mock_models, mock_cls):
         pass
 
     assert mock_cls.call_counter == {}
+
 def test_manager_no_change_models(monkeypatch, mock_models, entrypoint1, mock_cls):
     """Test manager with no changes and entrypoints"""
     monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: {entrypoint1})
@@ -132,8 +129,6 @@ def test_manager_no_change_models(monkeypatch, mock_models, entrypoint1, mock_cl
         pass
 
     assert mock_cls.call_counter['get'] == 3
-    assert mock_cls.call_counter['save'] == 3
-    assert mock_cls.set_counter['active'] == 3
 
 def test_manager_change_add(monkeypatch, mock_models, mock_cls, entrypoint1, mock_called):
     """Test manager with entrypoint added"""
@@ -143,8 +138,6 @@ def test_manager_change_add(monkeypatch, mock_models, mock_cls, entrypoint1, moc
         monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: {entrypoint1})
 
     assert mock_called.called
-    assert mock_cls.call_counter['save'] == 3
-    assert mock_cls.set_counter['active'] == 3
 
 @pytest.mark.parametrize('mock_cls', ['raise'], indirect=True)
 def test_manager_change_add_notexists(monkeypatch, mock_models, mock_ini, mock_cls, entrypoint1):
@@ -154,9 +147,7 @@ def test_manager_change_add_notexists(monkeypatch, mock_models, mock_ini, mock_c
     with epm.ep_manager():
         monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: {entrypoint1})
 
-    assert mock_cls.call_counter['box'] == 1
-    assert mock_cls.call_counter['ocr'] == 1
-    assert mock_cls.call_counter['tsl'] == 1
+    assert mock_cls.call_counter['from_dct'] == 3
 
 def test_manager_change_remove(monkeypatch, mock_models, mock_cls, entrypoint1, mock_called):
     """Test manager with entrypoint removed"""
@@ -164,16 +155,16 @@ def test_manager_change_remove(monkeypatch, mock_models, mock_cls, entrypoint1, 
     monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: {entrypoint1})
     with epm.ep_manager():
         monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: set())
-
     assert mock_called.called
-    assert mock_cls.call_counter['save'] == 3
-    assert mock_cls.set_counter['active'] == 3
+    assert mock_cls.call_counter['deactivate'] == 3
 
-def test_manager_change_remove_loaded(monkeypatch, mock_models, entrypoint1, mock_called):
+@pytest.mark.django_db
+def test_manager_change_remove_loaded(monkeypatch, entrypoint1, mock_called, box_model_loaded):
     """Test manager with entrypoint removed"""
     monkeypatch.setattr(cached_lists, 'refresh_model_cache', lambda: None)
-    monkeypatch.setattr(box, 'unload_box_model', mock_called)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', mock_models[0])
+    monkeypatch.setattr(m.OCRBoxModel, 'unload_model', mock_called)
+    box_model_loaded.name = 'name1'
+    box_model_loaded.save()
     importlib.reload(epm)
     monkeypatch.setattr(epm, 'get_group_entrypoints', lambda x: {entrypoint1})
     with epm.ep_manager():

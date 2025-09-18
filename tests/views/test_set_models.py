@@ -22,7 +22,7 @@
 import pytest
 from django.urls import reverse
 
-from ocr_translate.ocr_tsl import box, ocr, tsl
+from ocr_translate import models as m
 
 pytestmark = pytest.mark.django_db
 
@@ -75,9 +75,9 @@ def test_set_models_post_valid(client, mock_loaders, post_kwargs, box_model, tsl
 
     assert response.status_code == 200
 
-    assert box.BOX_MODEL_ID == box_model.name
-    assert ocr.OBJ_MODEL_ID == ocr_model.name
-    assert tsl.TSL_MODEL_ID == tsl_model.name
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL == tsl_model
 
 def test_set_models_post_valid_notall(client, mock_loaders, post_kwargs, tsl_model, ocr_model):
     """Test set_models with POST valid request."""
@@ -87,6 +87,6 @@ def test_set_models_post_valid_notall(client, mock_loaders, post_kwargs, tsl_mod
 
     assert response.status_code == 200
 
-    assert box.BOX_MODEL_ID is None
-    assert ocr.OBJ_MODEL_ID == ocr_model.name
-    assert tsl.TSL_MODEL_ID == tsl_model.name
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL == tsl_model

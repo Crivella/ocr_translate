@@ -21,59 +21,47 @@
 import pytest
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import ocr
 
-ocr_globals = ['OCR_MODEL_OBJ', 'OBJ_MODEL_ID']
 
 @pytest.mark.django_db
 def test_load_ocr_model(monkeypatch, mock_called, ocr_model: m.OCRModel):
     """Test load ocr model from scratch."""
-    model_id = ocr_model.id
+    model_id = ocr_model.name
     def mock_fromentrypoint(*args, **kwargs):
         mock_fromentrypoint.called = True
         return ocr_model
     # Required to avoid setting global variables for future `from clean` tests
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', None)
-    monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', None)
     monkeypatch.setattr(m.OCRModel, 'from_entrypoint', mock_fromentrypoint)
     ocr_model.load = mock_called
-    ocr.load_ocr_model(model_id)
+    m.OCRModel.load_model(model_id)
 
     assert hasattr(mock_fromentrypoint, 'called')
     assert hasattr(mock_called, 'called')
 
-def test_load_ocr_model_already_loaded(monkeypatch, mock_called):
+@pytest.mark.django_db
+def test_load_ocr_model_already_loaded(monkeypatch, mock_called, ocr_model_loaded: m.OCRModel):
     """Test load box model. With already loaded model."""
-    model_id = 'test/id'
+    model_id = ocr_model_loaded.name
     monkeypatch.setattr(m.OCRModel, 'from_entrypoint', mock_called)
-    monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', model_id)
-    ocr.load_ocr_model(model_id)
+    m.OCRModel.load_model(model_id)
 
     assert not hasattr(mock_called, 'called')
 
-def test_unload_ocr_model(monkeypatch):
+@pytest.mark.django_db
+def test_unload_ocr_model(ocr_model_loaded):
     """Test unload box model."""
-    for key in ocr_globals:
-        monkeypatch.setattr(ocr, key, f'mocked_{key}')
-
-    ocr.unload_ocr_model()
-
-    for key in ocr_globals:
-        assert getattr(ocr, key) is None
-
-def test_get_ocr_model(monkeypatch):
-    """Test get ocr model function."""
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', 'test')
-    assert ocr.get_ocr_model() == 'test'
+    assert m.OCRModel.get_loaded_model() == ocr_model_loaded
+    ocr_model_loaded.unload = lambda: None
+    m.OCRModel.unload_model()
+    assert m.OCRModel.get_loaded_model() is None
 
 def test_unload_ocr_model_if_loaded(monkeypatch, mock_base_model):
     """Test unload ocr model is called if load with an already loaded model."""
-    base1 = mock_base_model()
-    base2 = mock_base_model()
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', base1)
-    monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', 'test')
+    base1 = mock_base_model('test1')
+    base2 = mock_base_model('test2')
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', base1)
     monkeypatch.setattr(m.OCRModel, 'from_entrypoint', lambda *args, **kwargs: base2)
-    ocr.load_ocr_model('test2')
+    m.OCRModel.load_model('test2')
 
     assert not base1.load_called
     assert base1.unload_called

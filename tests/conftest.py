@@ -26,7 +26,7 @@ import ocr_translate
 from ocr_translate import entrypoint_manager as epm
 from ocr_translate import models as m
 from ocr_translate import ocr_tsl, queues, views
-from ocr_translate.ocr_tsl import box, lang, ocr, tsl
+from ocr_translate.ocr_tsl import lang
 
 strings = [
     'This is a test string.',
@@ -177,6 +177,30 @@ def tsl_model(language, tsl_model_dict):
     return res
 
 @pytest.fixture()
+def box_model_loaded(monkeypatch, box_model):
+    """OCRBoxModel database object with model loaded."""
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    return box_model
+
+@pytest.fixture()
+def ocr_model_loaded(monkeypatch, ocr_model):
+    """OCRModel database object with model loaded."""
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    return ocr_model
+
+@pytest.fixture()
+def ocr_model_single_loaded(monkeypatch, ocr_model_single):
+    """OCRModel database object with model loaded."""
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model_single)
+    return ocr_model_single
+
+@pytest.fixture()
+def tsl_model_loaded(monkeypatch, tsl_model):
+    """TSLModel database object with model loaded."""
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
+    return tsl_model
+
+@pytest.fixture()
 def manual_model():
     """ManualModel database object."""
     return m.TSLModel.objects.create(name='manual')
@@ -220,12 +244,9 @@ def mock_loaded_lang_only(monkeypatch, language):
 @pytest.fixture()
 def mock_loaded(monkeypatch, language, box_model, ocr_model, tsl_model):
     """Mock models being loaded"""
-    monkeypatch.setattr(box, 'BOX_MODEL_ID', box_model.name)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', ocr_model.name)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_ID', tsl_model.name)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(lang, 'LANG_DST', language)
 
@@ -237,24 +258,22 @@ def mock_loaders(monkeypatch):
     def mock_load_lang_dst(name):
         monkeypatch.setattr(lang, 'LANG_DST', m.Language.objects.get(iso1=name))
     def mock_load_box_model(name):
-        monkeypatch.setattr(box, 'BOX_MODEL_ID', name)
-        monkeypatch.setattr(box, 'BOX_MODEL_OBJ', m.OCRBoxModel.objects.get(name=name))
+        monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', m.OCRBoxModel.objects.get(name=name))
     def mock_load_ocr_model(name):
-        monkeypatch.setattr(ocr, 'OBJ_MODEL_ID', name)
-        monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', m.OCRModel.objects.get(name=name))
+        monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', m.OCRModel.objects.get(name=name))
     def mock_load_tsl_model(name):
-        monkeypatch.setattr(tsl, 'TSL_MODEL_ID', name)
-        monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', m.TSLModel.objects.get(name=name))
+        monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', m.TSLModel.objects.get(name=name))
 
     dct = {
         'load_lang_src': mock_load_lang_src,
         'load_lang_dst': mock_load_lang_dst,
-        'load_box_model': mock_load_box_model,
-        'load_ocr_model': mock_load_ocr_model,
-        'load_tsl_model': mock_load_tsl_model,
     }
 
-    for mod in [ocr_translate, ocr_tsl, ocr_tsl.initializers, box, lang, ocr, tsl, views]:
+    monkeypatch.setattr(m.OCRBoxModel, 'load_model', mock_load_box_model)
+    monkeypatch.setattr(m.OCRModel, 'load_model', mock_load_ocr_model)
+    monkeypatch.setattr(m.TSLModel, 'load_model', mock_load_tsl_model)
+
+    for mod in [ocr_translate, ocr_tsl, lang, views]:
         for fname, mock in dct.items():
             try:
                 monkeypatch.setattr(mod, fname, mock)
@@ -295,8 +314,8 @@ def mock_load_ept():
             l = res.pop('lang')
             res['name'] = 'test_tsl'
             res['entrypoint'] = 'test.tsl'
-            res['lang_src'] = l
-            res['lang_dst'] = l
+            res['lang_src'] = l.copy()
+            res['lang_dst'] = l.copy()
         else:
             raise ValueError(f'Unknown namespace: {namespace}')
 

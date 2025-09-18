@@ -25,10 +25,8 @@ from threading import Lock
 
 from django.http import HttpRequest, JsonResponse
 
-from .ocr_tsl.box import get_box_model
+from . import models as m
 from .ocr_tsl.lang import get_lang_dst, get_lang_src
-from .ocr_tsl.ocr import get_ocr_model
-from .ocr_tsl.tsl import get_tsl_model
 
 locks = {}
 
@@ -72,9 +70,9 @@ def get_backend_models(strict: bool = True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            box_model = get_box_model() or ''
-            ocr_model = get_ocr_model() or ''
-            tsl_model = get_tsl_model() or ''
+            box_model = m.OCRBoxModel.get_loaded_model() or ''
+            ocr_model = m.OCRModel.get_loaded_model() or ''
+            tsl_model = m.TSLModel.get_loaded_model() or ''
             if strict and (not box_model or not ocr_model or not tsl_model):
                 return JsonResponse({'error': 'Models not loaded'}, status=513)
             return func(*args, **kwargs, box_model=box_model, ocr_model=ocr_model, tsl_model=tsl_model)

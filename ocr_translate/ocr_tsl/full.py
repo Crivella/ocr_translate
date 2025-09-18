@@ -22,10 +22,7 @@ import logging
 from PIL import Image
 
 from .. import models as m
-from .box import get_box_model
 from .lang import get_lang_dst, get_lang_src
-from .ocr import get_ocr_model
-from .tsl import get_tsl_model
 
 logger = logging.getLogger('ocr.general')
 
@@ -39,9 +36,9 @@ def ocr_tsl_pipeline_lazy(
     Try to lazily generate reponse from md5.
     Should raise a ValueError if the operation is not possible (fails at any step).
     """
-    box_model = get_box_model()
-    ocr_model = get_ocr_model()
-    tsl_model = get_tsl_model()
+    box_model = m.OCRBoxModel.get_loaded_model()
+    ocr_model = m.OCRModel.get_loaded_model()
+    tsl_model = m.TSLModel.get_loaded_model()
 
     favor_manual = options_tsl.options.get('favor_manual', True)
     logger.debug(f'LAZY: START {md5}')
@@ -89,9 +86,9 @@ def ocr_tsl_pipeline_work(  # pylint: disable=too-many-locals
     Generate response from md5 and binary.
     Will attempt to behave lazily at every step unless force is True.
     """
-    box_model = get_box_model()
-    ocr_model = get_ocr_model()
-    tsl_model = get_tsl_model()
+    box_model = m.OCRBoxModel.get_loaded_model()
+    ocr_model = m.OCRModel.get_loaded_model()
+    tsl_model = m.TSLModel.get_loaded_model()
     lang_src = get_lang_src()
     lang_dst = get_lang_dst()
 

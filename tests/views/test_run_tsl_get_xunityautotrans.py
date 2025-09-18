@@ -23,7 +23,7 @@ import pytest
 from django.urls import reverse
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import lang, tsl
+from ocr_translate.ocr_tsl import lang
 
 pytestmark = pytest.mark.django_db
 
@@ -60,7 +60,7 @@ def test_run_tsl_xua_ok(client, monkeypatch, mock_loaded, language, tsl_model, m
     """Test run_tsl_get_xunityautotrans with GET request."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(lang, 'LANG_DST', language)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
     assert len(m.Text.objects.all()) == 0

@@ -21,61 +21,47 @@
 import pytest
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import tsl
-
-tsl_globals = ['TSL_MODEL_OBJ']
-
 
 
 @pytest.mark.django_db
 def test_load_tsl_model(monkeypatch, mock_called, tsl_model: m.TSLModel):
     """Test load tsl model from scratch."""
-    model_id = tsl_model.id
+    model_id = tsl_model.name
     def mock_fromentrypoint(*args, **kwargs):
         mock_fromentrypoint.called = True
         return tsl_model
     # Required to avoid setting global variables for future `from clean` tests
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', None)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_ID', None)
     monkeypatch.setattr(m.TSLModel, 'from_entrypoint', mock_fromentrypoint)
     tsl_model.load = mock_called
-    tsl.load_tsl_model(model_id)
+    m.TSLModel.load_model(model_id)
 
     assert hasattr(mock_fromentrypoint, 'called')
     assert hasattr(mock_called, 'called')
 
-def test_load_tsl_model_already_loaded(monkeypatch, mock_called):
-    """Test load box model. With already loaded model."""
-    model_id = 'test/id'
+@pytest.mark.django_db
+def test_load_tsl_model_already_loaded(monkeypatch, mock_called, tsl_model_loaded: m.TSLModel):
+    """Test load tsl model. With already loaded model."""
+    model_id = tsl_model_loaded.name
     monkeypatch.setattr(m.TSLModel, 'from_entrypoint', mock_called)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_ID', model_id)
-    tsl.load_tsl_model(model_id)
+    m.TSLModel.load_model(model_id)
 
     assert not hasattr(mock_called, 'called')
 
-def test_unload_tsl_model(monkeypatch):
-    """Test unload box model."""
-    for key in tsl_globals:
-        monkeypatch.setattr(tsl, key, f'mocked_{key}')
-
-    tsl.unload_tsl_model()
-
-    for key in tsl_globals:
-        assert getattr(tsl, key) is None
-
-def test_get_tsl_model(monkeypatch):
-    """Test get tsl model function."""
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', 'test')
-    assert tsl.get_tsl_model() == 'test'
+@pytest.mark.django_db
+def test_unload_tsl_model(monkeypatch, tsl_model_loaded: m.TSLModel):
+    """Test unload tsl model."""
+    assert m.TSLModel.get_loaded_model() == tsl_model_loaded
+    tsl_model_loaded.unload = lambda: None
+    m.TSLModel.unload_model()
+    assert m.TSLModel.get_loaded_model() is None
 
 def test_unload_tsl_model_if_loaded(monkeypatch, mock_base_model):
     """Test unload tsl model is called if load with an already loaded model."""
-    base1 = mock_base_model() # pylint: disable=invalid-name
-    base2 = mock_base_model() # pylint: disable=invalid-name
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', base1)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_ID', 'test')
+    base1 = mock_base_model('test1')
+    base2 = mock_base_model('test2')
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', base1)
     monkeypatch.setattr(m.TSLModel, 'from_entrypoint', lambda *args, **kwargs: base2)
-    tsl.load_tsl_model('test2')
+    m.TSLModel.load_model('test2')
 
     assert not base1.load_called
     assert base1.unload_called

@@ -21,8 +21,8 @@
 import pytest
 
 from ocr_translate import models as m
+
 # from ocr_translate.messaging import Message
-from ocr_translate.ocr_tsl import box
 
 # def test_load_box_model_notimplemented():
 #     """Test load box model. With not implemented model."""
@@ -38,98 +38,55 @@ def test_load_box_model(monkeypatch, mock_called, box_model: m.OCRBoxModel):
         mock_fromentrypoint.called = True
         return box_model
     # Required to avoid setting global variables for future `from clean` tests
-    monkeypatch.setattr(box, 'BOX_MODEL_ID', None)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', None)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', None)
     monkeypatch.setattr(m.OCRBoxModel, 'from_entrypoint', mock_fromentrypoint)
-    box_model.load = mock_called
-    box.load_box_model(model_id)
+    monkeypatch.setattr(box_model, 'load', mock_called)
+    m.OCRBoxModel.load_model(model_id)
 
     assert hasattr(mock_fromentrypoint, 'called')
     assert hasattr(mock_called, 'called')
 
-def test_load_box_model_already_loaded(monkeypatch, mock_called):
+@pytest.mark.django_db
+def test_load_box_model_already_loaded(monkeypatch, mock_called, box_model):
     """Test load box model. With already loaded model."""
-    model_id = 'easyocr'
     monkeypatch.setattr(m.OCRBoxModel, 'from_entrypoint', mock_called)
-    monkeypatch.setattr(box, 'BOX_MODEL_ID', model_id)
-    box.load_box_model(model_id)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    m.OCRBoxModel.load_model(box_model.name)
 
     assert not hasattr(mock_called, 'called')
 
 def test_get_box_model(monkeypatch):
     """Test get box model function."""
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', 'test')
-    assert box.get_box_model() == 'test'
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', 'test')
+    assert m.OCRBoxModel.get_loaded_model() == 'test'
+@pytest.mark.django_db
 
-def test_unload_box_model(monkeypatch):
+def test_unload_box_model(monkeypatch, box_model, mock_called):
     """Test unload box model function."""
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', 'test')
-    monkeypatch.setattr(box, 'BOX_MODEL_ID', 'test')
-    box.unload_box_model()
-    assert box.BOX_MODEL_OBJ is None
-    assert box.BOX_MODEL_ID is None
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(box_model, 'unload', mock_called)
+    m.OCRBoxModel.unload_model()
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert hasattr(mock_called, 'called')
 
 def test_unload_box_model_if_loaded(monkeypatch):
     """Test unload box model is called if load with an already loaded model."""
     class A(): # pylint: disable=missing-class-docstring,invalid-name
-        def __init__(self):
+        def __init__(self, name):
             self.load_called = False
             self.unload_called = False
+            self.name = name
         def load(self): # pylint: disable=missing-function-docstring
             self.load_called = True
         def unload(self): # pylint: disable=missing-function-docstring
             self.unload_called = True
-    a = A() # pylint: disable=invalid-name
-    b = A() # pylint: disable=invalid-name
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', a)
-    monkeypatch.setattr(box, 'BOX_MODEL_ID', 'test')
+    a = A('test1') # pylint: disable=invalid-name
+    b = A('test2') # pylint: disable=invalid-name
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', a)
     monkeypatch.setattr(m.OCRBoxModel, 'from_entrypoint', lambda *args, **kwargs: b)
-    box.load_box_model('test2')
+    m.OCRBoxModel.load_model('test2')
 
     assert not a.load_called
     assert a.unload_called
     assert b.load_called
     assert not b.unload_called
-
-# def test_queue_placer_handler(monkeypatch, mock_called):
-#     """Test queue_placer is setting _box_pipeline as handler, and that it is called."""
-#     monkeypatch.setattr(box, '_box_pipeline', mock_called)
-#     monkeypatch.setattr(box.q.msg_queue, 'reuse_msg', False)
-#     box.box_pipeline(id_=1, block=True)
-#     assert hasattr(mock_called, 'called')
-
-# @pytest.mark.parametrize('mock_called', ['test_return'], indirect=True)
-# def test_queue_placer_blocking(monkeypatch, mock_called):
-#     """Test queue_placer with blocking"""
-#     monkeypatch.setattr(box, '_box_pipeline', mock_called)
-#     monkeypatch.setattr(box.q.msg_queue, 'reuse_msg', False)
-#     res = box.box_pipeline(id_=1, block=True)
-#     assert hasattr(mock_called, 'called')
-#     assert res == mock_called.expected
-
-# @pytest.mark.parametrize('mock_called', ['test_return'], indirect=True)
-# def test_queue_placer_nonblocking(monkeypatch, mock_called):
-#     """Test queue_placer with blocking"""
-#     monkeypatch.setattr(box, '_box_pipeline', mock_called)
-#     monkeypatch.setattr(box.q.msg_queue, 'reuse_msg', False)
-#     box.q.stop_workers()
-#     res = box.box_pipeline(id_=1, block=False)
-#     assert isinstance(res, Message)
-
-#     assert not hasattr(mock_called, 'called') # Before resolving the message the handler is not called
-#     box.q.start_workers()
-#     assert res.response() == mock_called.expected
-#     assert hasattr(mock_called, 'called') # After resolving the message the handler is called
-
-# def test_box_pipeline_worker():
-#     """Test tsl pipeline with worker"""
-#     placeholder = 'placeholder'
-#     box.q.stop_workers()
-
-#     messages = [box.box_pipeline(placeholder, id_=i, block=False) for i in range(3)]
-#     assert all(isinstance(_, Message) for _ in messages)
-#     def gen():
-#         while not box.q.msg_queue.empty():
-#             yield box.q.msg_queue.get()
-#     res = list(gen())
-#     assert len(res) == len(messages)

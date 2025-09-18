@@ -25,9 +25,8 @@ from django.db.utils import OperationalError
 
 from ocr_translate import models as m
 from ocr_translate import tries
-from ocr_translate.ocr_tsl import box
 from ocr_translate.ocr_tsl import initializers as ini
-from ocr_translate.ocr_tsl import lang, ocr, tsl
+from ocr_translate.ocr_tsl import lang
 
 pytestmark = pytest.mark.django_db
 
@@ -117,18 +116,18 @@ def test_run_on_env_raise(monkeypatch):
 def test_init_most_used_clean(mock_loaders):
     """Test init_most_used with empty database."""
     ini.init_most_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
 def test_init_most_used_content_nousage(mock_loaders, language, box_model, ocr_model, tsl_model):
     """Test init_most_used with content in the database."""
     ini.init_most_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
@@ -137,9 +136,9 @@ def test_init_most_used_content_partial_usage_box(
         ):
     """Test init_most_used with content in the database."""
     ini.init_most_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
@@ -148,9 +147,9 @@ def test_init_most_used_content_partial_usage_ocr(
         ):
     """Test init_most_used with content in the database."""
     ini.init_most_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ == ocr_model
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
@@ -159,9 +158,9 @@ def test_init_most_used_content_partial_usage_tsl(
         ):
     """Test init_most_used with content in the database."""
     ini.init_most_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ == tsl_model
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL == tsl_model
     assert lang.LANG_SRC == language
     assert lang.LANG_DST == language
 
@@ -171,9 +170,9 @@ def test_init_most_used_content_full_usage(
         ):
     """Test init_most_used with content in the database."""
     ini.init_most_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ == ocr_model
-    assert tsl.TSL_MODEL_OBJ == tsl_model
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL == tsl_model
     assert lang.LANG_SRC == language
     assert lang.LANG_DST == language
 
@@ -234,16 +233,16 @@ def test_init_most_used_more_content(mock_loaders, language_dict, image, option_
     assert lang.LANG_SRC == lang2
     assert lang.LANG_DST == lang3
 
-    assert box.BOX_MODEL_OBJ == ocr_box_model2
-    assert ocr.OCR_MODEL_OBJ == ocr_model2
-    assert tsl.TSL_MODEL_OBJ == tsl_model1
+    assert m.OCRBoxModel.LOADED_MODEL == ocr_box_model2
+    assert m.OCRModel.LOADED_MODEL == ocr_model2
+    assert m.TSLModel.LOADED_MODEL == tsl_model1
 
 def test_init_last_used_clean(mock_loaders):
     """Test init_last_used with empty database."""
     ini.init_last_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
@@ -252,18 +251,18 @@ def test_init_last_used_partial(mock_loaders, language, language2):
     language.load_src()
     language2.load_dst()
     ini.init_last_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC == language
     assert lang.LANG_DST == language2
 
     language.load_dst()
     language2.load_src()
     ini.init_last_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC == language2
     assert lang.LANG_DST == language
 
@@ -279,16 +278,16 @@ def test_init_last_used_full(mock_loaders, monkeypatch, language, language2, ocr
     box_model.load()
     tsl_model.load()
 
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
     assert lang.LANG_SRC is None
     assert lang.LANG_DST is None
 
     ini.init_last_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ == ocr_model
-    assert tsl.TSL_MODEL_OBJ == tsl_model
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL == tsl_model
     assert lang.LANG_SRC == language
     assert lang.LANG_DST == language2
 
@@ -328,9 +327,9 @@ def test_load_ept_data(monkeypatch):
 def test_create_models_nolang(monkeypatch, mock_load_ept):
     """Test auto_create_models without creating languages before"""
     monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept)
-    with pytest.raises(m.Language.DoesNotExist):
+    with pytest.raises(ValueError):
         for ocr in ini.load_ept_data('ocr_translate.ocr_data'):
-            ini.add_ocr_model(ocr)
+            m.OCRModel.from_dct(ocr)
 
 def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     """Test creating dummy models"""
@@ -340,11 +339,11 @@ def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     ini.auto_create_languages()
 
     for box in ini.load_ept_data('ocr_translate.box_data'):
-        ini.add_box_model(box)
+        m.OCRBoxModel.from_dct(box)
     for ocr in ini.load_ept_data('ocr_translate.ocr_data'):
-        ini.add_ocr_model(ocr)
+        m.OCRModel.from_dct(ocr)
     for tsl in ini.load_ept_data('ocr_translate.tsl_data'):
-        ini.add_tsl_model(tsl)
+        m.TSLModel.from_dct(tsl)
 
     assert m.OCRBoxModel.objects.count() > 0
     assert m.OCRModel.objects.count() > 0
@@ -356,7 +355,7 @@ def test_deactivate_missing_models(box_model, ocr_model, tsl_model):
     assert box_model.active
     assert ocr_model.active
     assert tsl_model.active
-    ini.deactivate_missing_models()
+    ini.sync_models_epts()
     box_model.refresh_from_db()
     ocr_model.refresh_from_db()
     tsl_model.refresh_from_db()
@@ -371,7 +370,7 @@ def test_deactivate_missing_models_box_found(monkeypatch, box_model, ocr_model, 
     monkeypatch.setattr(ini, 'load_ept_data', lambda x: [{ 'name': box_model.name }])
     assert ocr_model.active
     assert tsl_model.active
-    ini.deactivate_missing_models()
+    ini.sync_models_epts()
     box_model.refresh_from_db()
     ocr_model.refresh_from_db()
     tsl_model.refresh_from_db()
@@ -380,10 +379,26 @@ def test_deactivate_missing_models_box_found(monkeypatch, box_model, ocr_model, 
     assert not tsl_model.active
 
 @pytest.mark.django_db
+def test_auto_create_models_raises(monkeypatch, box_model_dict):
+    """Test initializer auto create models."""
+    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
+    box_model_dict['lang_code'] = box_model_dict.pop('language_format')
+    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [box_model_dict] if x.endswith('.box_data') else [])
+
+    with pytest.raises(KeyError):
+        ini.env_var_init()
+
+    box_model_dict['lang'] = 123
+
+    with pytest.raises(TypeError):
+        ini.env_var_init()
+
+@pytest.mark.django_db
 def test_auto_create_models_box(monkeypatch, box_model_dict):
     """Test initializer auto create models."""
     monkeypatch.setenv('AUTOCREATE_MODELS', '1')
     box_model_dict['lang_code'] = box_model_dict.pop('language_format')
+    box_model_dict['lang'] = []
     monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [box_model_dict] if x.endswith('.box_data') else [])
 
     assert m.OCRBoxModel.objects.count() == 0
@@ -395,6 +410,7 @@ def test_auto_create_models_ocr(monkeypatch, ocr_model_dict):
     """Test initializer auto create models."""
     monkeypatch.setenv('AUTOCREATE_MODELS', '1')
     ocr_model_dict['lang_code'] = ocr_model_dict.pop('language_format')
+    ocr_model_dict['lang'] = []
     monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [ocr_model_dict] if x.endswith('.ocr_data') else [])
 
     assert m.OCRModel.objects.count() == 0
@@ -406,6 +422,8 @@ def test_auto_create_models_tsl(monkeypatch, tsl_model_dict):
     """Test initializer auto create models."""
     monkeypatch.setenv('AUTOCREATE_MODELS', '1')
     tsl_model_dict['lang_code'] = tsl_model_dict.pop('language_format')
+    tsl_model_dict['lang_src'] = []
+    tsl_model_dict['lang_dst'] = []
     monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [tsl_model_dict] if x.endswith('.tsl_data') else [])
 
     assert m.TSLModel.objects.count() == 0

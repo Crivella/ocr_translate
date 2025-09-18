@@ -33,16 +33,10 @@ from PIL import Image
 from . import __version__array__
 from . import models as m
 from .entrypoint_manager import ep_manager
-from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
-from .ocr_tsl.cached_lists import (get_all_lang_dst, get_all_lang_src,
-                                   get_allowed_box_models,
-                                   get_allowed_ocr_models,
-                                   get_allowed_tsl_models)
+from .ocr_tsl import cached_lists as cl
 from .ocr_tsl.full import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
 from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
                            load_lang_src)
-from .ocr_tsl.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
-from .ocr_tsl.tsl import get_tsl_model, load_tsl_model, unload_tsl_model
 from .plugin_manager import PluginManager
 from .queues import main_queue as q
 from .request_decorators import (get_backend_langs, get_backend_models,
@@ -61,21 +55,22 @@ def handshake(request: HttpRequest) -> JsonResponse:
     """Handshake with the client."""
     csrf.get_token(request)
 
-    logger.debug(f'Handshake: {str(get_ocr_model())}, {str(get_tsl_model())}')
     lang_src = get_lang_src()
     lang_dst = get_lang_dst()
 
-    languages = get_all_lang_src()
-    languages_src = get_all_lang_src()
-    languages_dst = get_all_lang_dst()
+    languages = cl.get_all_lang_src()
+    languages_src = cl.get_all_lang_src()
+    languages_dst = cl.get_all_lang_dst()
 
-    box_models = get_allowed_box_models()
-    ocr_models = get_allowed_ocr_models()
-    tsl_models = get_allowed_tsl_models()
+    box_models = cl.get_allowed_box_models()
+    ocr_models = cl.get_allowed_ocr_models()
+    tsl_models = cl.get_allowed_tsl_models()
 
-    box_model = get_box_model() or ''
-    ocr_model = get_ocr_model() or ''
-    tsl_model = get_tsl_model() or ''
+    box_model = m.OCRBoxModel.get_loaded_model() or ''
+    ocr_model = m.OCRModel.get_loaded_model() or ''
+    tsl_model = m.TSLModel.get_loaded_model() or ''
+
+    logger.info(f'Handshake: {str(box_model)}, {str(ocr_model)}, {str(tsl_model)}')
 
     lang_src = getattr(lang_src, 'iso1', None) or ''
     lang_dst = getattr(lang_dst, 'iso1', None) or ''
@@ -120,11 +115,11 @@ def set_models(request: HttpRequest, box_model_id, ocr_model_id, tsl_model_id) -
 
     try:
         if not box_model_id is None and not box_model_id == '':
-            load_box_model(box_model_id)
+            m.OCRBoxModel.load_model(box_model_id)
         if not ocr_model_id is None and not ocr_model_id == '':
-            load_ocr_model(ocr_model_id)
+            m.OCRModel.load_model(ocr_model_id)
         if not tsl_model_id is None and not tsl_model_id == '':
-            load_tsl_model(tsl_model_id)
+            m.TSLModel.load_model(tsl_model_id)
     except Exception as exc:
         logger.error(f'Failed to load models: {exc}')
         return JsonResponse({'error': str(exc)}, status=400)
@@ -159,21 +154,21 @@ def set_lang(request: HttpRequest, lang_src, lang_dst) -> JsonResponse:
     check1 = old_src != new_src
     check2 = old_dst != new_dst
     if check1 or check2:
-        tsl_model = get_tsl_model()
+        tsl_model = m.TSLModel.get_loaded_model()
         if (
             not tsl_model is None and
             (
                 new_src not in tsl_model.src_languages.all() or
                 new_dst not in tsl_model.dst_languages.all()
             )):
-            unload_tsl_model()
+            m.TSLModel.unload_model()
     if check1:
-        box_model = get_box_model()
-        ocr_model = get_ocr_model()
+        box_model = m.OCRBoxModel.get_loaded_model()
+        ocr_model = m.OCRModel.get_loaded_model()
         if not box_model is None and (new_src not in box_model.languages.all()):
-            unload_box_model()
+            m.OCRBoxModel.unload_model()
         if not ocr_model is None and (new_src not in ocr_model.languages.all()):
-            unload_ocr_model()
+            m.OCRModel.unload_model()
     # if check2:
     #     pass
 
@@ -418,11 +413,11 @@ def get_default_options_from_cascade(
             elif obj == 'lang_dst':
                 model = get_lang_dst()
             elif obj == 'box_model':
-                model = get_box_model()
+                model = m.OCRBoxModel.get_loaded_model()
             elif obj == 'ocr_model':
-                model = get_ocr_model()
+                model = m.OCRModel.get_loaded_model()
             elif obj == 'tsl_model':
-                model = get_tsl_model()
+                model = m.TSLModel.get_loaded_model()
             else:
                 raise ValueError(f'Unknown option cascade object: {obj}')
             res = model.default_options.options.get(option, res)

@@ -23,7 +23,7 @@
 import pytest
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import box, full, lang, ocr, tsl
+from ocr_translate.ocr_tsl import full, lang
 
 pytestmark = pytest.mark.django_db
 
@@ -40,8 +40,8 @@ def test_lazy_nobox(
         language, box_model, ocr_model, image, option_dict):
     """Test lazy pipeline with no box."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
     monkeypatch.setattr(ocr_model, 'ocr', mock_called)
     with pytest.raises(ValueError):
         full.ocr_tsl_pipeline_lazy(
@@ -55,9 +55,9 @@ def test_lazy_noocr(
         language, box_model, ocr_model, tsl_model, image, bbox, box_run, option_dict):
     """Test lazy pipeline with no ocr."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
@@ -73,9 +73,9 @@ def test_lazy_notsl(
         language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict):
     """Test lazy pipeline with no translation."""
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
@@ -97,9 +97,9 @@ def test_lazy_option_favor_manual_absent(
     #     'other': 'option'
     # }
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
@@ -122,9 +122,9 @@ def test_lazy_option_favor_manual_specified_true(
     }
     new_opt = m.OptionDict.objects.create(options=options)
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
@@ -147,9 +147,9 @@ def test_lazy_option_favor_manual_specified_false(
     }
     new_opt = m.OptionDict.objects.create(options=options)
     monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
