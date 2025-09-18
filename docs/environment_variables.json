@@ -1,5 +1,5 @@
-{
-    "main": {
+[
+    {
         "title": "App variable list",
         "description": "Environment variables used by the application.",
         "variables": {
@@ -17,7 +17,7 @@
             },
             "LOAD_ON_START": {
                 "default": "false",
-                "usage": "`most`: Load the most used models and the respective languages\n\n`last`: Load the last used models and languages source/destination languages and most used models for that language combination at server start"
+                "usage": "`most`: Load the most used models and the respective languages `last`: Load the last used models and languages source/destination languages and most used models for that language combination at server start"
             },
             "AUTOCREATE_LANGUAGES": {
                 "default": "false",
@@ -25,27 +25,27 @@
             },
             "DEVICE": {
                 "default": "cpu",
-                "usage": "Which device to use for plugins that support it.\n\nCurrently allowed: cpu, cuda"
+                "usage": "Which device to use for plugins that support it. Currently allowed: cpu, cuda"
             },
             "NUM_MAIN_WORKERS": {
                 "default": 4,
-                "usage": "Number of `WorkerMessageQueue` workers handling\n\nincoming OCR_TSL post requests"
+                "usage": "Number of `WorkerMessageQueue` workers handling incoming OCR_TSL post requests"
             },
             "NUM_BOX_WORKERS": {
                 "default": 1,
-                "usage": "Number of `WorkerMessageQueue` workers handling\n\nbox_ocr pipelines (Should be set as 1 until the\n\npipeline is build to handle multiple concurrent\n\nrequest efficiently without slowdowns)"
+                "usage": "Number of `WorkerMessageQueue` workers handling box_ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)"
             },
             "NUM_OCR_WORKERS": {
                 "default": 1,
-                "usage": "Number of `WorkerMessageQueue` workers handling\n\nocr pipelines (Should be set as 1 until the\n\npipeline is build to handle multiple concurrent\n\nrequest efficiently without slowdowns)"
+                "usage": "Number of `WorkerMessageQueue` workers handling ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)"
             },
             "NUM_TSL_WORKERS": {
                 "default": 1,
-                "usage": "Number of `WorkerMessageQueue` workers handling\n\ntranslation pipelines (Should be set as 1 until\n\nthe pipeline is build to handle multiple\n\nconcurrent request efficiently without slowdowns)"
+                "usage": "Number of `WorkerMessageQueue` workers handling translation pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)"
             }
         }
     },
-    "runserver": {
+    {
         "title": "run_server.py variable list",
         "description": "Environment variables used if running the server using the provided `run_server.py` script. This includes the windows release file and docker image that are based on the same script.",
         "variables": {
@@ -95,7 +95,7 @@
             }
         }
     },
-    "server": {
+    {
         "title": "Server variable list",
         "description": "Environment variables used specifically by the DJANGO server.",
         "variables": {
@@ -137,4 +137,4 @@
             }
         }
     }
-}
+]
