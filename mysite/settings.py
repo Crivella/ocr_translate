@@ -28,8 +28,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import json
 import os
 from pathlib import Path
+
+import yaml
 
 from ocr_translate.plugin_manager import PluginManager
 
@@ -47,19 +50,17 @@ STREAM_HANDLER = 'logging.StreamHandler'
 STREAM_HANDLER_KWARGS = {}
 MEDIUM_FMT_STR = '{asctime} - {levelname:>7s} - {name:>15s}:{module:<15s} - {message}'
 
-USE_RICH_LOGGING = os.environ.get('USE_RICH_LOGGING', '1').lower() in ['true', 't', '1', 'yes', 'y']
-if USE_RICH_LOGGING:
-    try:
-        from rich.logging import RichHandler
-    except:
-        pass
-    else:
-        STREAM_HANDLER = 'rich.logging.RichHandler'
-        STREAM_HANDLER_KWARGS = {
-            'rich_tracebacks': True,
-            'tracebacks_suppress': ['django', 'logging', 'rich'],
-        }
-        MEDIUM_FMT_STR = '{message}'
+try:
+    from rich.logging import RichHandler
+except:
+    pass
+else:
+    STREAM_HANDLER = 'rich.logging.RichHandler'
+    STREAM_HANDLER_KWARGS = {
+        'rich_tracebacks': True,
+        'tracebacks_suppress': ['django', 'logging', 'rich'],
+    }
+    MEDIUM_FMT_STR = '{message}'
 
 LOGFILE = os.environ.get('OCT_LOGFILE', '')
 
@@ -72,7 +73,7 @@ if LOGFILE:
         'file': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGFILE,
+            'filename': LOGFILE.as_posix(),
             'formatter': 'verbose',
             'maxBytes': 10*1024*1024,  # 10 MB
             'backupCount': 5,
@@ -114,7 +115,6 @@ LOGGING = {
     'handlers': {
         'console': {
             'level': DJANGO_LOG_LEVEL,
-            # 'filters': ['skip_static_requests'],
             'class': STREAM_HANDLER,
             'formatter': 'medium',
             **STREAM_HANDLER_KWARGS,
@@ -135,19 +135,16 @@ LOGGING = {
         'ocr.general': {
             'handlers': handlers_list,
             'level': 'DEBUG',
-            # 'filters': ['skip_static_requests'],
             'propagate': False,
         },
         'ocr.worker': {
             'handlers': handlers_list,
             'level': 'DEBUG',
-            # 'filters': ['skip_static_requests'],
             'propagate': False,
         },
         'plugin': {
             'handlers': handlers_list,
             'level': 'DEBUG',
-            # 'filters': ['skip_static_requests'],
             'propagate': False,
         },
     },
@@ -180,6 +177,27 @@ if 'CORS_ALLOW_HEADERS' in os.environ:
     CORS_ALLOW_HEADERS = parse_list(os.environ.get('CORS_ALLOW_HEADERS', ''))
 
 
+MANUAL_PLUGIN_FILE = os.environ.get('MANUAL_PLUGIN_FILE', BASE_DIR / 'manual_plugins.yaml')
+MANUAL_PLUGIN_FILE = Path(MANUAL_PLUGIN_FILE)
+MANUAL_PLUGIN_LIST = []
+if MANUAL_PLUGIN_FILE.exists():
+    suffix = MANUAL_PLUGIN_FILE.suffix.lower()
+    with MANUAL_PLUGIN_FILE.open(encoding='utf8') as f:
+        try:
+            if suffix in ['.yaml', '.yml']:
+                MANUAL_PLUGIN_LIST = yaml.safe_load(f)
+            elif suffix in ['.json']:
+                MANUAL_PLUGIN_LIST = json.load(f)
+            else:
+                print(f'Ignorning manual plugin file `{MANUAL_PLUGIN_FILE}`: unknown file extension `{suffix}`')
+        except Exception as e:
+            print(f'Ignorning manual plugin file `{MANUAL_PLUGIN_FILE}`: {e}')
+        else:
+            print(f'Loaded manual plugin file `{MANUAL_PLUGIN_FILE}`: {MANUAL_PLUGIN_LIST}')
+    if not isinstance(MANUAL_PLUGIN_LIST, list) or not all(isinstance(p, str) for p in MANUAL_PLUGIN_LIST):
+        print(f'Error loading manual plugin file `{MANUAL_PLUGIN_FILE}`: not a list of plugin names')
+        MANUAL_PLUGIN_LIST = []
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -193,14 +211,7 @@ if USE_CORS_HEADERS:
     INSTALLED_APPS.append('corsheaders')
 INSTALLED_APPS.append('ocr_translate')
 INSTALLED_APPS += PMNG.plugins
-INSTALLED_APPS += [
-    # 'ocr_translate_hugging_face',
-    # 'ocr_translate_easyocr',
-    # 'ocr_translate_paddle',
-    # 'ocr_translate_google',
-    # 'ocr_translate_tesseract',
-    # 'ocr_translate_ollama',
-]
+INSTALLED_APPS += MANUAL_PLUGIN_LIST
 
 # Middleware
 MIDDLEWARE = [
