@@ -101,7 +101,7 @@ def test_goc_multiple_object_returned(box_model_dict: dict):
     assert m.OCRBoxModel.objects.count() == 2
     assert obj1 is not obj2
 
-    res = m.safe_get_or_create(m.OCRBoxModel, **box_model_dict)
+    res = m.base.safe_get_or_create(m.OCRBoxModel, **box_model_dict)
 
     assert res.id == obj1.id
 
@@ -115,7 +115,7 @@ def test_goc_multiple_object_returned_strict(box_model_dict: dict):
     assert obj1 is not obj2
 
     with pytest.raises(m.OCRBoxModel.MultipleObjectsReturned):
-        m.safe_get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
+        m.base.safe_get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
 
 def test_lang_load_src(language: m.Language):
     """Test that loading a Language creates a respective src LoadEvent."""

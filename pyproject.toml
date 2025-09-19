@@ -106,7 +106,6 @@ disable = [
     "global-statement",
     "broad-exception-caught",
     "too-few-public-methods",
-    "too-many-lines",
 ]
 
 

@@ -47,7 +47,7 @@ def test_tsl_model_from_entrypoint_unknown(tsl_model: m.TSLModel):
 def test_valid_entrypoint(monkeypatch, box_model: m.OCRBoxModel):
     """Test that valid entrypoint works."""
     monkeypatch.setattr(
-        m, 'entry_points',
+        m.base, 'entry_points',
         lambda *args, **kwargs: [o,],
         )
 
