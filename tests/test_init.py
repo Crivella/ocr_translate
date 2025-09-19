@@ -421,6 +421,21 @@ def test_sync_create_missing(monkeypatch, box_model_dict, box_model, ocr_model_d
     assert hasattr(mock_called, 'called')
 
 @pytest.mark.django_db
+def test_activate_models(monkeypatch, box_model_dict, box_model):
+    """Test initializer deactivate missing models."""
+    def mock_load_ept_data(namespace):  # pylint: disable=unused-argument
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert box_model.active
+    box_model.deactivate()
+    assert not box_model.active
+    ini.sync_models_epts()
+    box_model.refresh_from_db()
+    assert box_model.active
+
+@pytest.mark.django_db
 def test_deactivate_missing_models(monkeypatch,box_model, ocr_model, tsl_model):
     """Test initializer deactivate missing models."""
     def mock_load_ept_data(namespace):  # pylint: disable=unused-argument

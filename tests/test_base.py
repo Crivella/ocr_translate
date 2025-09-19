@@ -118,3 +118,88 @@ def test_box_get_lang_code_noisomap(language2, box_model: m.OCRBoxModel):
     """Test that get_lang_code uses iso1_map value not available."""
     res = box_model.get_lang_code(language2)
     assert res == 'ja2'
+
+def test_lang_from_dct_new(language_dict):
+    """Test creating a new language"""
+    assert m.Language.objects.count() == 0
+    obj = m.Language.from_dct(language_dict)
+    assert m.Language.objects.count() == 1
+    assert obj.iso1 == language_dict['iso1']
+
+def test_lang_from_dct_missing_req(language_dict):
+    """Test creating a new language"""
+    language_dict.pop('iso1')
+    with pytest.raises(ValueError):
+        m.Language.from_dct(language_dict)
+
+def test_lang_from_dct_existing(language_dict, language):
+    """Test creating a new language"""
+    obj = m.Language.from_dct(language_dict)
+    assert language == obj
+
+def test_base_from_dct_new(box_model_dict):
+    """Test creating a new model"""
+    assert m.OCRBoxModel.objects.count() == 0
+    obj = m.OCRBoxModel.from_dct(box_model_dict)
+    assert m.OCRBoxModel.objects.count() == 1
+    assert obj.name == box_model_dict['name']
+
+def test_base_from_dct_new_missing_key(box_model_dict):
+    """Test creating a new model missing language key"""
+    key = list(m.OCRBoxModel.CREATE_LANG_KEYS.keys())[0]
+    box_model_dict.pop(key, '')
+    with pytest.raises(KeyError):
+        m.OCRBoxModel.from_dct(box_model_dict)
+
+def test_base_from_dct_new_wrong_type(box_model_dict):
+    """Test creating a new model with wrong data for languages"""
+    key = list(m.OCRBoxModel.CREATE_LANG_KEYS.keys())[0]
+    box_model_dict[key] = 12345
+    with pytest.raises(TypeError):
+        m.OCRBoxModel.from_dct(box_model_dict)
+
+def test_base_from_dct_new_both_code_format(box_model_dict):
+    """Test creating a new model missing language key"""
+    box_model_dict['lang_code'] = 'abc'
+    box_model_dict['language_format'] = 'xyz'
+    obj = m.OCRBoxModel.from_dct(box_model_dict)
+
+    assert obj.language_format == 'xyz'
+
+def test_base_from_dct_update(box_model_dict, box_model):
+    """Test creating a new model missing language key"""
+    assert box_model.language_format == box_model_dict['language_format']
+    assert box_model.languages.count() > 0
+    box_model_dict['language_format'] = 'xyz'
+    box_model_dict['lang'] = []
+    m.OCRBoxModel.from_dct(box_model_dict)
+    box_model.refresh_from_db()
+    assert box_model.language_format == 'xyz'
+    assert box_model.languages.count() == 0
+
+
+def test_load_model(monkeypatch, box_model, mock_called):
+    """Test load_model method of OCRBoxModel."""
+    monkeypatch.setattr(m.OCRBoxModel, 'from_entrypoint', lambda name: box_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'load', mock_called)
+    assert not hasattr(mock_called, 'called')
+    obj1 = m.OCRBoxModel.load_model(box_model.name)
+    assert hasattr(mock_called, 'called')
+    del mock_called.called
+
+    # Load again should not call `load` again
+    obj2 = m.OCRBoxModel.load_model(box_model.name)
+    assert not hasattr(mock_called, 'called')
+    assert obj1 is obj2
+
+def test_unload_model(monkeypatch, box_model_loaded, mock_called):
+    """Test unload_model method of OCRBoxModel."""
+    monkeypatch.setattr(m.OCRBoxModel, 'unload', mock_called)
+    assert not hasattr(mock_called, 'called')
+    m.OCRBoxModel.unload_model()
+    assert hasattr(mock_called, 'called')
+    del mock_called.called
+
+    # Unload again should not call `unload` again
+    m.OCRBoxModel.unload_model()
+    assert not hasattr(mock_called, 'called')

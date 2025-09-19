@@ -143,10 +143,6 @@ def ensure_plugins():
         with ep_manager():
             pmng.install_plugin(plugin)
 
-    unknown = installed - known
-    if unknown:
-        logger.warning(f'Unknown plugins found will be ignored: {unknown}')
-
 def sync_models_epts(update: bool = False):
     """Deactivate models that are in the database but whose entrypoint is no longer available."""
     for group, cls in epm.GROUPS.items():
