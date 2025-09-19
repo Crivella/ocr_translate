@@ -29,7 +29,7 @@ from PIL.Image import Image as PILImage
 from ocr_translate import models as m
 from ocr_translate import tries
 from ocr_translate.messaging import Message
-from ocr_translate.ocr_tsl import full, lang
+from ocr_translate.ocr_tsl import full
 from ocr_translate.trie import Trie
 
 pytestmark = pytest.mark.django_db
@@ -613,7 +613,8 @@ def test_tsl_run_lazy(text: m.Text, language: m.Language, tsl_model: m.TSLModel,
 @pytest.mark.parametrize('mock_called', [['test_text_ocred']], indirect=True)
 def test_ocr_tsl_work_single_ocr_plus_lazy(
         monkeypatch, image_pillow: PILImage, mock_called,
-        image: m.Image, text: m.Text, bbox: m.BBox, bbox_single: m.BBox, language: m.Language,
+        image: m.Image, text: m.Text, bbox: m.BBox, bbox_single: m.BBox,
+        lang_src_loaded: m.Language,
         box_model_loaded: m.OCRBoxModel, ocr_model_single_loaded: m.OCRModel, tsl_model_loaded: m.TSLModel,
         option_dict: m.OptionDict
         ):
@@ -635,7 +636,6 @@ def test_ocr_tsl_work_single_ocr_plus_lazy(
     ocr_model_single_loaded.ocr = mock_ocr_run
     tsl_model_loaded.translate = mock_tsl_run
 
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
     monkeypatch.setattr(ocr_model_single_loaded, 'merge_single_result', mock_called)
 
     res = full.ocr_tsl_pipeline_work(
@@ -644,7 +644,7 @@ def test_ocr_tsl_work_single_ocr_plus_lazy(
         )
 
     # Check that `merge_single_result` is being called with the expected arguments
-    assert mock_called.args[0] == language.iso1
+    assert mock_called.args[0] == lang_src_loaded.iso1
     assert mock_called.args[1] == [text.text + '_ocred']
     assert mock_called.args[2] == [bbox_single]
     assert mock_called.args[3] == [bbox]

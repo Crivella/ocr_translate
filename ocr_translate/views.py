@@ -35,8 +35,6 @@ from . import models as m
 from .entrypoint_manager import ep_manager
 from .ocr_tsl import cached_lists as cl
 from .ocr_tsl.full import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
-from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
-                           load_lang_src)
 from .plugin_manager import PluginManager
 from .queues import main_queue as q
 from .request_decorators import (get_backend_langs, get_backend_models,
@@ -55,8 +53,8 @@ def handshake(request: HttpRequest) -> JsonResponse:
     """Handshake with the client."""
     csrf.get_token(request)
 
-    lang_src = get_lang_src()
-    lang_dst = get_lang_dst()
+    lang_src = m.Language.get_loaded_model_src()
+    lang_dst = m.Language.get_loaded_model_dst()
 
     languages = cl.get_all_lang_src()
     languages_src = cl.get_all_lang_src()
@@ -139,17 +137,17 @@ def set_lang(request: HttpRequest, lang_src, lang_dst) -> JsonResponse:
     """
     logger.info(f'SET LANG: {lang_src}, {lang_dst}')
 
-    old_src = get_lang_src()
-    old_dst = get_lang_dst()
+    old_src = m.Language.get_loaded_model_src()
+    old_dst = m.Language.get_loaded_model_dst()
     try:
-        load_lang_src(lang_src)
-        load_lang_dst(lang_dst)
+        m.Language.load_model_src(lang_src)
+        m.Language.load_model_dst(lang_dst)
         load_trie_src(lang_src)
         # load_trie_dst(lang_dst)
     except Exception as exc:
         return JsonResponse({'error': str(exc)}, status=400)
-    new_src = get_lang_src()
-    new_dst = get_lang_dst()
+    new_src = m.Language.get_loaded_model_src()
+    new_dst = m.Language.get_loaded_model_dst()
 
     check1 = old_src != new_src
     check2 = old_dst != new_dst
@@ -189,7 +187,9 @@ def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> Json
     }
     """
     src_obj, _ = m.Text.objects.get_or_create(text=text)
-    dst_obj = tsl_model.translate(src_obj, get_lang_src(), get_lang_dst())
+    lang_src = m.Language.get_loaded_model_src()
+    lang_dst = m.Language.get_loaded_model_dst()
+    dst_obj = tsl_model.translate(src_obj, lang_src, lang_dst)
     dst_obj = next(dst_obj)
 
     return JsonResponse({
@@ -409,9 +409,9 @@ def get_default_options_from_cascade(
             res = obj.options.get(option, res)
         elif isinstance(obj, str):
             if obj == 'lang_src':
-                model = get_lang_src()
+                model = m.Language.get_loaded_model_src()
             elif obj == 'lang_dst':
-                model = get_lang_dst()
+                model = m.Language.get_loaded_model_dst()
             elif obj == 'box_model':
                 model = m.OCRBoxModel.get_loaded_model()
             elif obj == 'ocr_model':

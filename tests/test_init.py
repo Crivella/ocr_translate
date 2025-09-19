@@ -26,7 +26,6 @@ from django.db.utils import OperationalError
 from ocr_translate import models as m
 from ocr_translate import tries
 from ocr_translate.ocr_tsl import initializers as ini
-from ocr_translate.ocr_tsl import lang
 
 pytestmark = pytest.mark.django_db
 
@@ -112,8 +111,8 @@ def test_init_most_used_clean(mock_loaders):
     assert m.OCRBoxModel.LOADED_MODEL is None
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    assert m.Language.LOADED_MODEL_SRC is None
+    assert m.Language.LOADED_MODEL_DST is None
 
 def test_init_most_used_content_nousage(mock_loaders, language, box_model, ocr_model, tsl_model):
     """Test init_most_used with content in the database."""
@@ -121,8 +120,8 @@ def test_init_most_used_content_nousage(mock_loaders, language, box_model, ocr_m
     assert m.OCRBoxModel.LOADED_MODEL is None
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    assert m.Language.LOADED_MODEL_SRC is None
+    assert m.Language.LOADED_MODEL_DST is None
 
 def test_init_most_used_content_partial_usage_box(
         mock_loaders, language, box_model, ocr_model, tsl_model, box_run,
@@ -132,8 +131,8 @@ def test_init_most_used_content_partial_usage_box(
     assert m.OCRBoxModel.LOADED_MODEL == box_model
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    assert m.Language.LOADED_MODEL_SRC is None
+    assert m.Language.LOADED_MODEL_DST is None
 
 def test_init_most_used_content_partial_usage_ocr(
         mock_loaders, language, box_model, ocr_model, tsl_model, ocr_run,
@@ -143,8 +142,8 @@ def test_init_most_used_content_partial_usage_ocr(
     assert m.OCRBoxModel.LOADED_MODEL == box_model
     assert m.OCRModel.LOADED_MODEL == ocr_model
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    assert m.Language.LOADED_MODEL_SRC is None
+    assert m.Language.LOADED_MODEL_DST is None
 
 def test_init_most_used_content_partial_usage_tsl(
         mock_loaders, language, box_model, ocr_model, tsl_model, tsl_run
@@ -154,8 +153,8 @@ def test_init_most_used_content_partial_usage_tsl(
     assert m.OCRBoxModel.LOADED_MODEL is None
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL == tsl_model
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language
+    assert m.Language.LOADED_MODEL_SRC == language
+    assert m.Language.LOADED_MODEL_DST == language
 
 def test_init_most_used_content_full_usage(
         mock_loaders, language, box_model, ocr_model, tsl_model,
@@ -166,8 +165,8 @@ def test_init_most_used_content_full_usage(
     assert m.OCRBoxModel.LOADED_MODEL == box_model
     assert m.OCRModel.LOADED_MODEL == ocr_model
     assert m.TSLModel.LOADED_MODEL == tsl_model
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language
+    assert m.Language.LOADED_MODEL_SRC == language
+    assert m.Language.LOADED_MODEL_DST == language
 
 
 def test_init_most_used_more_content(mock_loaders, language_dict, image, option_dict, text):
@@ -223,8 +222,8 @@ def test_init_most_used_more_content(mock_loaders, language_dict, image, option_
 
     ini.init_most_used()
 
-    assert lang.LANG_SRC == lang2
-    assert lang.LANG_DST == lang3
+    assert m.Language.LOADED_MODEL_SRC == lang2
+    assert m.Language.LOADED_MODEL_DST == lang3
 
     assert m.OCRBoxModel.LOADED_MODEL == ocr_box_model2
     assert m.OCRModel.LOADED_MODEL == ocr_model2
@@ -236,8 +235,8 @@ def test_init_last_used_clean(mock_loaders):
     assert m.OCRBoxModel.LOADED_MODEL is None
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    assert m.Language.LOADED_MODEL_SRC is None
+    assert m.Language.LOADED_MODEL_DST is None
 
 def test_init_last_used_partial(mock_loaders, language, language2):
     """Test init_last_used with content in the database."""
@@ -247,8 +246,8 @@ def test_init_last_used_partial(mock_loaders, language, language2):
     assert m.OCRBoxModel.LOADED_MODEL is None
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language2
+    assert m.Language.LOADED_MODEL_SRC == language
+    assert m.Language.LOADED_MODEL_DST == language2
 
     language.load_dst()
     language2.load_src()
@@ -256,8 +255,8 @@ def test_init_last_used_partial(mock_loaders, language, language2):
     assert m.OCRBoxModel.LOADED_MODEL is None
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC == language2
-    assert lang.LANG_DST == language
+    assert m.Language.LOADED_MODEL_SRC == language2
+    assert m.Language.LOADED_MODEL_DST == language
 
 def test_init_last_used_full(mock_loaders, monkeypatch, language, language2, ocr_model, box_model, tsl_model):
     """Test init_last_used with content in the database."""
@@ -274,15 +273,15 @@ def test_init_last_used_full(mock_loaders, monkeypatch, language, language2, ocr
     assert m.OCRBoxModel.LOADED_MODEL is None
     assert m.OCRModel.LOADED_MODEL is None
     assert m.TSLModel.LOADED_MODEL is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    assert m.Language.LOADED_MODEL_SRC is None
+    assert m.Language.LOADED_MODEL_DST is None
 
     ini.init_last_used()
     assert m.OCRBoxModel.LOADED_MODEL == box_model
     assert m.OCRModel.LOADED_MODEL == ocr_model
     assert m.TSLModel.LOADED_MODEL == tsl_model
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language2
+    assert m.Language.LOADED_MODEL_SRC == language
+    assert m.Language.LOADED_MODEL_DST == language2
 
 def test_auto_create_languages():
     """Test auto_create_languages."""

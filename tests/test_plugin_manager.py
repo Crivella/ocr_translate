@@ -61,6 +61,11 @@ def mock_sprun():
             return b'error!!'
     return MockSPrun
 
+@pytest.fixture(autouse=True)
+def reset_env(monkeypatch):
+    """Reset environment variables."""
+    monkeypatch.delenv('DEVICE', raising=False)
+
 @pytest.fixture(autouse=True, scope='function')
 def tmp_base_dir(tmp_path, monkeypatch):
     """Set the base directory to a temporary directory."""

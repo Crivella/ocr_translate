@@ -23,6 +23,8 @@ from typing import Type
 
 from django.db import models
 
+from ..ocr_tsl.signals import refresh_model_cache_signal
+
 logger = logging.getLogger('ocr.general')
 
 def safe_get_or_create(model: Type[models.Model], strict: bool = False, **kwargs) -> models.Model:
@@ -66,6 +68,9 @@ class Text(models.Model):
 
 class Language(models.Model):
     """Language used for translation"""
+    LOADED_MODEL_SRC: 'Language' = None
+    LOADED_MODEL_DST: 'Language' = None
+
     name = models.CharField(max_length=64, unique=True)
     iso1 = models.CharField(max_length=8, unique=True)
     iso2b = models.CharField(max_length=8, unique=True)
@@ -150,6 +155,68 @@ class Language(models.Model):
             logger.debug('No load events found for Language')
             return None
         return res
+
+    @classmethod
+    def load_model_src(cls, lang_iso1: str) -> 'Language':
+        """Load a language by iso1 code and unload the current one if needed"""
+        current = cls.LOADED_MODEL_SRC
+        if current is not None:
+            if current.iso1 == lang_iso1:
+                return current
+
+        logger.info(f'Loading Language SRC model: {lang_iso1}')
+        obj = cls.objects.get(iso1=lang_iso1)
+        obj.load_src()
+
+        cls.LOADED_MODEL_SRC = obj
+        refresh_model_cache_signal.send(sender=None)
+        return obj
+
+    @classmethod
+    def load_model_dst(cls, lang_iso1: str) -> 'Language':
+        """Load a language by iso1 code and unload the current one if needed"""
+        current = cls.LOADED_MODEL_DST
+        if current is not None:
+            if current.iso1 == lang_iso1:
+                return current
+
+        logger.info(f'Loading Language DST model: {lang_iso1}')
+        obj = cls.objects.get(iso1=lang_iso1)
+        obj.load_dst()
+
+        cls.LOADED_MODEL_DST = obj
+        refresh_model_cache_signal.send(sender=None)
+        return obj
+
+    @classmethod
+    def get_loaded_model_src(cls) -> 'Language':
+        """Get the currently loaded source language"""
+        return cls.LOADED_MODEL_SRC
+
+    @classmethod
+    def get_loaded_model_dst(cls) -> 'Language':
+        """Get the currently loaded destination language"""
+        return cls.LOADED_MODEL_DST
+
+    @classmethod
+    def unload_model_src(cls):
+        """Unload the currently loaded source language if any"""
+        current = cls.LOADED_MODEL_SRC
+        if current is None:
+            return
+        logger.info(f'Unloading Language SRC model: {current.iso1}')
+        cls.LOADED_MODEL_SRC = None
+        refresh_model_cache_signal.send(sender=None)
+
+    @classmethod
+    def unload_model_dst(cls):
+        """Unload the currently loaded destination language if any"""
+        current = cls.LOADED_MODEL_DST
+        if current is None:
+            return
+        logger.info(f'Unloading Language DST model: {current.iso1}')
+        cls.LOADED_MODEL_DST = None
+        refresh_model_cache_signal.send(sender=None)
 
 class BaseModel(models.Model):
     """Mixin class for loading entrypoint models"""

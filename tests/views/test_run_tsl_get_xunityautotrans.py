@@ -23,7 +23,6 @@ import pytest
 from django.urls import reverse
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import lang
 
 pytestmark = pytest.mark.django_db
 
@@ -56,10 +55,8 @@ class MockReturn:
     text = 'translated_hello'
 
 @pytest.mark.parametrize('mock_called', [iter([MockReturn])], indirect=True)
-def test_run_tsl_xua_ok(client, monkeypatch, mock_loaded, language, tsl_model, mock_called):
+def test_run_tsl_xua_ok(client, monkeypatch, mock_loaded, lang_src_loaded, lang_dst_loaded, tsl_model, mock_called):
     """Test run_tsl_get_xunityautotrans with GET request."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
     monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     monkeypatch.setattr(tsl_model, 'translate', mock_called)
 
@@ -75,4 +72,4 @@ def test_run_tsl_xua_ok(client, monkeypatch, mock_loaded, language, tsl_model, m
     assert response.content == b'translated_hello'
     assert hasattr(mock_called, 'called')
     text_obj = m.Text.objects.first()
-    assert mock_called.args == (text_obj, language, language)
+    assert mock_called.args == (text_obj, lang_src_loaded, lang_dst_loaded)

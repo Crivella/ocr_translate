@@ -30,7 +30,6 @@ from django.db.utils import OperationalError
 from .. import entrypoint_manager as epm
 from .. import models as m
 from ..plugin_manager import PluginManager
-from .lang import load_lang_dst, load_lang_src
 
 logger = logging.getLogger('ocr.general')
 
@@ -69,9 +68,9 @@ def init_most_used():
     dst = m.Language.objects.annotate(count=Count('trans_dst')).order_by('-count').first()
 
     if src and src.count > 0:
-        load_lang_src(src.iso1)
+        m.Language.load_model_src(src.iso1)
     if dst and dst.count > 0:
-        load_lang_dst(dst.iso1)
+        m.Language.load_model_dst(dst.iso1)
 
     box = m.OCRBoxModel.objects.annotate(count=Count('box_runs')).order_by('-count').first()
     ocr = m.OCRModel.objects.annotate(count=Count('ocr_runs')).order_by('-count').first()
@@ -95,11 +94,11 @@ def init_last_used():
     tsl = m.TSLModel.get_last_loaded()
 
     if src:
-        load_lang_src(src.iso1)
+        m.Language.load_model_src(src.iso1)
     else:
         logger.warning('No last source language found')
     if dst:
-        load_lang_dst(dst.iso1)
+        m.Language.load_model_dst(dst.iso1)
     else:
         logger.warning('No last destination language found')
     if box:

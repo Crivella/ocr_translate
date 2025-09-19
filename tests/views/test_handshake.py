@@ -24,7 +24,6 @@ import pytest
 from django.urls import reverse
 
 from ocr_translate import __version__array__
-from ocr_translate.ocr_tsl import lang
 from ocr_translate.ocr_tsl.cached_lists import refresh_model_cache
 
 pytestmark = pytest.mark.django_db
@@ -73,10 +72,10 @@ def test_handshake_clean_content(client, language, box_model, ocr_model, tsl_mod
     for key in ['lang_src', 'lang_dst']:
         assert content[key] == ''
 
-def test_handshake_initialized_lang_only(monkeypatch, client, language, box_model, ocr_model, tsl_model):
+def test_handshake_initialized_lang_only(
+        monkeypatch, client,
+        lang_src_loaded, lang_dst_loaded, box_model, ocr_model, tsl_model):
     """Test handshake with content in the database."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
     refresh_model_cache()
 
     url = reverse('ocr_translate:handshake')

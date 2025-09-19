@@ -21,8 +21,9 @@
 
 import pytest
 
+from ocr_translate import models as m
 from ocr_translate.ocr_tsl import cached_lists as cl
-from ocr_translate.ocr_tsl import lang, signals
+from ocr_translate.ocr_tsl import signals
 
 pytestmark = pytest.mark.django_db
 
@@ -76,8 +77,8 @@ def test_get_lang_dst_set(monkeypatch, mock_called):
 
 def test_refresh_model_cache(monkeypatch, language):
     """Test that the model cache is refreshed."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
+    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', language)
+    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language)
     cl.refresh_model_cache()
     assert set(cl.ALLOWED_BOX_MODELS) == set()
     assert set(cl.ALLOWED_OCR_MODELS) == set()
@@ -85,17 +86,17 @@ def test_refresh_model_cache(monkeypatch, language):
 
 def test_refresh_model_cache_all(monkeypatch, language, box_model, ocr_model, tsl_model):
     """Test that the model cache is refreshed."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
+    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', language)
+    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language)
     cl.refresh_model_cache()
     assert set(cl.ALLOWED_BOX_MODELS) == {box_model}
     assert set(cl.ALLOWED_OCR_MODELS) == {ocr_model}
     assert set(cl.ALLOWED_TSL_MODELS) == {tsl_model}
 
-def test_refresh_model_cache_all_inactive_box(monkeypatch, language, box_model, ocr_model, tsl_model):
+def test_refresh_model_cache_all_inactive_box(
+        monkeypatch, language, box_model, ocr_model, tsl_model, mock_loaded_lang_only
+    ):
     """Test that the model cache is refreshed."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
     box_model.active = False
     box_model.save()
     cl.refresh_model_cache()
@@ -103,10 +104,10 @@ def test_refresh_model_cache_all_inactive_box(monkeypatch, language, box_model, 
     assert set(cl.ALLOWED_OCR_MODELS) == {ocr_model}
     assert set(cl.ALLOWED_TSL_MODELS) == {tsl_model}
 
-def test_refresh_model_cache_all_inactive_ocr(monkeypatch, language, box_model, ocr_model, tsl_model):
+def test_refresh_model_cache_all_inactive_ocr(
+        monkeypatch, language, box_model, ocr_model, tsl_model, mock_loaded_lang_only
+    ):
     """Test that the model cache is refreshed."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
     ocr_model.active = False
     ocr_model.save()
     cl.refresh_model_cache()
@@ -114,10 +115,10 @@ def test_refresh_model_cache_all_inactive_ocr(monkeypatch, language, box_model, 
     assert set(cl.ALLOWED_OCR_MODELS) == set()
     assert set(cl.ALLOWED_TSL_MODELS) == {tsl_model}
 
-def test_refresh_model_cache_all_inactive_tsl(monkeypatch, language, box_model, ocr_model, tsl_model):
+def test_refresh_model_cache_all_inactive_tsl(
+        monkeypatch, language, box_model, ocr_model, tsl_model, mock_loaded_lang_only
+    ):
     """Test that the model cache is refreshed."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
     tsl_model.active = False
     tsl_model.save()
     cl.refresh_model_cache()

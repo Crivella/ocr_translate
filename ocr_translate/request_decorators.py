@@ -26,7 +26,6 @@ from threading import Lock
 from django.http import HttpRequest, JsonResponse
 
 from . import models as m
-from .ocr_tsl.lang import get_lang_dst, get_lang_src
 
 locks = {}
 
@@ -84,8 +83,8 @@ def get_backend_langs(strict: bool = True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            lang_src = get_lang_src() or ''
-            lang_dst = get_lang_dst() or ''
+            lang_src = m.Language.get_loaded_model_src() or ''
+            lang_dst = m.Language.get_loaded_model_dst() or ''
             if strict and (not lang_src or not lang_dst):
                 return JsonResponse({'error': 'Languages not loaded'}, status=512)
             return func(*args, **kwargs, lang_src=lang_src, lang_dst=lang_dst)
