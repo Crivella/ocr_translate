@@ -52,9 +52,9 @@ List of environment variables used in this project to configure the application 
 
   * - Variable (=[default])
     - Description
-  * - ``AUTOCREATE_LANGUAGES``
-      = ``false``
-    - Will force the server to automatically create/update the Language entries in the database.
+  * - ``COLUMNS``
+      = *OPTIONAL*
+    - Number of columns the rich logging should use if enabled. Particularly useful in docker environments if the terminal width is not detected properly.
   * - ``CORS_ALLOWED_ORIGINS``
       = *OPTIONAL*
     - List of semi-colon ``;`` separated URLs that are allowed to access the server. CSRF_TRUSTED_ORIGINS is set to the same value (can use this with USE_CORS_HEADERS=false) to set CSRF_TRUSTED_ORIGINS only. EXAMPLE: ``CORS_ALLOWED_ORIGINS="http://localhost:4000;http://127.0.0.1:4000"``

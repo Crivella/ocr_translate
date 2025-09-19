@@ -19,10 +19,6 @@
                 "default": "false",
                 "usage": "`most`: Load the most used models and the respective languages `last`: Load the last used models and languages source/destination languages and most used models for that language combination at server start"
             },
-            "AUTOCREATE_LANGUAGES": {
-                "default": "false",
-                "usage": "Will force the server to automatically create/update the Language entries in the database."
-            },
             "DEVICE": {
                 "default": "cpu",
                 "usage": "Which device to use for plugins that support it. Currently allowed: cpu, cuda"
@@ -138,6 +134,10 @@
             "OCT_DISABLE_PLUGINS": {
                 "default": "false",
                 "usage": "If true, all plugins will be disabled and not loaded at server start. Mostly used for testing purposes."
+            },
+            "COLUMNS": {
+                "default": "",
+                "usage": "Number of columns the rich logging should use if enabled. Particularly useful in docker environments if the terminal width is not detected properly."
             }
         }
     }

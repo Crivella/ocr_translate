@@ -9,7 +9,6 @@ set DEVICE=cpu
 set OCT_BASE_DIR=
 set DATABASE_NAME=
 
-set USE_RICH_LOGGING=true
 set DJANGO_DEBUG=true
 set DJANGO_LOG_LEVEL=INFO
 
