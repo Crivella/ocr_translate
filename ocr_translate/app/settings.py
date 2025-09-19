@@ -155,7 +155,7 @@ def parse_list(s, sep=';'):
         s = s[1:-1]
     if s.startswith("'") and s.endswith("'"):
         s = s[1:-1]
-    return s.split(sep)
+    return list(filter(None, s.split(sep)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/

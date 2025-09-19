@@ -18,20 +18,28 @@
 ###################################################################################
 """Run the django migrations and start the server."""
 import importlib
+import os
 import subprocess
 
-VERSION = '0.7.0'
+req_version = os.environ.get('OCT_VERSION', '0.7.0').lower()
 
-def install_upgrade():
+def install_upgrade(upgrade=False):
     """Install or upgrade the ocr_translate package."""
     cmd = ['pip', 'install']
-    print(f'Installing ocr_translate {VERSION}...')
-    if VERSION in ['latest', 'last']:
+    if upgrade:
+        print(f'Upgrading ocr_translate to {req_version}...')
+        cmd.append('--upgrade')
+    else:
+        print(f'Installing ocr_translate {req_version}...')
+    if req_version in ['latest', 'last']:
         cmd.append('django-ocr_translate')
     else:
-        cmd.append(f'django-ocr_translate=={VERSION}')
+        cmd.append(f'django-ocr_translate=={req_version}')
     subprocess.run(cmd, check=True)
     print('...done')
+
+if os.environ.get('OCT_AUTOUPDATE', 'false').lower() in ['true', 't', '1']:
+    install_upgrade(upgrade=True)
 
 try:
     importlib.import_module('ocr_translate')

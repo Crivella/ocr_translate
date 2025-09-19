@@ -115,6 +115,9 @@ List of environment variables used in this project to configure the application 
   * - ``NUM_TSL_WORKERS``
       = ``1``
     - Number of ``WorkerMessageQueue`` workers handling translation pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)
+  * - ``OCT_AUTOUPDATE``
+      = ``false``
+    - If true, the server will attempt to update the main package to the version specified by ``OCT_VERSION``
   * - ``OCT_BASE_DIR``
       = ``false``
     - Path to the base directory of the project. If no other paths are configured using environment variables, the server database, plugin files and downloaded models will be stored here.
@@ -145,6 +148,9 @@ List of environment variables used in this project to configure the application 
   * - ``OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]``
       = ``optional``
     - Override the version, scope or extras of a package to be installed/updated. EXAMPLE: ``OCT_PKG_TORCH_VERSION="A.B.C"``. If the package name contains a ``-`` it should be replaced with ``_min_`` in the package name.
+  * - ``OCT_VERSION``
+      = *OPTIONAL*
+    - Default set to the downloaded release version Version the ``run_server.py`` script will attempt to install/update to. Can be either a version number (``A.B.C`` eg ``0.6.1```) or last/latest.
   * - ``USE_CORS_HEADERS``
       = ``false``
     - Allow setting of CORS headers in the server responses

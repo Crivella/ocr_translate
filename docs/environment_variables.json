@@ -3,6 +3,14 @@
         "title": "App variable list",
         "description": "List of environment variables used in this project to configure the application behavior.",
         "variables": {
+            "OCT_VERSION": {
+                "default": "",
+                "usage": "Default set to the downloaded release version Version the `run_server.py` script will attempt to install/update to. Can be either a version number (`A.B.C` eg `0.6.1``) or last/latest."
+            },
+            "OCT_AUTOUPDATE": {
+                "default": "false",
+                "usage": "If true, the server will attempt to update the main package to the version specified by `OCT_VERSION`"
+            },
             "OCT_BASE_DIR": {
                 "default": "false",
                 "usage": "Path to the base directory of the project. If no other paths are configured using environment variables, the server database, plugin files and downloaded models will be stored here."
