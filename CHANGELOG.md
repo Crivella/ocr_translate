@@ -37,9 +37,13 @@ List of changes between versions
     - `AUTOCREATE_MODELS` - Models are now synchronized with the available entrypoints at every server start
       Removed models will be deactivated, and present models will be updated/created.
   - ADDED:
-      By default the server will look into `$OCT_BASE_DIR/manual_plugins.yaml`.
     - `OCT_LOGFILE` - `[true/false/path]`. If true, a logfile named `$OCT_BASE_DIR/ocr_translate.log` will be created. If a path is provided, that will be used instead.
 - Logic of the `run_server.py` moved inside the package to improve testing and modularity (the script will appear much smaller in the release)
+- QoL improvements for manual plugins installations
+  - If you want to try your own plugins or you want to manually install the supported ones (eg with modifications) you can now do so by installing them in the server
+    environment.
+  - The server will automatically pick up the plugin module name and add it to the DJANGO apps, and synchronize the models in the database at launch.
+  - **NOTE**: packages coming from the managed plugins will take precedence over manually installed ones. This could cause package conflicts. Mix stuff at your own risk.
 
 ### Fixes
 

@@ -1,6 +1,6 @@
 [
     {
-        "title": "App variable list",
+        "title": "Project variable list",
         "description": "List of environment variables used in this project to configure the application behavior.",
         "variables": {
             "OCT_VERSION": {
@@ -134,6 +134,80 @@
             "COLUMNS": {
                 "default": "",
                 "usage": "Number of columns the rich logging should use if enabled. Particularly useful in docker environments if the terminal width is not detected properly."
+            }
+        }
+    },
+    {
+        "title": "Plugin variable list",
+        "description": "List of environment variables used by various plugins to configure their behavior. For more details visit the respective plugin documentation.",
+        "variables": {
+            "TRANSFORMERS_CACHE": {
+                "default": "<OCT_BASE_DIR>/models/transformers",
+                "usage": "Path to a directory where transformers models will be downloaded and loaded from."
+            },
+            "TRANSFORMERS_OFFLINE": {
+                "default": "0",
+                "usage": "If set to 1, transformers will not attempt to download models and will only use models already present in the storage cache."
+            },
+            "EASYOCR_MODULE_PATH": {
+                "default": "<OCT_BASE_DIR>/models/easyocr",
+                "usage": "Path to a directory where easyocr models will be downloaded and loaded from."
+            },
+            "TESSERACT_PREFIX": {
+                "default": "",
+                "usage": "Path to a directory where tesseract  models will be downloaded and loaded from."
+            },
+            "TESSERACT_ALLOW_DOWNLOAD": {
+                "default": "true",
+                "usage": "If true, tesseract will attempt to download missing language models when needed."
+            },
+            "PADDLEOCR_PREFIX": {
+                "default": "<OCT_BASE_DIR>/models/paddleocr",
+                "usage": "Path to a directory where paddleocr models will be downloaded and loaded from."
+            },
+            "OCT_OLLAMA_PREFIX": {
+                "default": "oct_ollama",
+                "usage": "Prefix added to the model name, made customizable via environment variable since people might not want to setup a dedicated server for this."
+            },
+            "OCT_OLLAMA_ENDPOINT": {
+                "default": "REQUIRED",
+                "usage": "Endpoint URL for the Ollama API."
+            }
+        }
+    },
+    {
+        "title": "Utility run scripts",
+        "description": "List of environment variables used in the ``run/run-user.[sh|bat]`` scripts to configure their behavior.",
+        "variables": {
+            "PYTHON": {
+                "default": "python",
+                "usage": "Python executable to use to run the script. Mostly used to choose the initial version with which to create the virtual environment."
+            },
+            "VENV_DIR": {
+                "default": "CURRENT_DIR/venv",
+                "usage": "Path to the virtual environment directory to use/create."
+            },
+            "SKIP_VENV": {
+                "default": "false",
+                "usage": "If true, the script will not attempt to create/use a virtual environment and will run using the current python environment."
+            },
+            "PIP_INSTALLER_LOCATION": {
+                "default": "",
+                "usage": "Path to a pip installer script like `get-pip.py` to allow python to bootstrap pip if it is not available in the current python environment."
+            }
+        }
+    },
+    {
+        "title": "Docker environment variables",
+        "description": "List of environment variables used by the ``start-server.sh`` in docker.",
+        "variables": {
+            "UID": {
+                "default": "1000",
+                "usage": "User ID to run the server as inside the container. Mostly useful when mounting volumes to avoid permission issues."
+            },
+            "GID": {
+                "default": "1000",
+                "usage": "Group ID to run the server as inside the container. Mostly useful when mounting volumes to avoid permission issues."
             }
         }
     }

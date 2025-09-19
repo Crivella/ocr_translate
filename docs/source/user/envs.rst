@@ -41,8 +41,16 @@ This is a list of common possible ways:
     ...
     VARIABLE_NAME_N=VALUE_N
 
-App variable list
------------------
+Docker exceptions
+-------------------------
+
+In Docker environments, the values of :code:`OCT_DJANGO_PORT` and :code:`OCT_BASE_DIR` are overridden and cannot be customized.
+
+To persist data, bind mount the container path :code:`/plugin_data`. The server listens on port :code:`4000`, which should be mapped to the desired host port.
+
+
+Project variable list
+---------------------
 
 List of environment variables used in this project to configure the application behavior.
 
@@ -152,17 +160,82 @@ List of environment variables used in this project to configure the application 
       = ``false``
     - Allow setting of CORS headers in the server responses
 
-Plugin specific variables
--------------------------
+Plugin variable list
+--------------------
 
-See :doc:`plugins doc <../plugins/index>`
+List of environment variables used by various plugins to configure their behavior. For more details visit the respective plugin documentation.
 
-Docker exceptions
--------------------------
+.. list-table::
+  :widths: 20 80
+  :header-rows: 1
 
-In Docker environments, the values of :code:`OCT_DJANGO_PORT` and :code:`OCT_BASE_DIR` are overridden and cannot be customized.
+  * - Variable (=[default])
+    - Description
+  * - ``EASYOCR_MODULE_PATH``
+      = ``<OCT_BASE_DIR>/models/easyocr``
+    - Path to a directory where easyocr models will be downloaded and loaded from.
+  * - ``OCT_OLLAMA_ENDPOINT``
+      = ``REQUIRED``
+    - Endpoint URL for the Ollama API.
+  * - ``OCT_OLLAMA_PREFIX``
+      = ``oct_ollama``
+    - Prefix added to the model name, made customizable via environment variable since people might not want to setup a dedicated server for this.
+  * - ``PADDLEOCR_PREFIX``
+      = ``<OCT_BASE_DIR>/models/paddleocr``
+    - Path to a directory where paddleocr models will be downloaded and loaded from.
+  * - ``TESSERACT_ALLOW_DOWNLOAD``
+      = ``true``
+    - If true, tesseract will attempt to download missing language models when needed.
+  * - ``TESSERACT_PREFIX``
+      = *OPTIONAL*
+    - Path to a directory where tesseract  models will be downloaded and loaded from.
+  * - ``TRANSFORMERS_CACHE``
+      = ``<OCT_BASE_DIR>/models/transformers``
+    - Path to a directory where transformers models will be downloaded and loaded from.
+  * - ``TRANSFORMERS_OFFLINE``
+      = ``0``
+    - If set to 1, transformers will not attempt to download models and will only use models already present in the storage cache.
 
-To persist data, bind mount the container path :code:`/plugin_data`. The server listens on port :code:`4000`, which should be mapped to the desired host port.
+Utility run scripts
+-------------------
 
+List of environment variables used in the ``run/run-user.[sh|bat]`` scripts to configure their behavior.
+
+.. list-table::
+  :widths: 20 80
+  :header-rows: 1
+
+  * - Variable (=[default])
+    - Description
+  * - ``PIP_INSTALLER_LOCATION``
+      = *OPTIONAL*
+    - Path to a pip installer script like ``get-pip.py`` to allow python to bootstrap pip if it is not available in the current python environment.
+  * - ``PYTHON``
+      = ``python``
+    - Python executable to use to run the script. Mostly used to choose the initial version with which to create the virtual environment.
+  * - ``SKIP_VENV``
+      = ``false``
+    - If true, the script will not attempt to create/use a virtual environment and will run using the current python environment.
+  * - ``VENV_DIR``
+      = ``CURRENT_DIR/venv``
+    - Path to the virtual environment directory to use/create.
+
+Docker environment variables
+----------------------------
+
+List of environment variables used by the ``start-server.sh`` in docker.
+
+.. list-table::
+  :widths: 20 80
+  :header-rows: 1
+
+  * - Variable (=[default])
+    - Description
+  * - ``GID``
+      = ``1000``
+    - Group ID to run the server as inside the container. Mostly useful when mounting volumes to avoid permission issues.
+  * - ``UID``
+      = ``1000``
+    - User ID to run the server as inside the container. Mostly useful when mounting volumes to avoid permission issues.
 
 .. _logging_docs: https://docs.python.org/3/library/logging.html#logging-levels
