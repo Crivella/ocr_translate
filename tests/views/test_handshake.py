@@ -24,7 +24,6 @@ import pytest
 from django.urls import reverse
 
 from ocr_translate import __version__array__
-from ocr_translate import models as m
 from ocr_translate.ocr_tsl import lang
 from ocr_translate.ocr_tsl.cached_lists import refresh_model_cache
 
@@ -97,13 +96,8 @@ def test_handshake_initialized_lang_only(monkeypatch, client, language, box_mode
     for key in ['box_selected', 'ocr_selected', 'tsl_selected']:
         assert content[key] == ''
 
-def test_handshake_initialized(client, monkeypatch, language, box_model, tsl_model, ocr_model):
+def test_handshake_initialized(client, monkeypatch, language, box_model, tsl_model, ocr_model, mock_loaded):
     """Test handshake with content + init."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language)
-    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
-    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
-    monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
     refresh_model_cache()
 
     url = reverse('ocr_translate:handshake')
