@@ -177,7 +177,7 @@ if 'CORS_ALLOW_HEADERS' in os.environ:
     CORS_ALLOW_HEADERS = parse_list(os.environ.get('CORS_ALLOW_HEADERS', ''))
 
 
-MANUAL_PLUGIN_FILE = os.environ.get('MANUAL_PLUGIN_FILE', BASE_DIR / 'manual_plugins.yaml')
+MANUAL_PLUGIN_FILE = os.environ.get('OCT_MANUAL_PLUGIN_FILE', BASE_DIR / 'manual_plugins.yaml')
 MANUAL_PLUGIN_FILE = Path(MANUAL_PLUGIN_FILE)
 MANUAL_PLUGIN_LIST = []
 if MANUAL_PLUGIN_FILE.exists():

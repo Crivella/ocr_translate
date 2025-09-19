@@ -115,15 +115,11 @@ def init():
     """Run server initializations"""
     from .. import models as m
     from ..ocr_tsl import initializers as ini
-    ac_lang = os.environ.get('AUTO_CREATE_LANGUAGES', 'false').lower() in ini.TRUE_VALUES
-    ac_lang |= m.Language.objects.count() == 0
-    if ac_lang:
+    if m.Language.objects.count() == 0:
         print('Autocreate language entries in database...')
         ini.auto_create_languages()
-        os.environ['AUTO_CREATE_LANGUAGES'] = 'false'
-    update_models = os.environ.get('UPDATE_MODELS', 'false').lower() in ini.TRUE_VALUES
     ini.ensure_plugins()
-    ini.sync_models_epts(update=update_models)
+    ini.sync_models_epts()
     ini.env_var_init()
 
 def superuser():

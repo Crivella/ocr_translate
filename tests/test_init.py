@@ -399,8 +399,6 @@ def test_sync_update(monkeypatch, box_model_dict, box_model, mock_called):
     monkeypatch.setattr(m.OCRBoxModel, 'from_dct', mock_called)
     assert not hasattr(mock_called, 'called')
     ini.sync_models_epts()
-    assert not hasattr(mock_called, 'called')
-    ini.sync_models_epts(update=True)
     assert hasattr(mock_called, 'called')
 
 @pytest.mark.django_db

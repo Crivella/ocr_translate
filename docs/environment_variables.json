@@ -1,16 +1,8 @@
 [
     {
         "title": "App variable list",
-        "description": "Environment variables used by the application.",
+        "description": "List of environment variables used in this project to configure the application behavior.",
         "variables": {
-            "OCT_VERSION": {
-                "default": "",
-                "usage": "Default set to the downloaded release version Version the `run_server.py` script will attempt to install/update to. Can be either a version number (`A.B.C` eg `0.6.1``) or last/latest."
-            },
-            "OCT_AUTOUPDATE": {
-                "default": "false",
-                "usage": "If true, the server will attempt to update the main package to the version specified by `OCT_VERSION`"
-            },
             "OCT_BASE_DIR": {
                 "default": "false",
                 "usage": "Path to the base directory of the project. If no other paths are configured using environment variables, the server database, plugin files and downloaded models will be stored here."
@@ -42,13 +34,7 @@
             "NUM_TSL_WORKERS": {
                 "default": 1,
                 "usage": "Number of `WorkerMessageQueue` workers handling translation pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)"
-            }
-        }
-    },
-    {
-        "title": "run_server.py variable list",
-        "description": "Environment variables used if running the server using the provided `run_server.py` script. This includes the windows release file and docker image that are based on the same script.",
-        "variables": {
+            },
             "DJANGO_SUPERUSER_USERNAME": {
                 "default": "admin",
                 "usage": "Username for the superuser to be created"
@@ -73,6 +59,14 @@
                 "default": "LIB default",
                 "usage": "List of semi-colon `;` separated HTTP headers that are allowed to be used. EXAMPLE: `CORS_ALLOW_HEADERS=\"Content-Type;Authorization;X-CSRFToken\"`"
             },
+            "OCT_LOGFILE": {
+                "default": "false",
+                "usage": "true/false/path. If true, a logfile named `ocr_translate.log` will be created in the base directory. If a path is provided, that will be used instead."
+            },
+            "OCT_MANUAL_PLUGIN_FILE": {
+                "default": "BASE_DIR/manual_plugins.yaml",
+                "usage": "Path to a yaml/json file c ontaining a list of strings representing plugin names that have been installed manually."
+            },
             "OCT_DJANGO_BIND_ADDRESS": {
                 "default": "127.0.0.1",
                 "usage": "Address to bind the server to"
@@ -92,13 +86,7 @@
             "OCT_GUNICORN_NUM_WORKERS": {
                 "default": 1,
                 "usage": "Number of gunicorn workers"
-            }
-        }
-    },
-    {
-        "title": "Server variable list",
-        "description": "Environment variables used specifically by the DJANGO server.",
-        "variables": {
+            },
             "DJANGO_DEBUG": {
                 "default": "false",
                 "usage": "Whether to run the server in debug (true) or production (false) mode"
@@ -134,6 +122,14 @@
             "DATABASE_PASSWORD": {
                 "default": "optional",
                 "usage": "Probably required if using another database backend"
+            },
+            "OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]": {
+                "default": "optional",
+                "usage": "Override the version, scope or extras of a package to be installed/updated. EXAMPLE: `OCT_PKG_TORCH_VERSION=\"A.B.C\"`. If the package name contains a `-` it should be replaced with `_min_` in the package name."
+            },
+            "OCT_DISABLE_PLUGINS": {
+                "default": "false",
+                "usage": "If true, all plugins will be disabled and not loaded at server start. Mostly used for testing purposes."
             }
         }
     }

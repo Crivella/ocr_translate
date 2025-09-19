@@ -142,7 +142,7 @@ def ensure_plugins():
         with ep_manager():
             pmng.install_plugin(plugin)
 
-def sync_models_epts(update: bool = False):
+def sync_models_epts():
     """Deactivate models that are in the database but whose entrypoint is no longer available."""
     for group, cls in epm.GROUPS.items():
         ept_data = load_ept_data(group)
@@ -157,25 +157,8 @@ def sync_models_epts(update: bool = False):
             model.deactivate()
             logger.info(f'Deactivated {cls.__name__:>12s} `{name}` as its entrypoint is no longer available')
 
-        if update:
-            for model_data in ept_data:
-                cls.from_dct(model_data)
-        else:
-            # Activate models that have an entrypoint again
-            names_db_off = set(q.filter(active=False).values_list('name', flat=True))
-            present = names_db_off & names_ep
-            for name in present:
-                model = cls.objects.get(name=name)
-                model.activate()
-                logger.info(f'Activated {cls.__name__:>12s} `{name}` as its entrypoint is now available')
-
-            # Create models that are missing
-            names_db_all = set(q.values_list('name', flat=True))
-            missing = names_ep - names_db_all
-            for name in missing:
-                data = next(_ for _ in load_ept_data(group) if _['name'] == name)
-                cls.from_dct(data)
-                logger.info(f'Created {cls.__name__:>12s} `{name}` as its entrypoint is now available')
+        for model_data in ept_data:
+            cls.from_dct(model_data)
 
 def deprecate_los_true():
     """Deprecate the environment variable `LOAD_ON_START=true`."""
@@ -186,10 +169,6 @@ def deprecate_los_true():
 TRUE_VALUES = ('true', 't', '1')
 FALSE_VALUES = ('false', 'f', '0')
 RUN_ON_ENV_INIT = {
-    'AUTOCREATE_LANGUAGES': {
-        TRUE_VALUES: auto_create_languages,
-        FALSE_VALUES: None,
-    },
     'LOAD_ON_START': {
         'most': init_most_used,
         'last': init_last_used,

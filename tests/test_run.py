@@ -266,49 +266,18 @@ def test_superuser_new():
     assert User.objects.get(username=new_name).check_password(new_pass)
 
 @pytest.mark.django_db
-def test_init_default_no_languages(monkeypatch, mock_called):
+def test_init_no_languages(monkeypatch, mock_called):
     """Test init function when no languages are present."""
-    monkeypatch.setenv('AUTO_CREATE_LANGUAGES', '0')
     monkeypatch.setattr(ini, 'auto_create_languages', mock_called)
-
     run.init()
     assert hasattr(mock_called, 'called')
 
 @pytest.mark.django_db
-def test_init_default_languages(monkeypatch, mock_called, language):
+def test_init_with_languages(monkeypatch, mock_called, language):
     """Test init function when no languages are present."""
-    monkeypatch.setenv('AUTO_CREATE_LANGUAGES', '0')
     monkeypatch.setattr(ini, 'auto_create_languages', mock_called)
-
     run.init()
     assert not hasattr(mock_called, 'called')
-
-@pytest.mark.django_db
-def test_init_on_languages(monkeypatch, mock_called, language):
-    """Test init function when no languages are present."""
-    monkeypatch.setenv('AUTO_CREATE_LANGUAGES', '1')
-    monkeypatch.setattr(ini, 'auto_create_languages', mock_called)
-
-    run.init()
-    assert hasattr(mock_called, 'called')
-
-
-@pytest.mark.django_db
-def test_init_update_models(monkeypatch, mock_called):
-    """Test init function when no languages are present."""
-    monkeypatch.setattr(ini, 'sync_models_epts', mock_called)
-
-    run.init()
-    assert hasattr(mock_called, 'called')
-    assert not mock_called.kwargs.get('update')
-
-    monkeypatch.setenv('UPDATE_MODELS', '1')
-    run.init()
-    assert mock_called.kwargs.get('update')
-
-    monkeypatch.setenv('UPDATE_MODELS', '0')
-    run.init()
-    assert not mock_called.kwargs.get('update')
 
 @pytest.mark.django_db
 def test_start_with_gunicorn(monkeypatch, mock_called):
