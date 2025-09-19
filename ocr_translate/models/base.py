@@ -344,6 +344,7 @@ class BaseModel(models.Model):
         current = cls.get_loaded_model()
         if current is None:
             return
+        logger.info(f'Unloading {cls.__name__} model: {current.name}')
         current.unload()
         cls.LOADED_MODEL = None
 
@@ -362,3 +363,9 @@ class BaseModel(models.Model):
             self.save()
         if current is not None and current.name == self.name:
             cls.unload_model()
+
+    def activate(self):
+        """Activate the model"""
+        if not self.active:
+            self.active = True
+            self.save()

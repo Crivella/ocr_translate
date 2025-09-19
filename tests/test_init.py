@@ -343,6 +343,84 @@ def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     assert m.TSLModel.objects.count() > 0
 
 @pytest.mark.django_db
+def test_create_new_model_box(monkeypatch, box_model_dict):
+    """Test creating a new box model with sync function."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
+    ini.sync_models_epts()
+    assert m.OCRBoxModel.objects.count() == 1
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
+
+@pytest.mark.django_db
+def test_create_new_model_ocr(monkeypatch, ocr_model_dict):
+    """Test creating a new ocr model with sync function."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.ocr_data'):
+            return [ocr_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
+    ini.sync_models_epts()
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 1
+    assert m.TSLModel.objects.count() == 0
+
+@pytest.mark.django_db
+def test_create_new_model_tsl(monkeypatch, tsl_model_dict):
+    """Test creating a new tsl model with sync function."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.tsl_data'):
+            return [tsl_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
+    ini.sync_models_epts()
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 1
+
+@pytest.mark.django_db
+def test_sync_update(monkeypatch, box_model_dict, box_model, mock_called):
+    """Test sync update existing model."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    monkeypatch.setattr(m.OCRBoxModel, 'from_dct', mock_called)
+    assert not hasattr(mock_called, 'called')
+    ini.sync_models_epts()
+    assert not hasattr(mock_called, 'called')
+    ini.sync_models_epts(update=True)
+    assert hasattr(mock_called, 'called')
+
+@pytest.mark.django_db
+def test_sync_create_missing(monkeypatch, box_model_dict, box_model, ocr_model_dict, mock_called):
+    """Test sync create missing model."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        if namespace.endswith('.ocr_data'):
+            return [ocr_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    monkeypatch.setattr(m.OCRModel, 'from_dct', mock_called)
+    assert not hasattr(mock_called, 'called')
+    ini.sync_models_epts()
+    assert hasattr(mock_called, 'called')
+
+@pytest.mark.django_db
 def test_deactivate_missing_models(monkeypatch,box_model, ocr_model, tsl_model):
     """Test initializer deactivate missing models."""
     def mock_load_ept_data(namespace):  # pylint: disable=unused-argument
@@ -378,59 +456,6 @@ def test_deactivate_missing_models_box_found(monkeypatch, box_model_dict, box_mo
     assert box_model.active
     assert not ocr_model.active
     assert not tsl_model.active
-
-@pytest.mark.django_db
-def test_auto_create_models_raises(monkeypatch, box_model_dict):
-    """Test initializer auto create models."""
-    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
-    box_model_dict['lang_code'] = box_model_dict.pop('language_format')
-    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [box_model_dict] if x.endswith('.box_data') else [])
-
-    box_model_dict.pop('lang')
-    with pytest.raises(KeyError):
-        ini.env_var_init()
-
-    box_model_dict['lang'] = 123
-
-    with pytest.raises(TypeError):
-        ini.env_var_init()
-
-@pytest.mark.django_db
-def test_auto_create_models_box(monkeypatch, box_model_dict):
-    """Test initializer auto create models."""
-    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
-    box_model_dict['lang_code'] = box_model_dict.pop('language_format')
-    box_model_dict['lang'] = []
-    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [box_model_dict] if x.endswith('.box_data') else [])
-
-    assert m.OCRBoxModel.objects.count() == 0
-    ini.env_var_init()
-    assert m.OCRBoxModel.objects.count() == 1
-
-@pytest.mark.django_db
-def test_auto_create_models_ocr(monkeypatch, ocr_model_dict):
-    """Test initializer auto create models."""
-    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
-    ocr_model_dict['lang_code'] = ocr_model_dict.pop('language_format')
-    ocr_model_dict['lang'] = []
-    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [ocr_model_dict] if x.endswith('.ocr_data') else [])
-
-    assert m.OCRModel.objects.count() == 0
-    ini.env_var_init()
-    assert m.OCRModel.objects.count() == 1
-
-@pytest.mark.django_db
-def test_auto_create_models_tsl(monkeypatch, tsl_model_dict):
-    """Test initializer auto create models."""
-    monkeypatch.setenv('AUTOCREATE_MODELS', '1')
-    tsl_model_dict['lang_code'] = tsl_model_dict.pop('language_format')
-    tsl_model_dict['lang_src'] = []
-    tsl_model_dict['lang_dst'] = []
-    monkeypatch.setattr(ini, 'load_ept_data', lambda x:  [tsl_model_dict] if x.endswith('.tsl_data') else [])
-
-    assert m.TSLModel.objects.count() == 0
-    ini.env_var_init()
-    assert m.TSLModel.objects.count() == 1
 
 def test_load_on_start_true(monkeypatch, mock_called):
     """Test initializer auto create models."""

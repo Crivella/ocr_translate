@@ -143,47 +143,44 @@ def ensure_plugins():
         with ep_manager():
             pmng.install_plugin(plugin)
 
-def sync_models_epts():
+    unknown = installed - known
+    if unknown:
+        logger.warning(f'Unknown plugins found will be ignored: {unknown}')
+
+def sync_models_epts(update: bool = False):
     """Deactivate models that are in the database but whose entrypoint is no longer available."""
     for group, cls in epm.GROUPS.items():
-        names_ep = set(_['name'] for _ in load_ept_data(group))
+        ept_data = load_ept_data(group)
+        names_ep = set(_['name'] for _ in ept_data)
 
+        # Deactivate models that do not have an entrypoint anymore
         q = cls.objects
         names_db_on = set(q.filter(active=True).values_list('name', flat=True))
         removed = names_db_on - names_ep
         for name in removed:
             model = cls.objects.get(name=name)
-            model.active = False
-            model.save()
+            model.deactivate()
             logger.info(f'Deactivated {cls.__name__:>12s} `{name}` as its entrypoint is no longer available')
 
-        names_db_off = set(q.filter(active=False).values_list('name', flat=True))
-        present = names_db_off & names_ep
-        for name in present:
-            model = cls.objects.get(name=name)
-            model.active = True
-            model.save()
-            logger.info(f'Activated {cls.__name__:>12s} `{name}` as its entrypoint is now available')
+        if update:
+            for model_data in ept_data:
+                cls.from_dct(model_data)
+        else:
+            # Activate models that have an entrypoint again
+            names_db_off = set(q.filter(active=False).values_list('name', flat=True))
+            present = names_db_off & names_ep
+            for name in present:
+                model = cls.objects.get(name=name)
+                model.activate()
+                logger.info(f'Activated {cls.__name__:>12s} `{name}` as its entrypoint is now available')
 
-        names_db_all = set(q.values_list('name', flat=True))
-        missing = names_ep - names_db_all
-        for name in missing:
-            data = next(_ for _ in load_ept_data(group) if _['name'] == name)
-            cls.from_dct(data)
-            logger.info(f'Created {cls.__name__:>12s} `{name}` as its entrypoint is now available')
-
-def auto_create_models():
-    """Create OCR and TSL models from json file. Also create default OptionDict"""
-    logger.info('Creating default models')
-    for group, cls in [
-        ('ocr_translate.box_data', m.OCRBoxModel),
-        ('ocr_translate.ocr_data', m.OCRModel),
-        ('ocr_translate.tsl_data', m.TSLModel),
-        ]:
-        for data in load_ept_data(group):
-            cls.from_dct(data)
-
-    m.OptionDict.objects.get_or_create(options={})
+            # Create models that are missing
+            names_db_all = set(q.values_list('name', flat=True))
+            missing = names_ep - names_db_all
+            for name in missing:
+                data = next(_ for _ in load_ept_data(group) if _['name'] == name)
+                cls.from_dct(data)
+                logger.info(f'Created {cls.__name__:>12s} `{name}` as its entrypoint is now available')
 
 def deprecate_los_true():
     """Deprecate the environment variable `LOAD_ON_START=true`."""
@@ -196,11 +193,6 @@ FALSE_VALUES = ('false', 'f', '0')
 RUN_ON_ENV_INIT = {
     'AUTOCREATE_LANGUAGES': {
         TRUE_VALUES: auto_create_languages,
-        FALSE_VALUES: None,
-    },
-    # Re-added to give a way to install plugin independently and still add the models from the entrypoints
-    'AUTOCREATE_MODELS': {
-        TRUE_VALUES: auto_create_models,
         FALSE_VALUES: None,
     },
     'LOAD_ON_START': {
