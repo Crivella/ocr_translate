@@ -58,4 +58,4 @@ If you are running tests with and IDE like VSCode, make sure that the following 
 
 .. code-block::
 
-   `DJANGO_SETTINGS_MODULE = "mysite.settings"`
+   `DJANGO_SETTINGS_MODULE = "ocr_translate.app.settings"`

@@ -40,7 +40,7 @@ def banner():
 
 def env_default():
     """Set default environment variables."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mysite.settings')
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'ocr_translate.app.settings'
     os.environ.setdefault('DJANGO_DEBUG', 'True')
     os.environ.setdefault('DJANGO_LOG_LEVEL', 'INFO')
 
@@ -155,7 +155,7 @@ def start():
         timeout = os.environ.get('OCT_GUNICORN_TIMEOUT', '1200')
         num_workers = os.environ.get('OCT_GUNICORN_NUM_WORKERS', '1')
         subprocess.run([
-            'gunicorn', 'mysite.wsgi',
+            'gunicorn', 'ocr_translate.app.wsgi',
             '--user', user,
             '--bind', f'{bind_address}:{port}',
             '--timeout', timeout,

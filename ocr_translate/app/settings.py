@@ -27,7 +27,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+# pylint: skip-file
 import json
 import os
 from pathlib import Path
@@ -228,7 +228,7 @@ MIDDLEWARE += [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'mysite.urls'
+ROOT_URLCONF = 'ocr_translate.app.urls'
 
 TEMPLATES = [
     {
@@ -246,7 +246,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'mysite.wsgi.application'
+WSGI_APPLICATION = 'ocr_translate.app.wsgi.application'
 
 
 # Database

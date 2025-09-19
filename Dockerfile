@@ -30,9 +30,8 @@ RUN mkdir -p /data
 COPY --from=intermediate /venv /venv
 
 COPY start-server.sh /opt/app/
-COPY run_server.py /opt/app/
-COPY mysite /opt/app/mysite/
-COPY staticfiles /opt/app/static/
+COPY release_files/run_server.py /opt/app/
+COPY ocr_translate/staticfiles /opt/app/static/
 
 RUN chown -R www-data:www-data /opt/app
 RUN chmod +x /opt/app/start-server.sh

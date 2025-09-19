@@ -11,12 +11,6 @@ For a more complete guide please check the full documentation https://crivella.g
 - `run_server.py`     - Python script handling initial checks, some environment variables, db initialization and running the server
 - `CHANGELOG.md`      - Changelog file
 - `README_release.md` - This file
-- `mysite/`           - Django project directory
-  - `server.py`         - Server configuration file (should not need to be changed unless for advanced users)
-  - `urls.py`           - URL routing file (should not need to be changed unless for advanced users)
-  - `wsgi.py`           - WSGI configuration file (should not need to be changed unless for advanced users)
-  - `asgi.py`           - ASGI configuration file (should not need to be changed unless for advanced users)
-  - `__init__.py`       - Python package initialization file (should not need to be changed unless for advanced users)
 
 ## Running the server
 

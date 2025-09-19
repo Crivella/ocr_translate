@@ -83,13 +83,13 @@ def test_env_default_clean():
     run.env_default()
     assert all(v in os.environ for v in INIT_VARS)
 
-def test_env_default_nooverride():
+def test_env_default_override():
     """Test env_default function does not override existing vars."""
     os.environ['DJANGO_SETTINGS_MODULE'] = 'custom.settings'
     os.environ['DJANGO_DEBUG'] = 'ABC'
     os.environ['DJANGO_LOG_LEVEL'] = '123'
     run.env_default()
-    assert os.environ['DJANGO_SETTINGS_MODULE'] == 'custom.settings'
+    assert os.environ['DJANGO_SETTINGS_MODULE'] == 'ocr_translate.app.settings'
     assert os.environ['DJANGO_DEBUG'] == 'ABC'
     assert os.environ['DJANGO_LOG_LEVEL'] == '123'
 
