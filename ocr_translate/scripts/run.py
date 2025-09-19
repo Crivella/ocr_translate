@@ -92,8 +92,8 @@ def cuda_check():
         # This check is still useful to se if a CUDA capable torch is installed but a GPU is not available.
         torch = importlib.import_module('torch')
     except ModuleNotFoundError:
-        print('Torch not found: cannot check for CUDA availability explicitly.')
-        print('In case of errors try setting the DEVICE environment variable to "cpu"')
+        print('Torch not found: cannot check for CUDA availability explicitly. Defaulting to CPU')
+        os.environ['DEVICE'] = 'cpu'
     except ImportError:
         print('Torch found but cannot be imported: probably using a newer version of python with an old plugin')
         print('installation directory. The tool will attempt to update the plugins.')
@@ -142,6 +142,30 @@ def superuser():
             if User.objects.get(username=su_name).check_password(default_su_password):
                 print(f'   password still set to the default "{default_su_password}"')
 
+def start():
+    """Start the server."""
+    bind_address = os.environ.get('OCT_DJANGO_BIND_ADDRESS', '127.0.0.1')
+    port = os.environ.get('OCT_DJANGO_PORT', '4000')
+
+    try:
+        importlib.import_module('gunicorn')
+    except ImportError:
+        print('...using django development server')
+        call_command('runserver', '--noreload', f'{bind_address}:{port}')
+    else:
+        print('...using gunicorn')
+        import getpass
+        user = os.environ.get('OCT_GUNICORN_USER', getpass.getuser())
+        timeout = os.environ.get('OCT_GUNICORN_TIMEOUT', '1200')
+        num_workers = os.environ.get('OCT_GUNICORN_NUM_WORKERS', '1')
+        subprocess.run([
+            'gunicorn', 'mysite.wsgi',
+            '--user', user,
+            '--bind', f'{bind_address}:{port}',
+            '--timeout', timeout,
+            '--workers', num_workers,
+        ], check=True)
+
 def main():
     """Run the django migrations and start the server."""
     banner()
@@ -163,26 +187,6 @@ def main():
     print('Running server initializations...')
     init()
 
-    bind_address = os.environ.get('OCT_DJANGO_BIND_ADDRESS', '127.0.0.1')
-    port = os.environ.get('OCT_DJANGO_PORT', '4000')
-
     print('--------------------------------------------')
     print('Starting server...')
-    try:
-        importlib.import_module('gunicorn')
-    except ImportError:
-        print('...using django development server')
-        call_command('runserver', '--noreload', f'{bind_address}:{port}')
-    else:
-        print('...using gunicorn')
-        import getpass
-        user = os.environ.get('OCT_GUNICORN_USER', getpass.getuser())
-        timeout = os.environ.get('OCT_GUNICORN_TIMEOUT', '1200')
-        num_workers = os.environ.get('OCT_GUNICORN_NUM_WORKERS', '1')
-        subprocess.run([
-            'gunicorn', 'mysite.wsgi',
-            '--user', user,
-            '--bind', f'{bind_address}:{port}',
-            '--timeout', timeout,
-            '--workers', num_workers,
-        ], check=True)
+    start()
