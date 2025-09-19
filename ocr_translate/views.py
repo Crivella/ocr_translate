@@ -469,7 +469,7 @@ def get_plugin_data(request: HttpRequest) -> JsonResponse:
         ptr = {**tpl, **plugin}
         name = ptr.pop('name')
         ptr.pop('dependencies', None)
-        ptr['installed'] = name in PMNG.plugins
+        ptr['installed'] = name in PMNG.managed_plugins
         resp[name] = ptr
     return JsonResponse(resp)
 

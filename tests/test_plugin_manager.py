@@ -455,19 +455,19 @@ def test_get_plugin_data_present(mock_plugin_data):
 def test_plugin_file_mock(monkeypatch, mock_plugin_file, mock_called):
     """Test plugin manager loading installed plugin list."""
     pmng = pm.PluginManager()
-    assert isinstance(pmng.plugins, list)
-    assert pmng.plugins == mock_plugin_file
+    assert isinstance(pmng.managed_plugins, list)
+    assert pmng.managed_plugins == mock_plugin_file
 
     # Test caching of file
     monkeypatch.setattr(pm.json, 'load', mock_called)
-    pmng.plugins  # pylint: disable=pointless-statement
+    pmng.managed_plugins  # pylint: disable=pointless-statement
     assert not hasattr(mock_called, 'called')
 
 def test_plugin_file_mock_disabled(monkeypatch, disabled, mock_plugin_file, mock_called):
     """Test plugin manager loading installed plugin list."""
     monkeypatch.setattr(pm.json, 'load', mock_called)
     pmng = pm.PluginManager()
-    assert pmng.plugins == []
+    assert pmng.managed_plugins == []
     assert not hasattr(mock_called, 'called')
 
 def test_installed_pkgs_envdisabled(disabled):
@@ -540,10 +540,10 @@ def test_install_plugin_known(monkeypatch, mock_plugin_data, mock_log_called):
     pmng = pm.PluginManager()
     monkeypatch.setattr(pmng, 'install_package', mock_log_called())
 
-    assert name not in pmng.plugins
+    assert name not in pmng.managed_plugins
     assert name not in pm.settings.INSTALLED_APPS
     pmng.install_plugin(name)
-    assert name in pmng.plugins
+    assert name in pmng.managed_plugins
     assert name in pm.settings.INSTALLED_APPS
 
     def get_name_version():
@@ -571,7 +571,7 @@ def test_install_plugin_new_and_existing(monkeypatch, mock_plugin_data, mock_cal
     assert not pmng.plugin_list_file.exists()
     assert name not in pm.settings.INSTALLED_APPS
     pmng.install_plugin(name)
-    assert name in pmng.plugins
+    assert name in pmng.managed_plugins
     assert name in pm.settings.INSTALLED_APPS
     assert pmng.plugin_list_file.exists()
 
@@ -641,7 +641,7 @@ def test_uninstall_plugin_remove_single(monkeypatch, mock_plugin_data, mock_log_
     assert (f'{pm.GENERIC_SCOPE}::pkg4',) in mock_log_called.called_args
     assert (f'{device}::pkg4',) in mock_log_called.called_args
 
-    assert pmng.plugins == []
+    assert pmng.managed_plugins == []
     assert pm.settings.INSTALLED_APPS == []
 
 def test_uninstall_plugin_remove_shared(monkeypatch, mock_plugin_data, mock_log_called, device):
@@ -665,7 +665,7 @@ def test_uninstall_plugin_remove_shared(monkeypatch, mock_plugin_data, mock_log_
     assert (f'{pm.GENERIC_SCOPE}::pkg4',) in mock_log_called.called_args
     assert (f'{device}::pkg4',) in mock_log_called.called_args
 
-    assert pmng.plugins == [name2]
+    assert pmng.managed_plugins == [name2]
     assert pm.settings.INSTALLED_APPS == [name2]
 
 def test_uninstall_plugin_thread_lock(monkeypatch, mock_plugin_data, mock_called):
@@ -699,7 +699,7 @@ def test_uninstall_plugin_thread_lock(monkeypatch, mock_plugin_data, mock_called
     for t in threads:
         t.join()
 
-    assert name not in pmng.plugins
+    assert name not in pmng.managed_plugins
     assert not hasattr(mock_called, 'called')
 
 def test_install_package_unkown_scope(monkeypatch, mock_called):

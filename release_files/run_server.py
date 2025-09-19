@@ -20,6 +20,7 @@
 import importlib
 import os
 import subprocess
+import sys
 
 req_version = os.environ.get('OCT_VERSION', '0.7.0').lower()
 
@@ -47,7 +48,12 @@ except ImportError:
     print('`ocr_translate` not found: installing django-ocr_translate...')
     install_upgrade()
 
-from ocr_translate.scripts import run  # pylint: disable=wrong-import-position
+try:
+    from ocr_translate.scripts import \
+        run  # pylint: disable=wrong-import-position
+except ImportError:
+    print('Please relaunch this script to use the newly installed package')
+    sys.exit(1)
 
 if __name__ == '__main__':
     run.main()

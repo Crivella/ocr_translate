@@ -67,10 +67,6 @@
                 "default": "false",
                 "usage": "true/false/path. If true, a logfile named `ocr_translate.log` will be created in the base directory. If a path is provided, that will be used instead."
             },
-            "OCT_MANUAL_PLUGIN_FILE": {
-                "default": "BASE_DIR/manual_plugins.yaml",
-                "usage": "Path to a yaml/json file c ontaining a list of strings representing plugin names that have been installed manually."
-            },
             "OCT_DJANGO_BIND_ADDRESS": {
                 "default": "127.0.0.1",
                 "usage": "Address to bind the server to"

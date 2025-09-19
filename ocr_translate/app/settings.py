@@ -32,8 +32,6 @@ import json
 import os
 from pathlib import Path
 
-import yaml
-
 from ocr_translate.plugin_manager import PluginManager
 
 PMNG = PluginManager()
@@ -176,28 +174,6 @@ if 'CORS_ALLOW_METHODS' in os.environ:
 if 'CORS_ALLOW_HEADERS' in os.environ:
     CORS_ALLOW_HEADERS = parse_list(os.environ.get('CORS_ALLOW_HEADERS', ''))
 
-
-MANUAL_PLUGIN_FILE = os.environ.get('OCT_MANUAL_PLUGIN_FILE', BASE_DIR / 'manual_plugins.yaml')
-MANUAL_PLUGIN_FILE = Path(MANUAL_PLUGIN_FILE)
-MANUAL_PLUGIN_LIST = []
-if MANUAL_PLUGIN_FILE.exists():
-    suffix = MANUAL_PLUGIN_FILE.suffix.lower()
-    with MANUAL_PLUGIN_FILE.open(encoding='utf8') as f:
-        try:
-            if suffix in ['.yaml', '.yml']:
-                MANUAL_PLUGIN_LIST = yaml.safe_load(f)
-            elif suffix in ['.json']:
-                MANUAL_PLUGIN_LIST = json.load(f)
-            else:
-                print(f'Ignorning manual plugin file `{MANUAL_PLUGIN_FILE}`: unknown file extension `{suffix}`')
-        except Exception as e:
-            print(f'Ignorning manual plugin file `{MANUAL_PLUGIN_FILE}`: {e}')
-        else:
-            print(f'Loaded manual plugin file `{MANUAL_PLUGIN_FILE}`: {MANUAL_PLUGIN_LIST}')
-    if not isinstance(MANUAL_PLUGIN_LIST, list) or not all(isinstance(p, str) for p in MANUAL_PLUGIN_LIST):
-        print(f'Error loading manual plugin file `{MANUAL_PLUGIN_FILE}`: not a list of plugin names')
-        MANUAL_PLUGIN_LIST = []
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -210,8 +186,7 @@ INSTALLED_APPS = [
 if USE_CORS_HEADERS:
     INSTALLED_APPS.append('corsheaders')
 INSTALLED_APPS.append('ocr_translate')
-INSTALLED_APPS += PMNG.plugins
-INSTALLED_APPS += MANUAL_PLUGIN_LIST
+INSTALLED_APPS += PMNG.all_plugins
 
 # Middleware
 MIDDLEWARE = [

@@ -142,9 +142,6 @@ List of environment variables used in this project to configure the application 
   * - ``OCT_LOGFILE``
       = ``false``
     - true/false/path. If true, a logfile named ``ocr_translate.log`` will be created in the base directory. If a path is provided, that will be used instead.
-  * - ``OCT_MANUAL_PLUGIN_FILE``
-      = ``BASE_DIR/manual_plugins.yaml``
-    - Path to a yaml/json file c ontaining a list of strings representing plugin names that have been installed manually.
   * - ``OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]``
       = ``optional``
     - Override the version, scope or extras of a package to be installed/updated. EXAMPLE: ``OCT_PKG_TORCH_VERSION="A.B.C"``. If the package name contains a ``-`` it should be replaced with ``_min_`` in the package name.

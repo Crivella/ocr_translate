@@ -31,12 +31,14 @@ import subprocess
 import sys
 import time
 from importlib import resources
+from importlib.metadata import entry_points
 from pathlib import Path
 from threading import Lock
 
 from django.apps import apps
 from django.conf import settings
 
+GROUPS = ['ocr_translate.box_data', 'ocr_translate.ocr_data', 'ocr_translate.tsl_data']
 GENERIC_SCOPE = 'generic'
 DEFAULT_OCT_BASE_DIR: Path = Path.home() / '.ocr_translate'
 
@@ -173,6 +175,17 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
         while (tmp_dir := find_site_packages(self.plugin_dir)) is not None:
             shutil.rmtree(tmp_dir)
 
+    @property
+    def manual_plugin_list(self) -> list[str]:
+        """Get the list of manually installed plugins."""
+        if self.disabled:
+            return []
+        modules = set()
+        for grp in GROUPS:
+            for ep in entry_points(group=grp):
+                modules.add(ep.module)
+        return list(modules)
+
     def ensure_pip(self):
         """Ensure pip is installed."""
         if self.disabled:
@@ -225,7 +238,18 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
         site.USER_SITE = self.PLUGIN_SP[GENERIC_SCOPE].as_posix()
 
     @property
-    def plugins(self) -> list[str]:
+    def all_plugins(self) -> list[str]:
+        """Get the list of all known plugins."""
+        managed = set(self.managed_plugins)
+        manual = set(self.manual_plugin_list)
+        if managed & manual:
+            logger.warning(f'Some plugins are both manually and automatically managed: {managed & manual}')
+            logger.warning('Managed ones will most likely take precedence over manually installed ones')
+
+        return list(managed | manual)
+
+    @property
+    def managed_plugins(self) -> list[str]:
         """Get/cache the list of installed plugins."""
         if self.disabled:
             return []
@@ -254,7 +278,7 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
         if self.disabled:
             return
         with open(self.plugin_list_file, 'w') as f:
-            json.dump(self.plugins, f, indent=2)
+            json.dump(self.managed_plugins, f, indent=2)
 
     def save_installed(self):
         """Save the installed packages."""
@@ -349,8 +373,8 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
         """Ensure the plugin is installed."""
         with self.lock_plugin:
             self._install_plugin(name)
-            if name not in self.plugins:
-                self.plugins.append(name)
+            if name not in self.managed_plugins:
+                self.managed_plugins.append(name)
                 self.save_plugin_list()
             if name not in settings.INSTALLED_APPS:
                 settings.INSTALLED_APPS.append(name)
@@ -383,7 +407,7 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
     def uninstall_plugin(self, name: str):
         """Uninstall the plugin."""
         with self.lock_plugin:
-            if name not in self.plugins:
+            if name not in self.managed_plugins:
                 return
             data = self.get_plugin_data(name)
             pkg = data['package']
@@ -398,7 +422,7 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
             plugin_deps = set()
             torm_deps = set()
             for plugin in self.plugins_data:
-                if plugin['name'] not in self.plugins:
+                if plugin['name'] not in self.managed_plugins:
                     continue
                 deps = set()
                 for dep in plugin.get('dependencies', []):
@@ -413,7 +437,7 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
                 self.uninstall_package(dep)
             self.uninstall_package(scoped_name)
 
-            self.plugins.remove(name)
+            self.managed_plugins.remove(name)
             self.save_plugin_list()
 
             settings.INSTALLED_APPS.remove(name)

@@ -137,7 +137,7 @@ def ensure_plugins():
     logger.info('Ensuring that all plugins are loaded')
     pmng = PluginManager()
     known = set(_['name'] for _ in pmng.plugins_data)
-    installed = set(pmng.plugins)
+    installed = set(pmng.managed_plugins)
     for plugin in known & installed:
         with ep_manager():
             pmng.install_plugin(plugin)
