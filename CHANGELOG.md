@@ -46,20 +46,6 @@ List of changes between versions
 
 - Fix #55
 
-### TODO
-
-- [X] Test if python 3.10 still works
-- [X] Test if python 3.11 still works
-- [X] Test if python 3.12 works
-- [X] Test if python 3.13 works
-- [X] Make sure staka model works with newer deps (for now it is working but outputting gibberish)
-  - Issue related to https://github.com/huggingface/transformers/issues/24657#issuecomment-3303054186
-  - Unfortunately the version of transformers/tokenizers can't be lowered below `4.48.0/0.20.2`
-    as tokenizers does not support python 3.13 before https://github.com/huggingface/tokenizers/releases/tag/v0.20.2
-- [X] Properly extract output from paddleocr to place textboxes over text
-  Or just use it as an OCR model so this is not a problem
-- [X] Ensure `LOAD_ON_START` happens after plugins are checked to allow switching from `cpu` <-> `cuda` and reinstalling relevant packages
-
 ## 0.6.3
 
 Changes
