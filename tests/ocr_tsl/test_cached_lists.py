@@ -21,7 +21,6 @@
 
 import pytest
 
-from ocr_translate import models as m
 from ocr_translate.ocr_tsl import cached_lists as cl
 from ocr_translate.ocr_tsl import signals
 
@@ -75,19 +74,18 @@ def test_get_lang_dst_set(monkeypatch, mock_called):
     cl.get_all_lang_dst()
     assert not hasattr(mock_called, 'called')
 
-def test_refresh_model_cache(monkeypatch, language):
+def test_refresh_model_cache(lang_src_loaded, lang_dst_loaded):
     """Test that the model cache is refreshed."""
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', language)
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language)
     cl.refresh_model_cache()
     assert set(cl.ALLOWED_BOX_MODELS) == set()
     assert set(cl.ALLOWED_OCR_MODELS) == set()
     assert set(cl.ALLOWED_TSL_MODELS) == set()
 
-def test_refresh_model_cache_all(monkeypatch, language, box_model, ocr_model, tsl_model):
+def test_refresh_model_cache_all(
+        lang_src_loaded, lang_dst_loaded,
+        box_model, ocr_model, tsl_model
+    ):
     """Test that the model cache is refreshed."""
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', language)
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language)
     cl.refresh_model_cache()
     assert set(cl.ALLOWED_BOX_MODELS) == {box_model}
     assert set(cl.ALLOWED_OCR_MODELS) == {ocr_model}

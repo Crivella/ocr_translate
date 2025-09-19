@@ -27,7 +27,6 @@ import pytest
 from PIL.Image import Image as PILImage
 
 from ocr_translate import models as m
-from ocr_translate import tries
 from ocr_translate.messaging import Message
 from ocr_translate.ocr_tsl import full
 from ocr_translate.trie import Trie
@@ -485,7 +484,7 @@ def test_tsl_pre_tokenize_restorespaces(monkeypatch):
     trie.insert('app')
     trie.insert('apple')
     trie.insert('pie')
-    monkeypatch.setattr(tries, 'TRIE_SRC', trie)
+    monkeypatch.setattr(m.Language, 'LOADED_TRIE', trie)
     res = m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
     assert res == ['apple pie']
 

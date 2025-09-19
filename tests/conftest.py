@@ -190,19 +190,19 @@ def tsl_model_loaded(monkeypatch, tsl_model):
 @pytest.fixture()
 def lang_src_loaded(monkeypatch, language):
     """Language database object with source language loaded."""
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', language)
+    monkeypatch.setattr(m.Language, 'LOADED_SRC', language)
     return language
 
 @pytest.fixture()
 def lang_dst_loaded(monkeypatch, language):
     """Language database object with destination language loaded."""
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language)
+    monkeypatch.setattr(m.Language, 'LOADED_DST', language)
     return language
 
 @pytest.fixture()
 def lang_dst_loaded2(monkeypatch, language2):
     """Language database object with destination language loaded."""
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language2)
+    monkeypatch.setattr(m.Language, 'LOADED_DST', language2)
     return language2
 
 @pytest.fixture()
@@ -243,14 +243,14 @@ def tsl_run(language, text, tsl_model, option_dict):
 @pytest.fixture()
 def mock_loaded_lang_only(monkeypatch, language):
     """Mock languages being loaded"""
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', language)
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language)
+    monkeypatch.setattr(m.Language, 'LOADED_SRC', language)
+    monkeypatch.setattr(m.Language, 'LOADED_DST', language)
 
 @pytest.fixture()
 def mock_loaded(monkeypatch, language, box_model, ocr_model, tsl_model):
     """Mock models being loaded"""
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', language)
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', language)
+    monkeypatch.setattr(m.Language, 'LOADED_SRC', language)
+    monkeypatch.setattr(m.Language, 'LOADED_DST', language)
     monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
     monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
     monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', tsl_model)
@@ -268,16 +268,17 @@ def reset_loaded_models(monkeypatch):
     monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', None)
     monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', None)
     monkeypatch.setattr(m.TSLModel, 'LOADED_MODEL', None)
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', None)
-    monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', None)
+    monkeypatch.setattr(m.Language, 'LOADED_SRC', None)
+    monkeypatch.setattr(m.Language, 'LOADED_DST', None)
+    monkeypatch.setattr(m.Language, 'LOADED_TRIE', None)
 
 @pytest.fixture()
 def mock_loaders(monkeypatch):
     """Mock the load functions. Act on global variables, but avoid downloading and actually loading models."""
     def mock_load_lang_src(name):
-        monkeypatch.setattr(m.Language, 'LOADED_MODEL_SRC', m.Language.objects.get(iso1=name))
+        monkeypatch.setattr(m.Language, 'LOADED_SRC', m.Language.objects.get(iso1=name))
     def mock_load_lang_dst(name):
-        monkeypatch.setattr(m.Language, 'LOADED_MODEL_DST', m.Language.objects.get(iso1=name))
+        monkeypatch.setattr(m.Language, 'LOADED_DST', m.Language.objects.get(iso1=name))
     def mock_load_box_model(name):
         monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', m.OCRBoxModel.objects.get(name=name))
     def mock_load_ocr_model(name):

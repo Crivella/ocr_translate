@@ -25,7 +25,6 @@ from django.db import models
 
 from .. import queues
 from ..messaging import Message
-from ..tries import get_trie_src
 from .base import BaseModel, Language, OptionDict, Text, safe_get_or_create
 
 logger = logging.getLogger('ocr.general')
@@ -154,13 +153,18 @@ class TSLModel(BaseModel):
         else:
             text = text.replace('\n', ' ')
 
-        if restore_missing_spaces and not (trie := get_trie_src()) is None:
-            res = [
-                trie.decompose(split, min_length=1)
-                if not trie.search(split, strict=False) else
-                [[split]]
-                for split in text.lower().split(' ')
-                ]
+        trie = Language.get_loaded_trie()
+        if restore_missing_spaces and not trie is None:
+            res = []
+            for split in text.lower().split(' '):
+                if not trie.search(split, strict=False):
+                    decomposed = trie.decompose(split, min_length=1)
+                    if decomposed:
+                        res.append(decomposed)
+                    else:
+                        res.append([[split]])
+                else:
+                    res.append([[split]])
 
             # Use a list of word frequencies to determine the best split
             def sum_freq(lst: list) -> float:

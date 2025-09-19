@@ -17,13 +17,16 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Django models for the ocr_translate app."""
+import json
 import logging
+from importlib import resources
 from importlib.metadata import entry_points
 from typing import Type
 
 from django.db import models
 
 from ..ocr_tsl.signals import refresh_model_cache_signal
+from ..trie import Trie
 
 logger = logging.getLogger('ocr.general')
 
@@ -68,8 +71,9 @@ class Text(models.Model):
 
 class Language(models.Model):
     """Language used for translation"""
-    LOADED_MODEL_SRC: 'Language' = None
-    LOADED_MODEL_DST: 'Language' = None
+    LOADED_SRC: 'Language' = None
+    LOADED_DST: 'Language' = None
+    LOADED_TRIE: Trie = None
 
     name = models.CharField(max_length=64, unique=True)
     iso1 = models.CharField(max_length=8, unique=True)
@@ -157,65 +161,95 @@ class Language(models.Model):
         return res
 
     @classmethod
+    def load_trie(cls, iso1: str) -> Trie:
+        """Load the language trie"""
+        trie_file = resources.files('ocr_translate.dictionaries').joinpath(f'{iso1}.txt')
+        freq_file = resources.files('ocr_translate.dictionaries').joinpath(f'{iso1}_freq.json')
+
+        if not trie_file.exists():
+            logger.debug(f'No source language trie found: {iso1}')
+            cls.LOADED_TRIE = None
+            return None
+
+        with freq_file.open(encoding='utf-8') as f:
+            freq = json.load(f)
+
+        logger.info(f'Loading source language trie: {iso1}')
+        res = Trie()
+        with trie_file.open(encoding='utf-8') as f:
+            for word in f.read().splitlines():
+                res.insert(word, freq.get(word, -1e-4))
+
+        cls.LOADED_TRIE = res
+        return res
+
+    @classmethod
     def load_model_src(cls, lang_iso1: str) -> 'Language':
         """Load a language by iso1 code and unload the current one if needed"""
-        current = cls.LOADED_MODEL_SRC
+        current = cls.LOADED_SRC
         if current is not None:
             if current.iso1 == lang_iso1:
                 return current
 
         logger.info(f'Loading Language SRC model: {lang_iso1}')
         obj = cls.objects.get(iso1=lang_iso1)
-        obj.load_src()
+        obj.load_events_src.create(description=f'Loading SRC Language {obj.name}')
+        obj.load_trie(obj.iso1)
 
-        cls.LOADED_MODEL_SRC = obj
+        cls.LOADED_SRC = obj
         refresh_model_cache_signal.send(sender=None)
         return obj
 
     @classmethod
     def load_model_dst(cls, lang_iso1: str) -> 'Language':
         """Load a language by iso1 code and unload the current one if needed"""
-        current = cls.LOADED_MODEL_DST
+        current = cls.LOADED_DST
         if current is not None:
             if current.iso1 == lang_iso1:
                 return current
 
         logger.info(f'Loading Language DST model: {lang_iso1}')
         obj = cls.objects.get(iso1=lang_iso1)
-        obj.load_dst()
+        obj.load_events_dst.create(description=f'Loading DST Language {obj.name}')
 
-        cls.LOADED_MODEL_DST = obj
+        cls.LOADED_DST = obj
         refresh_model_cache_signal.send(sender=None)
         return obj
 
     @classmethod
     def get_loaded_model_src(cls) -> 'Language':
         """Get the currently loaded source language"""
-        return cls.LOADED_MODEL_SRC
+        return cls.LOADED_SRC
 
     @classmethod
     def get_loaded_model_dst(cls) -> 'Language':
         """Get the currently loaded destination language"""
-        return cls.LOADED_MODEL_DST
+        return cls.LOADED_DST
+
+    @classmethod
+    def get_loaded_trie(cls) -> Trie:
+        """Get the currently loaded language trie"""
+        return cls.LOADED_TRIE
 
     @classmethod
     def unload_model_src(cls):
         """Unload the currently loaded source language if any"""
-        current = cls.LOADED_MODEL_SRC
+        cls.LOADED_TRIE = None
+        current = cls.LOADED_SRC
         if current is None:
             return
         logger.info(f'Unloading Language SRC model: {current.iso1}')
-        cls.LOADED_MODEL_SRC = None
+        cls.LOADED_SRC = None
         refresh_model_cache_signal.send(sender=None)
 
     @classmethod
     def unload_model_dst(cls):
         """Unload the currently loaded destination language if any"""
-        current = cls.LOADED_MODEL_DST
+        current = cls.LOADED_DST
         if current is None:
             return
         logger.info(f'Unloading Language DST model: {current.iso1}')
-        cls.LOADED_MODEL_DST = None
+        cls.LOADED_DST = None
         refresh_model_cache_signal.send(sender=None)
 
 class BaseModel(models.Model):
@@ -422,14 +456,12 @@ class BaseModel(models.Model):
 
     def deactivate(self):
         """Deactivate the model and unload it if it is currently loaded"""
-        cls = self.__class__
-
-        current = cls.get_loaded_model()
+        current = self.get_loaded_model()
         if self.active:
             self.active = False
             self.save()
         if current is not None and current.name == self.name:
-            cls.unload_model()
+            self.unload_model()
 
     def activate(self):
         """Activate the model"""
