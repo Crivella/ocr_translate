@@ -21,6 +21,7 @@
 import pytest
 
 from ocr_translate import models as m
+from ocr_translate.ocr_tsl import signals
 
 pytestmark = pytest.mark.django_db
 
@@ -137,6 +138,56 @@ def test_lang_from_dct_existing(language_dict, language):
     obj = m.Language.from_dct(language_dict)
     assert language == obj
 
+def test_lang_load_model(monkeypatch, language, language2, mock_called):
+    """Test loading language"""
+    assert m.Language.get_loaded_model_src() is None
+    assert m.Language.get_loaded_model_dst() is None
+
+    m.Language.load_model_src(language.iso1)
+
+    assert m.Language.get_loaded_model_src() == language
+    assert m.Language.get_loaded_model_dst() is None
+
+    m.Language.load_model_dst(language2.iso1)
+
+    assert m.Language.get_loaded_model_src() == language
+    assert m.Language.get_loaded_model_dst() == language2
+
+    # Reloading same model should not refresh the cache
+    monkeypatch.setattr(signals.refresh_model_cache_signal, 'send', mock_called)
+    m.Language.load_model_src(language.iso1)
+    m.Language.load_model_dst(language2.iso1)
+    assert not hasattr(mock_called, 'called')
+
+    m.Language.load_model_src(language2.iso1)
+    assert hasattr(mock_called, 'called')
+
+def test_lang_unload_model(monkeypatch, lang_src_loaded, lang_dst_loaded2, mock_called):
+    """Test unloading language"""
+    assert m.Language.get_loaded_model_src() == lang_src_loaded
+    assert m.Language.get_loaded_model_dst() == lang_dst_loaded2
+
+    m.Language.unload_model_src()
+    assert m.Language.get_loaded_model_src() is None
+    assert m.Language.get_loaded_model_dst() == lang_dst_loaded2
+
+    m.Language.unload_model_dst()
+    assert m.Language.get_loaded_model_src() is None
+    assert m.Language.get_loaded_model_dst() is None
+
+    # Unloading again should not refresh the cache
+    monkeypatch.setattr(signals.refresh_model_cache_signal, 'send', mock_called)
+    m.Language.unload_model_src()
+    m.Language.unload_model_dst()
+    assert not hasattr(mock_called, 'called')
+
+    monkeypatch.setattr(signals.refresh_model_cache_signal, 'send', lambda *args, **kwargs: None)
+    m.Language.load_model_src(lang_src_loaded.iso1)
+    monkeypatch.setattr(signals.refresh_model_cache_signal, 'send', mock_called)
+    assert not hasattr(mock_called, 'called')
+    m.Language.unload_model_src()
+    assert hasattr(mock_called, 'called')
+
 def test_base_from_dct_new(box_model_dict):
     """Test creating a new model"""
     assert m.OCRBoxModel.objects.count() == 0
@@ -177,8 +228,7 @@ def test_base_from_dct_update(box_model_dict, box_model):
     assert box_model.language_format == 'xyz'
     assert box_model.languages.count() == 0
 
-
-def test_load_model(monkeypatch, box_model, mock_called):
+def test_base_load_model(monkeypatch, box_model, mock_called):
     """Test load_model method of OCRBoxModel."""
     monkeypatch.setattr(m.OCRBoxModel, 'from_entrypoint', lambda name: box_model)
     monkeypatch.setattr(m.OCRBoxModel, 'load', mock_called)
@@ -192,7 +242,7 @@ def test_load_model(monkeypatch, box_model, mock_called):
     assert not hasattr(mock_called, 'called')
     assert obj1 is obj2
 
-def test_unload_model(monkeypatch, box_model_loaded, mock_called):
+def test_base_unload_model(monkeypatch, box_model_loaded, mock_called):
     """Test unload_model method of OCRBoxModel."""
     monkeypatch.setattr(m.OCRBoxModel, 'unload', mock_called)
     assert not hasattr(mock_called, 'called')
