@@ -128,7 +128,7 @@ def test_manager_no_change_models(monkeypatch, mock_models, entrypoint1, mock_cl
     with epm.ep_manager():
         pass
 
-    assert mock_cls.call_counter['get'] == 3
+    assert mock_cls.call_counter['from_dct'] == 3
 
 def test_manager_change_add(monkeypatch, mock_models, mock_cls, entrypoint1, mock_called):
     """Test manager with entrypoint added"""

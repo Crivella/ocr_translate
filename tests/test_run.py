@@ -190,7 +190,8 @@ def test_cuda_check_env_failcheck_modulenotfound(monkeypatch, mock_called):
 
     assert hasattr(mock_called, 'called')
     assert mock_called.args[0] == 'torch'
-    assert os.environ['DEVICE'] == 'cpu'
+    # Should stay as cuda here to allow PMNG to install GPU capable plugins
+    assert os.environ['DEVICE'] == 'cuda'
 
 def test_cuda_check_env_cuda_not_vailable(monkeypatch):
     """Test cuda_check function when nvidia-smi is not available."""

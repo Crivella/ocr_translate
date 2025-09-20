@@ -63,10 +63,7 @@ def ep_manager():
                 logger.info(f'New entrypoint {ept.name} found')
             data = ept.load()
             model_id = data['name']
-            try:
-                model = cls.objects.get(name=model_id)
-            except cls.DoesNotExist:
-                model = cls.from_dct(data)
+            model = cls.from_dct(data)
 
         removed = before[grp] - after[grp]
         for ept in removed:

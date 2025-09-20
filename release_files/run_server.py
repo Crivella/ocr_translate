@@ -20,9 +20,8 @@
 import importlib
 import os
 import subprocess
-import sys
 
-req_version = os.environ.get('OCT_VERSION', '0.7.1').lower()
+req_version = os.environ.get('OCT_VERSION', '0.7.2').lower()
 
 def install_upgrade(upgrade=False):
     """Install or upgrade the ocr_translate package."""
@@ -43,17 +42,12 @@ if os.environ.get('OCT_AUTOUPDATE', 'false').lower() in ['true', 't', '1']:
     install_upgrade(upgrade=True)
 
 try:
-    importlib.import_module('ocr_translate')
+    run = importlib.import_module('ocr_translate.scripts.run')
 except ImportError:
     print('`ocr_translate` not found: installing django-ocr_translate...')
     install_upgrade()
-
-try:
-    from ocr_translate.scripts import \
-        run  # pylint: disable=wrong-import-position
-except ImportError:
-    print('Please relaunch this script to use the newly installed package')
-    sys.exit(1)
+    importlib.invalidate_caches()
+    run = importlib.import_module('ocr_translate.scripts.run')
 
 if __name__ == '__main__':
     run.main()

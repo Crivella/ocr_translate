@@ -81,7 +81,7 @@ def cuda_check():
         try:
             subprocess.run(['nvidia-smi'], check=True, capture_output=True)
         except FileNotFoundError:
-            pass
+            os.environ['DEVICE'] = 'cpu'
         else:
             print('`nvidia-smi` is available, setting DEVICE to `cuda`')
             os.environ['DEVICE'] = 'cuda'
@@ -92,8 +92,8 @@ def cuda_check():
         # This check is still useful to se if a CUDA capable torch is installed but a GPU is not available.
         torch = importlib.import_module('torch')
     except ModuleNotFoundError:
-        print('Torch not found: cannot check for CUDA availability explicitly. Defaulting to CPU')
-        os.environ['DEVICE'] = 'cpu'
+        print('Torch not found: cannot check for CUDA availability explicitly.')
+        # Cant default to CPU here otherwise the plugin manager will never install GPU capable plugins
     except ImportError:
         print('Torch found but cannot be imported: probably using a newer version of python with an old plugin')
         print('installation directory. The tool will attempt to update the plugins.')
