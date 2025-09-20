@@ -68,7 +68,7 @@ If you plan to use different python versions, it is recommended to point to a di
 It depends... downgrading to a previous version is in general not supported.
 In particular if there have been changes to the database schema, downgrading them is not automated in this project.
 In that case, you would need to either start from a new database or use a backed up from the target version (or a previous one as upgrading is supported).
-If a release is marked as `containing database migrations`, then downgrading from it is not supported.
+Check the [labeled PRs](https://github.com/Crivella/ocr_translate/pulls?q=is%3Apr+label%3Adatabase_migrations) for which releases  contains database migrations (label might be missing before `v0.4.0`).
 
 ## Contributing
 
