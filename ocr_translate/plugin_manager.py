@@ -242,9 +242,10 @@ class PluginManager:  # pylint: disable=too-many-instance-attributes
         """Get the list of all known plugins."""
         managed = set(self.managed_plugins)
         manual = set(self.manual_plugin_list)
-        if managed & manual:
-            logger.warning(f'Some plugins are both manually and automatically managed: {managed & manual}')
-            logger.warning('Managed ones will most likely take precedence over manually installed ones')
+        # manual will always also include managed if taking from entrypoints
+        # if managed & manual:
+        #     logger.warning(f'Some plugins are both manually and automatically managed: {managed & manual}')
+        #     logger.warning('Managed ones will most likely take precedence over manually installed ones')
 
         return list(managed | manual)
 

@@ -278,7 +278,7 @@ paths:
           description: Method not allowed.
         '200':    # status code
           description: Success.
-  /set_manual_translation:
+  /set_manual_translation/:
     post:
       summary: Set manual translation.
       description: Set manual translation for a text object.
@@ -386,7 +386,7 @@ paths:
                             type: string
                           installed:
                             type: boolean
-  /manage_plugins:
+  /manage_plugins/:
     post:
       summary: Manage plugins.
       description: Manage the plugins, by installing/uninstalling them.
@@ -397,8 +397,11 @@ paths:
             schema:
               type: object
               properties:
-                <plugin_name>:
-                  type: boolean
+                  plugins:
+                    type: object
+                    properties:
+                      <plugin_name>:
+                        type: boolean
       responses:
         '400':  # status code
           description: Bad request.
