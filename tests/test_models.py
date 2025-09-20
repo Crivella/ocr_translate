@@ -17,7 +17,7 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Tests for the database models."""
-#pylint: disable=protected-access
+#pylint: disable=protected-access,too-many-positional-arguments,too-many-arguments
 
 from dataclasses import dataclass
 
@@ -27,9 +27,8 @@ import pytest
 from PIL.Image import Image as PILImage
 
 from ocr_translate import models as m
-from ocr_translate import tries
 from ocr_translate.messaging import Message
-from ocr_translate.ocr_tsl import box, full, lang, ocr, tsl
+from ocr_translate.ocr_tsl import full
 from ocr_translate.trie import Trie
 
 pytestmark = pytest.mark.django_db
@@ -66,18 +65,22 @@ def test_language_eq_iso1(language: m.Language):
 
 def test_add_ocr_box_model(box_model_dict: dict, box_model: m.OCRBoxModel):
     """Test adding a new OCRBoxModel"""
+    box_model_dict.pop('lang')
     query = m.OCRBoxModel.objects.filter(**box_model_dict)
     assert query.exists()
     assert str(query.first()) == box_model_dict['name']
 
 def test_add_ocr_model(ocr_model_dict: dict, ocr_model: m.OCRModel):
     """Test adding a new OCRModel"""
+    ocr_model_dict.pop('lang')
     query = m.OCRModel.objects.filter(**ocr_model_dict)
     assert query.exists()
     assert str(query.first()) == ocr_model_dict['name']
 
 def test_add_tsl_model(tsl_model_dict: dict, tsl_model: m.TSLModel):
     """Test adding a new TSLModel"""
+    tsl_model_dict.pop('lang_src')
+    tsl_model_dict.pop('lang_dst')
     query = m.TSLModel.objects.filter(**tsl_model_dict)
     assert query.exists()
     assert str(query.first()) == tsl_model_dict['name']
@@ -90,18 +93,20 @@ def test_add_option_dict(option_dict: m.OptionDict):
 
 def test_goc_multiple_object_returned(box_model_dict: dict):
     """Test that `get_or_create` the first created object is returned when multiple objects are found."""
+    box_model_dict.pop('lang')
     assert m.OCRBoxModel.objects.count() == 0
     obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
     obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
     assert m.OCRBoxModel.objects.count() == 2
     assert obj1 is not obj2
 
-    res = m.get_or_create(m.OCRBoxModel, **box_model_dict)
+    res = m.base.safe_get_or_create(m.OCRBoxModel, **box_model_dict)
 
     assert res.id == obj1.id
 
 def test_goc_multiple_object_returned_strict(box_model_dict: dict):
     """Test that `get_or_create` raises  when multiple objects are found with strict."""
+    box_model_dict.pop('lang')
     assert m.OCRBoxModel.objects.count() == 0
     obj1 = m.OCRBoxModel.objects.create(**box_model_dict)
     obj2 = m.OCRBoxModel.objects.create(**box_model_dict)
@@ -109,7 +114,7 @@ def test_goc_multiple_object_returned_strict(box_model_dict: dict):
     assert obj1 is not obj2
 
     with pytest.raises(m.OCRBoxModel.MultipleObjectsReturned):
-        m.get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
+        m.base.safe_get_or_create(m.OCRBoxModel, **box_model_dict, strict=True)
 
 def test_lang_load_src(language: m.Language):
     """Test that loading a Language creates a respective src LoadEvent."""
@@ -179,7 +184,7 @@ def test_box_load(monkeypatch, box_model: m.OCRBoxModel):
     assert len(box_model.load_events.all()) == 1
 
 def test_box_run(
-        monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict
+        monkeypatch, image: m.Image, language: m.Language, box_model_loaded: m.OCRBoxModel, option_dict: m.OptionDict
         ):
     """Test adding a new BoxRun"""
 
@@ -187,10 +192,9 @@ def test_box_run(
     def mock_pipeline(*args, **kwargs):
         return [{'single': [lbrt], 'merged': lbrt}]
 
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    box_model._box_detection = mock_pipeline
+    box_model_loaded._box_detection = mock_pipeline
 
-    single, merged = box_model.box_detection(image, language, image=1, options=option_dict)
+    single, merged = box_model_loaded.box_detection(image, language, image=1, options=option_dict)
 
     assert isinstance(single, list)
     assert isinstance(merged, list)
@@ -206,7 +210,7 @@ def test_box_run_reuse(
     def mock_pipeline(*args, **kwargs):
         return [{'single': [lbrt], 'merged': lbrt}]
 
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
     monkeypatch.setattr(box_model, '_box_detection', mock_pipeline)
 
     assert m.OCRBoxRun.objects.count() == 0
@@ -216,15 +220,13 @@ def test_box_run_reuse(
     assert m.OCRBoxRun.objects.count() == 1
 
 def test_box_run_04migration_donothing(
-        monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict,
+        monkeypatch, image: m.Image, language: m.Language, box_model_loaded: m.OCRBoxModel, option_dict: m.OptionDict,
         ):
     """Test that baxrun on v0.4.x that reuses a run from < v0.4.0 is always re-run"""
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-
     assert m.OCRBoxRun.objects.count() == 0
     bbox_run = m.OCRBoxRun.objects.create(
         image=image,
-        model=box_model,
+        model=box_model_loaded,
         lang_src=language,
         options=option_dict,
     )
@@ -234,10 +236,10 @@ def test_box_run_04migration_donothing(
     def mock_pipeline(*args, **kwargs):
         return [{'single': [lbrt], 'merged': lbrt}]
 
-    monkeypatch.setattr(box_model, '_box_detection', mock_pipeline)
+    monkeypatch.setattr(box_model_loaded, '_box_detection', mock_pipeline)
 
     assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first().id == bbox_run.id
-    single, merged = box_model.box_detection(image, language, image=1, options=option_dict)
+    single, merged = box_model_loaded.box_detection(image, language, image=1, options=option_dict)
     assert m.OCRBoxRun.objects.count() == 1
     assert m.OCRBoxRun.objects.filter(id=bbox_run.id).first().id == bbox_run.id
     assert len(single) == 0
@@ -247,7 +249,7 @@ def test_box_run_04migration_replace(
         monkeypatch, image: m.Image, language: m.Language, box_model: m.OCRBoxModel, option_dict: m.OptionDict,
         ):
     """Test that baxrun on v0.4.x that reuses a run from < v0.4.0 is always re-run"""
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(m.OCRBoxModel, 'LOADED_MODEL', box_model)
 
     bbox = m.BBox.objects.create(image=image, l=1, b=2, r=3, t=4)
 
@@ -291,8 +293,8 @@ def test_ocr_run_nooption(
     def mock_ocr(*args, **kwargs):
         return text
 
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    ocr_model._ocr = mock_ocr
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(ocr_model, '_ocr', mock_ocr)
 
     gen = ocr_model.ocr(bbox, language, image=image_pillow)
 
@@ -311,8 +313,8 @@ def test_ocr_run_noimage(
     def mock_ocr(*args, **kwargs):
         return text
 
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    ocr_model._ocr = mock_ocr
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(ocr_model, '_ocr', mock_ocr)
 
     gen = ocr_model.ocr(bbox, language, options=option_dict)
 
@@ -328,8 +330,8 @@ def test_ocr_run(
     def mock_ocr(*args, **kwargs):
         return text
 
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    ocr_model._ocr = mock_ocr
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(ocr_model, '_ocr', mock_ocr)
 
     gen = ocr_model.ocr(bbox, language, image=image_pillow, options=option_dict)
 
@@ -353,8 +355,8 @@ def test_ocr_run_nonblock(
     def mock_ocr(*args, **kwargs):
         return text
 
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    ocr_model._ocr = mock_ocr
+    monkeypatch.setattr(m.OCRModel, 'LOADED_MODEL', ocr_model)
+    monkeypatch.setattr(ocr_model, '_ocr', mock_ocr)
 
     gen = ocr_model.ocr(bbox, language, image=image_pillow, options=option_dict, block=False)
 
@@ -482,7 +484,7 @@ def test_tsl_pre_tokenize_restorespaces(monkeypatch):
     trie.insert('app')
     trie.insert('apple')
     trie.insert('pie')
-    monkeypatch.setattr(tries, 'TRIE_SRC', trie)
+    monkeypatch.setattr(m.Language, 'LOADED_TRIE', trie)
     res = m.TSLModel.pre_tokenize('applepie', restore_missing_spaces=True)
     assert res == ['apple pie']
 
@@ -497,6 +499,9 @@ def test_tsl_load(monkeypatch, tsl_model: m.TSLModel):
 def test_tsl_get_last_loaded(monkeypatch, tsl_model_dict: dict):
     """Test that get_last_loaded returns the last loaded TSLModel."""
     cls = m.TSLModel
+    tsl_model_dict.pop('lang_src')
+    tsl_model_dict.pop('lang_dst')
+    tsl_model_dict['active'] = True
     dct1 = tsl_model_dict.copy()
     dct2 = tsl_model_dict.copy()
     dct1['name'] = 'tsl1'
@@ -515,31 +520,30 @@ def test_tsl_get_last_loaded(monkeypatch, tsl_model_dict: dict):
 
 def test_tsl_run(
         monkeypatch, mock_called,
-        text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict
+        text: m.Text, language: m.Language, tsl_model_loaded: m.TSLModel, option_dict: m.OptionDict
         ):
     """Test performing an tsl_run blocking"""
     def mock_tsl_pipeline(*args, **kwargs):
         return text.text
 
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    tsl_model._translate = mock_tsl_pipeline
+    monkeypatch.setattr(tsl_model_loaded, '_translate', mock_tsl_pipeline)
 
-    gen = tsl_model.translate(text, src=language, dst=language, options=option_dict)
+    gen = tsl_model_loaded.translate(text, src=language, dst=language, options=option_dict)
 
     res = next(gen)
 
     assert isinstance(res, m.Text)
     assert res.text == text.text
 
-    tsl_model._translate = mock_called # Should not be called as it should be lazy
-    gen_lazy = tsl_model.translate(text, src=language, dst=language, options=option_dict)
+    tsl_model_loaded._translate = mock_called # Should not be called as it should be lazy
+    gen_lazy = tsl_model_loaded.translate(text, src=language, dst=language, options=option_dict)
 
     assert not hasattr(mock_called, 'called')
     assert next(gen_lazy) == res
 
 def test_tsl_run_manual(
         monkeypatch, mock_called,
-        text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict,
+        text: m.Text, language: m.Language, tsl_model_loaded: m.TSLModel, option_dict: m.OptionDict,
         manual_model: m.TSLModel
         ):
     """Test performing an tsl_run blocking"""
@@ -555,11 +559,10 @@ def test_tsl_run_manual(
     def mock_tsl_pipeline(*args, **kwargs):
         return text.text
 
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    tsl_model._translate = mock_tsl_pipeline
+    monkeypatch.setattr(tsl_model_loaded, '_translate', mock_tsl_pipeline)
 
-    tsl_model._translate = mock_called # Should not be called as it should be lazy
-    gen = tsl_model.translate(text, src=language, dst=language, options=option_dict)
+    tsl_model_loaded._translate = mock_called # Should not be called as it should be lazy
+    gen = tsl_model_loaded.translate(text, src=language, dst=language, options=option_dict)
 
     res = next(gen)
 
@@ -569,16 +572,15 @@ def test_tsl_run_manual(
 
 def test_tsl_run_nonblock(
         monkeypatch, mock_called,
-        text: m.Text, language: m.Language, tsl_model: m.TSLModel, option_dict: m.OptionDict
+        text: m.Text, language: m.Language, tsl_model_loaded: m.TSLModel, option_dict: m.OptionDict
         ):
     """Test performing an tsl_run non-blocking"""
     def mock_tsl_pipeline(*args, **kwargs):
         return text.text
 
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    tsl_model._translate = mock_tsl_pipeline
+    monkeypatch.setattr(tsl_model_loaded, '_translate', mock_tsl_pipeline)
 
-    gen = tsl_model.translate(text, src=language, dst=language, options=option_dict, block=False)
+    gen = tsl_model_loaded.translate(text, src=language, dst=language, options=option_dict, block=False)
 
     msg = next(gen)
     # msg.resolve()
@@ -588,8 +590,8 @@ def test_tsl_run_nonblock(
     assert isinstance(res, m.Text)
     assert res.text == text.text
 
-    tsl_model._translate = mock_called # Should not be called as it should be lazy
-    gen_lazy = tsl_model.translate(text, src=language, dst=language, options=option_dict, block=False)
+    tsl_model_loaded._translate = mock_called # Should not be called as it should be lazy
+    gen_lazy = tsl_model_loaded.translate(text, src=language, dst=language, options=option_dict, block=False)
 
     assert not hasattr(mock_called, 'called')
     assert next(gen_lazy) is None
@@ -608,10 +610,12 @@ def test_tsl_run_lazy(text: m.Text, language: m.Language, tsl_model: m.TSLModel,
         next(gen)
 
 @pytest.mark.parametrize('mock_called', [['test_text_ocred']], indirect=True)
-def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
+def test_ocr_tsl_work_single_ocr_plus_lazy(
         monkeypatch, image_pillow: PILImage, mock_called,
-        image: m.Image, text: m.Text, bbox: m.BBox, bbox_single: m.BBox, language: m.Language,
-        box_model: m.OCRBoxModel, ocr_model_single: m.OCRModel, tsl_model: m.TSLModel, option_dict: m.OptionDict
+        image: m.Image, text: m.Text, bbox: m.BBox, bbox_single: m.BBox,
+        lang_src_loaded: m.Language,
+        box_model_loaded: m.OCRBoxModel, ocr_model_single_loaded: m.OCRModel, tsl_model_loaded: m.TSLModel,
+        option_dict: m.OptionDict
         ):
     """Test performing an ocr_tsl_run non-lazy"""
     def mock_box_run(*args, **kwargs):
@@ -627,16 +631,11 @@ def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
         res, _ = m.Text.objects.get_or_create(text = obj.text + '_translated')
         yield res
 
-    box_model.box_detection = mock_box_run
-    ocr_model_single.ocr = mock_ocr_run
-    tsl_model.translate = mock_tsl_run
+    box_model_loaded.box_detection = mock_box_run
+    ocr_model_single_loaded.ocr = mock_ocr_run
+    tsl_model_loaded.translate = mock_tsl_run
 
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(ocr_model_single, 'merge_single_result', mock_called)
-
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model_single)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    monkeypatch.setattr(ocr_model_single_loaded, 'merge_single_result', mock_called)
 
     res = full.ocr_tsl_pipeline_work(
         image_pillow, image.md5,
@@ -644,7 +643,7 @@ def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
         )
 
     # Check that `merge_single_result` is being called with the expected arguments
-    assert mock_called.args[0] == language.iso1
+    assert mock_called.args[0] == lang_src_loaded.iso1
     assert mock_called.args[1] == [text.text + '_ocred']
     assert mock_called.args[2] == [bbox_single]
     assert mock_called.args[3] == [bbox]
@@ -657,9 +656,10 @@ def test_ocr_tsl_work_single_ocr_plus_lazy( # pylint: disable=too-many-arguments
     assert res == res_lazy
 
 def test_ocr_tsl_work_plus_lazy(
-        monkeypatch, image_pillow: PILImage,
+        image_pillow: PILImage,
         image: m.Image, text: m.Text, bbox: m.BBox, language: m.Language,
-        box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel, option_dict: m.OptionDict
+        box_model_loaded: m.OCRBoxModel, ocr_model_loaded: m.OCRModel, tsl_model_loaded: m.TSLModel,
+        option_dict: m.OptionDict
         ):
     """Test performing an ocr_tsl_run non-lazy"""
     def mock_box_run(*args, **kwargs):
@@ -675,13 +675,9 @@ def test_ocr_tsl_work_plus_lazy(
         res, _ = m.Text.objects.get_or_create(text = obj.text + '_translated')
         yield res
 
-    box_model.box_detection = mock_box_run
-    ocr_model.ocr = mock_ocr_run
-    tsl_model.translate = mock_tsl_run
-
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
+    box_model_loaded.box_detection = mock_box_run
+    ocr_model_loaded.ocr = mock_ocr_run
+    tsl_model_loaded.translate = mock_tsl_run
 
     res = full.ocr_tsl_pipeline_work(
         image_pillow, image.md5,
@@ -712,12 +708,10 @@ def test_ocr_tsl_lazy(option_dict: m.OptionDict):
 
 def test_ocr_tsl_lazy_image(
         monkeypatch, image: m.Image,
-        box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel, option_dict: m.OptionDict
+        box_model_loaded: m.OCRBoxModel, ocr_model_loaded: m.OCRModel, tsl_model_loaded: m.TSLModel,
+        option_dict: m.OptionDict
         ):
     """Test performing an ocr_tsl_run lazy (with image but missing ocr-tsl steps)"""
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
 
     with pytest.raises(ValueError):
         full.ocr_tsl_pipeline_lazy(

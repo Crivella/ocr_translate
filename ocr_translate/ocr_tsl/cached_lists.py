@@ -22,7 +22,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .. import models as m
-from .lang import get_lang_dst, get_lang_src
 from .signals import refresh_model_cache_signal
 
 # Caches for the languages ordered by number of translations
@@ -39,8 +38,8 @@ def refresh_model_cache():
     global ALLOWED_OCR_MODELS
     global ALLOWED_TSL_MODELS
 
-    lang_src = get_lang_src()
-    lang_dst = get_lang_dst()
+    lang_src = m.Language.get_loaded_model_src()
+    lang_dst = m.Language.get_loaded_model_dst()
 
     ALLOWED_BOX_MODELS = []
     ALLOWED_OCR_MODELS = []

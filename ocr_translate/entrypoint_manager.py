@@ -23,11 +23,7 @@ import logging
 from importlib.metadata import EntryPoint, entry_points
 
 from . import models as m
-from .ocr_tsl import initializers as ini
-from .ocr_tsl.box import get_box_model, unload_box_model
-from .ocr_tsl.ocr import get_ocr_model, unload_ocr_model
 from .ocr_tsl.signals import refresh_model_cache_signal
-from .ocr_tsl.tsl import get_tsl_model, unload_tsl_model
 
 logger = logging.getLogger('ocr.general')
 
@@ -35,10 +31,10 @@ def get_group_entrypoints(group: str) -> set[EntryPoint]:
     """Get all entrypoints for a group"""
     return set(ep for ep in entry_points(group=group))
 
-GROUPS = {
-    'ocr_translate.box_data': (m.OCRBoxModel, ini.add_box_model, get_box_model, unload_box_model),
-    'ocr_translate.ocr_data': (m.OCRModel, ini.add_ocr_model, get_ocr_model, unload_ocr_model),
-    'ocr_translate.tsl_data': (m.TSLModel, ini.add_tsl_model, get_tsl_model, unload_tsl_model),
+GROUPS: dict[str, m.BaseModel] = {
+    'ocr_translate.box_data': m.OCRBoxModel,
+    'ocr_translate.ocr_data': m.OCRModel,
+    'ocr_translate.tsl_data': m.TSLModel,
 }
 
 @contextlib.contextmanager
@@ -59,9 +55,7 @@ def ep_manager():
         after[grp] = get_group_entrypoints(grp)
 
     flag = False
-    for grp, data in GROUPS.items():
-        cls, create_func, get_func, unload_func = data
-        loaded_model = get_func()
+    for grp, cls in GROUPS.items():
         added = after[grp] - before[grp]
         # Using after to ensure that when using same plugin folder with new db, the models are created
         for ept in after[grp]:
@@ -72,25 +66,18 @@ def ep_manager():
             try:
                 model = cls.objects.get(name=model_id)
             except cls.DoesNotExist:
-                model = create_func(data.copy())
-            model.active = True
-            model.save()
+                model = cls.from_dct(data)
 
         removed = before[grp] - after[grp]
         for ept in removed:
             data = ept.load()
             model_id = data['name']
-            try:
-                model = cls.objects.get(name=model_id)
-                if loaded_model is not None:
-                    if loaded_model.name == model.name:
-                        unload_func()
-                model.active = False
-                model.save()
-                logger.info(f'Entrypoint {ept.name} removed')
-            except cls.DoesNotExist:
+            q = cls.objects.filter(name=model_id)
+            if q.exists():
+                model = q.first()
+                model.deactivate()
+            else:
                 logger.warning(f'Could not find model {model_id} to deactivate')
-                continue
 
         flag = flag or bool(added or removed)
 

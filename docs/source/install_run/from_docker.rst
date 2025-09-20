@@ -25,10 +25,6 @@ Additionally the docker image defines several other variables to automatically c
 
 - :code:`UID`: UID of the user owning the files in /models and /data
 - :code:`GID`: GID of the user owning the files in /models and /data
-- :code:`NUM_WEB_WORKERS`: Number of gunicorn workers for the server
-- :code:`DJANGO_SUPERUSER_USERNAME`: The username of the admin user to be created.
-- :code:`DJANGO_SUPERUSER_PASSWORD`: The password of the admin user to be created.
-
 
 Compose example
 _______________
@@ -61,6 +57,7 @@ This is an example of using :code:`docker compose` to run the server with a post
           - 4000:4000
         depends_on:
           - database
+        tty: true  # Useful to see the color on the logs
         restart: unless-stopped
 
       database:

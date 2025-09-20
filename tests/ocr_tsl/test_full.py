@@ -17,13 +17,13 @@
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
 """Tests for full module."""
+# pylint: disable=too-many-positional-arguments,too-many-arguments
 
-#pylint: disable=too-many-arguments
 
 import pytest
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import box, full, lang, ocr, tsl
+from ocr_translate.ocr_tsl import full
 
 pytestmark = pytest.mark.django_db
 
@@ -37,12 +37,9 @@ def test_lazy_nonexistent_image(option_dict):
 
 def test_lazy_nobox(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, image, option_dict):
+        lang_src_loaded, box_model_loaded, ocr_model_loaded, image, option_dict):
     """Test lazy pipeline with no box."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(ocr_model, 'ocr', mock_called)
+    monkeypatch.setattr(ocr_model_loaded, 'ocr', mock_called)
     with pytest.raises(ValueError):
         full.ocr_tsl_pipeline_lazy(
             image.md5,
@@ -52,13 +49,11 @@ def test_lazy_nobox(
 
 def test_lazy_noocr(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, tsl_model, image, bbox, box_run, option_dict):
+        lang_src_loaded, box_model_loaded, ocr_model_loaded, tsl_model_loaded,
+        image, bbox, box_run, option_dict
+    ):
     """Test lazy pipeline with no ocr."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    monkeypatch.setattr(tsl_model, 'translate', mock_called)
+    monkeypatch.setattr(tsl_model_loaded, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(ValueError):
@@ -70,13 +65,11 @@ def test_lazy_noocr(
 
 def test_lazy_notsl(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict):
+        lang_src_loaded, box_model_loaded, ocr_model_loaded, tsl_model_loaded,
+        image, bbox, box_run, ocr_run, option_dict
+    ):
     """Test lazy pipeline with no translation."""
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    monkeypatch.setattr(tsl_model, 'translate', mock_called)
+    monkeypatch.setattr(tsl_model_loaded, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(TypeError):
@@ -89,18 +82,15 @@ def test_lazy_notsl(
 
 def test_lazy_option_favor_manual_absent(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict
+        lang_src_loaded, box_model_loaded, ocr_model_loaded, tsl_model_loaded,
+        image, bbox, box_run, ocr_run, option_dict
         ):
     """Test favor manual translation option when absent."""
     # options = {
     #     'favor_manual': True,
     #     'other': 'option'
     # }
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    monkeypatch.setattr(tsl_model, 'translate', mock_called)
+    monkeypatch.setattr(tsl_model_loaded, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(TypeError):
@@ -113,7 +103,8 @@ def test_lazy_option_favor_manual_absent(
 
 def test_lazy_option_favor_manual_specified_true(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict
+        lang_src_loaded, box_model_loaded, ocr_model_loaded, tsl_model_loaded,
+        image, bbox, box_run, ocr_run, option_dict
         ):
     """Test favor manual translation option when set True."""
     options = {
@@ -121,11 +112,7 @@ def test_lazy_option_favor_manual_specified_true(
         'other': 'option'
     }
     new_opt = m.OptionDict.objects.create(options=options)
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    monkeypatch.setattr(tsl_model, 'translate', mock_called)
+    monkeypatch.setattr(tsl_model_loaded, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(TypeError):
@@ -138,7 +125,8 @@ def test_lazy_option_favor_manual_specified_true(
 
 def test_lazy_option_favor_manual_specified_false(
         monkeypatch, mock_called,
-        language, box_model, ocr_model, tsl_model, image, bbox, box_run, ocr_run, option_dict
+        lang_src_loaded, box_model_loaded, ocr_model_loaded, tsl_model_loaded,
+        image, bbox, box_run, ocr_run, option_dict
         ):
     """Test favor manual translation option when set False."""
     options = {
@@ -146,11 +134,7 @@ def test_lazy_option_favor_manual_specified_false(
         'other': 'option'
     }
     new_opt = m.OptionDict.objects.create(options=options)
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    monkeypatch.setattr(tsl_model, 'translate', mock_called)
+    monkeypatch.setattr(tsl_model_loaded, 'translate', mock_called)
 
     bbox.from_ocr_merged.result_single.add(bbox)
     with pytest.raises(TypeError):

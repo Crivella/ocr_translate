@@ -22,10 +22,6 @@ import logging
 from PIL import Image
 
 from .. import models as m
-from .box import get_box_model
-from .lang import get_lang_dst, get_lang_src
-from .ocr import get_ocr_model
-from .tsl import get_tsl_model
 
 logger = logging.getLogger('ocr.general')
 
@@ -39,9 +35,11 @@ def ocr_tsl_pipeline_lazy(
     Try to lazily generate reponse from md5.
     Should raise a ValueError if the operation is not possible (fails at any step).
     """
-    box_model = get_box_model()
-    ocr_model = get_ocr_model()
-    tsl_model = get_tsl_model()
+    lang_src = m.Language.get_loaded_model_src()
+    lang_dst = m.Language.get_loaded_model_dst()
+    box_model = m.OCRBoxModel.get_loaded_model()
+    ocr_model = m.OCRModel.get_loaded_model()
+    tsl_model = m.TSLModel.get_loaded_model()
 
     favor_manual = options_tsl.options.get('favor_manual', True)
     logger.debug(f'LAZY: START {md5}')
@@ -50,14 +48,14 @@ def ocr_tsl_pipeline_lazy(
         img_obj= m.Image.objects.get(md5=md5)
     except m.Image.DoesNotExist as exc:
         raise ValueError(f'Image with md5 {md5} does not exist') from exc
-    _, bbox_obj_list = box_model.box_detection(img_obj, get_lang_src(), options=options_box)
+    _, bbox_obj_list = box_model.box_detection(img_obj, lang_src, options=options_box)
 
     for bbox_obj in bbox_obj_list:
-        text_obj = ocr_model.ocr(bbox_obj, get_lang_src(), options=options_ocr)
+        text_obj = ocr_model.ocr(bbox_obj, lang_src, options=options_ocr)
         text_obj = next(text_obj)
 
         tsl_obj = tsl_model.translate(
-            text_obj, get_lang_src(), get_lang_dst(),
+            text_obj, lang_src, lang_dst,
             options=options_tsl, favor_manual=favor_manual,
             lazy=True
             )
@@ -89,11 +87,11 @@ def ocr_tsl_pipeline_work(  # pylint: disable=too-many-locals
     Generate response from md5 and binary.
     Will attempt to behave lazily at every step unless force is True.
     """
-    box_model = get_box_model()
-    ocr_model = get_ocr_model()
-    tsl_model = get_tsl_model()
-    lang_src = get_lang_src()
-    lang_dst = get_lang_dst()
+    lang_src = m.Language.get_loaded_model_src()
+    lang_dst = m.Language.get_loaded_model_dst()
+    box_model = m.OCRBoxModel.get_loaded_model()
+    ocr_model = m.OCRModel.get_loaded_model()
+    tsl_model = m.TSLModel.get_loaded_model()
 
     favor_manual = options_tsl.options.get('favor_manual', True)
     logger.debug(f'WORK: START {md5}')

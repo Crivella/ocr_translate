@@ -23,7 +23,6 @@ import pytest
 from django.urls import reverse
 
 from ocr_translate import models as m
-from ocr_translate.ocr_tsl import box, lang, ocr, tsl
 from ocr_translate.views import get_default_options_from_cascade
 
 pytestmark = pytest.mark.django_db
@@ -55,25 +54,23 @@ def test_cascade_action_default():
     res = get_default_options_from_cascade([opt], 'test', 2)
     assert res == 2
 
-def test_cascade_action_all(monkeypatch, box_model, ocr_model, tsl_model, language, language2):
+def test_cascade_action_all(
+        monkeypatch,
+        box_model_loaded, ocr_model_loaded, tsl_model_loaded,
+        lang_src_loaded, lang_dst_loaded2
+    ):
     """Test cascade action multiple overrides."""
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
-    monkeypatch.setattr(ocr, 'OCR_MODEL_OBJ', ocr_model)
-    monkeypatch.setattr(tsl, 'TSL_MODEL_OBJ', tsl_model)
-    monkeypatch.setattr(lang, 'LANG_SRC', language)
-    monkeypatch.setattr(lang, 'LANG_DST', language2)
-
     opt1 = m.OptionDict.objects.create(options={'1': 1})
     opt2 = m.OptionDict.objects.create(options={'1': 2, '2': 2})
     opt3 = m.OptionDict.objects.create(options={'1': 3, '2': 3, '3': 3})
     opt4 = m.OptionDict.objects.create(options={'1': 4, '2': 4, '3': 4, '4': 4})
     opt5 = m.OptionDict.objects.create(options={'1': 5, '2': 5, '3': 5, '4': 5, '5': 5})
 
-    box_model.default_options = opt1
-    ocr_model.default_options = opt2
-    tsl_model.default_options = opt3
-    language.default_options = opt4
-    language2.default_options = opt5
+    box_model_loaded.default_options = opt1
+    ocr_model_loaded.default_options = opt2
+    tsl_model_loaded.default_options = opt3
+    lang_src_loaded.default_options = opt4
+    lang_dst_loaded2.default_options = opt5
 
     lst = ['box_model', 'ocr_model', 'tsl_model', 'lang_src', 'lang_dst']
     lst.reverse()
@@ -84,9 +81,6 @@ def test_cascade_action_all(monkeypatch, box_model, ocr_model, tsl_model, langua
     assert get_default_options_from_cascade(lst, '4', 6) == 4
     assert get_default_options_from_cascade(lst, '5', 6) == 5
     assert get_default_options_from_cascade(lst, '6', 6) == 6
-
-
-
 
 def test_get_translations_nonget(client):
     """Test get_translations with non GET request."""
@@ -109,15 +103,14 @@ def test_get_translations_noinit(client):
     assert response.status_code == 200
     assert response.json() == {'options': {'box_model': {}, 'ocr_model': {}, 'tsl_model': {}}}
 
-def test_get_translations_init(client, monkeypatch, box_model):
+def test_get_translations_init(client, monkeypatch, box_model_loaded):
     """Test get_translations with GET request with non recognized attribute."""
     # opt = m.OptionDict.objects.create(options={'test': 1})
     # monkeypatch.setattr(box_model, 'default_options', opt)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     dct = {'test': {
         'type': int, 'default': 1, 'description': 'test'
         }}
-    monkeypatch.setattr(box_model, 'ALLOWED_OPTIONS', dct)
+    monkeypatch.setattr(box_model_loaded, 'ALLOWED_OPTIONS', dct)
     url = reverse('ocr_translate:get_active_options')
     response = client.get(url)
     dct['test']['type'] = 'int'
@@ -125,15 +118,14 @@ def test_get_translations_init(client, monkeypatch, box_model):
     assert response.status_code == 200
     assert response.json() == {'options': {'box_model': dct, 'ocr_model': {}, 'tsl_model': {}}}
 
-def test_get_translations_init_override_no(client, monkeypatch, box_model):
+def test_get_translations_init_override_no(client, monkeypatch, box_model_loaded):
     """Test get_translations with GET request with non recognized attribute."""
-    opt = m.OptionDict.objects.create(options={})
-    monkeypatch.setattr(box_model, 'default_options', opt)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+    opt, _ = m.OptionDict.objects.get_or_create(options={})
+    monkeypatch.setattr(box_model_loaded, 'default_options', opt)
     dct = {'test': {
         'type': int, 'default': ('cascade', ['box_model'], 1), 'description': 'test'
         }}
-    monkeypatch.setattr(box_model, 'ALLOWED_OPTIONS', dct)
+    monkeypatch.setattr(box_model_loaded, 'ALLOWED_OPTIONS', dct)
     url = reverse('ocr_translate:get_active_options')
     response = client.get(url)
     dct['test']['type'] = 'int'
@@ -142,15 +134,14 @@ def test_get_translations_init_override_no(client, monkeypatch, box_model):
     assert response.status_code == 200
     assert response.json() == {'options': {'box_model': dct, 'ocr_model': {}, 'tsl_model': {}}}
 
-def test_get_translations_init_override_yes(client, monkeypatch, box_model):
+def test_get_translations_init_override_yes(client, monkeypatch, box_model_loaded):
     """Test get_translations with GET request with non recognized attribute."""
     opt = m.OptionDict.objects.create(options={'test': 2})
-    monkeypatch.setattr(box_model, 'default_options', opt)
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
+    monkeypatch.setattr(box_model_loaded, 'default_options', opt)
     dct = {'test': {
         'type': int, 'default': ('cascade', ['box_model'], 1), 'description': 'test'
         }}
-    monkeypatch.setattr(box_model, 'ALLOWED_OPTIONS', dct)
+    monkeypatch.setattr(box_model_loaded, 'ALLOWED_OPTIONS', dct)
     url = reverse('ocr_translate:get_active_options')
     response = client.get(url)
     dct['test']['type'] = 'int'
@@ -159,13 +150,12 @@ def test_get_translations_init_override_yes(client, monkeypatch, box_model):
     assert response.status_code == 200
     assert response.json() == {'options': {'box_model': dct, 'ocr_model': {}, 'tsl_model': {}}}
 
-def test_get_translations_init_override_invalid(client, monkeypatch, box_model):
+def test_get_translations_init_override_invalid(client, monkeypatch, box_model_loaded):
     """Test get_translations with GET request with non recognized attribute."""
-    monkeypatch.setattr(box, 'BOX_MODEL_OBJ', box_model)
     dct = {'test': {
         'type': int, 'default': ('random_action', ['box_model'], 1), 'description': 'test'
         }}
-    monkeypatch.setattr(box_model, 'ALLOWED_OPTIONS', dct)
+    monkeypatch.setattr(box_model_loaded, 'ALLOWED_OPTIONS', dct)
     url = reverse('ocr_translate:get_active_options')
     with pytest.raises(ValueError):
         client.get(url)

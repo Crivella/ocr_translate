@@ -2,6 +2,53 @@
 
 List of changes between versions
 
+## XXX (maybe planned)
+
+- [ ] Add null/passthrough OCR model (how should it be designed to report  both the boxes and the OCR step?)
+- [ ] Possibly move to CUDA 12.9 and check if paddleocr can work also with the gpu version
+- [ ] Add way to control server natively without the extension (e.g. through the admin page or another view)
+- [ ] Make PMNG aware of manually installed plugins and gray them out in the extension
+- [ ] Add <DETECT> language to allow either OCR or TSL models to detect the language automatically
+      (Both should easy, only one could be troublesome)
+
+## 0.7.0
+
+### Breaking changes
+
+- `staka/fugumt-...` models has been removed as it is not working with the newer dependencies.
+  - Issue related to https://github.com/huggingface/transformers/issues/24657#issuecomment-3303054186
+  - Unfortunately the version of transformers/tokenizers can't be lowered below `4.48.0/0.20.2`
+    as tokenizers does not support python 3.13 before https://github.com/huggingface/tokenizers/releases/tag/v0.20.2
+
+### Major Changes
+
+- dependencies updates:
+  - [X] `python`: support for `>=3.10, <=3.11` extended to `>=3.10` (will test `3.14` once it is out with all its prebuilt packages in PyPI)
+  - [X] `CUDA`: from `11.8` updated to `12.8` (allow using `sm_120` GPUs like the RTX 5000 series)
+  - [X] `torch`: from `2.2.1` updated to `2.8.0`
+  - [X] `easyocr`: from `1.7.1` updated to `1.7.2`
+  - [X] `paddleocr`: from `2.8.1` updated to `3.2.0`
+    Different models and much ampler set of languages supported
+- Improved logging of the server using [rich](https://github.com/Textualize/rich)
+- Environment variables:
+  - REMOVED:
+    - `AUTO_CREATE_LANGUAGES` - Languages are now created once at first initialization if missing
+      For now the languages have never changed across versions so it was never needed to recreate/updated them.
+    - `AUTOCREATE_MODELS` - Models are now synchronized with the available entrypoints at every server start
+      Removed models will be deactivated, and present models will be updated/created.
+  - ADDED:
+    - `OCT_LOGFILE` - `[true/false/path]`. If true, a logfile named `$OCT_BASE_DIR/ocr_translate.log` will be created. If a path is provided, that will be used instead.
+- Logic of the `run_server.py` moved inside the package to improve testing and modularity (the script will appear much smaller in the release)
+- QoL improvements for manual plugins installations
+  - If you want to try your own plugins or you want to manually install the supported ones (eg with modifications) you can now do so by installing them in the server
+    environment.
+  - The server will automatically pick up the plugin module name and add it to the DJANGO apps, and synchronize the models in the database at launch.
+  - **NOTE**: packages coming from the managed plugins will take precedence over manually installed ones. This could cause package conflicts. Mix stuff at your own risk.
+
+### Fixes
+
+- Fix #55
+
 ## 0.6.3
 
 Changes

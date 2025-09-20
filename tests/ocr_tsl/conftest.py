@@ -26,9 +26,10 @@ def mock_base_model():
     """Mock BaseModel class."""
     class MockModel(): # pylint: disable=invalid-name
         """Mocked BaseModel class."""
-        def __init__(self):
+        def __init__(self, name = 'test'):
             self.load_called = False
             self.unload_called = False
+            self.name = name
         def load(self): # pylint: disable=missing-function-docstring
             self.load_called = True
         def unload(self): # pylint: disable=missing-function-docstring

@@ -24,9 +24,9 @@ See the [documentation](https://crivella.github.io/ocr_translate/user/index.html
 
 **TLDR:** If you are on windows you will need to:
 
-- install [python](https://www.python.org/downloads/windows/) (3.10 or 3.11 as 3.12 is currently incompatible due to the version of numpy used [see #35](/../../issues/35)) with the check on `Add python.exe to PATH`
+- install [python](https://www.python.org/downloads/windows/) (`3.10 <= SUPPORTED_VERSIONS <= 3.13`) with the check on `Add python.exe to PATH`
 - download>unzip the [release file](/../../releases/latest/download/run_server.zip)
-- run the `run-user.bat` file
+- run the `run-user.[bat/sh]` file (bat for windows, sh for linux)
 
 ### Why do I need to install python
 
@@ -43,6 +43,32 @@ The check on `Add python.exe to PATH` is needed so that `pip` can be run without
 
 Also since I am now asking people to install python, I decided to go all the way and use an approach similar to what [automatic1111's webui.bat](https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/webui.bat) does for stable diffusion.\
 This batch script will create/reuse a virtual environment in a folder `venv` in the same directory as the script and install the required packages in it.
+
+## Upgrading from a previous version
+
+- Download the desired release files.
+- Stop the server if it is running
+- Run the new server files. Make sure to use the same environment variables in `run-user.[bat/sh]` as before if you had set any
+- Since `v0.6.0` you could also replace the existing server files with the new ones, or point the new ones to reuse the same virtual environment (if you really want to save 100~200MB)
+
+Since `v0.6.1` you can also use the `OCT_VERSION` and `OCT_AUTOUPDATE` environment variables to have the server update itself automatically to the `latest` or a specific version.
+It is still recommended to download the new release files as improvements/bug-fixes/new-features can also be added to the launch and settings scripts.
+
+### What happens to my installation and database in an upgrade
+
+- The database will be automatically migrated to the new version if needed. Any existing data will be preserved.
+- The plugins and their dependencies will be left unchanged or upgraded as needed.
+- Models will be reused
+
+**NOTE**: Attempting to reuse the plugins if switching between different python versions will likely cause problems.
+If you plan to use different python versions, it is recommended to point to a different `OCT_BASE_DIR` or move/delete your current plugin installations.
+
+### Can I downgrade to a previous version
+
+It depends... downgrading to a previous version is in general not supported.
+In particular if there have been changes to the database schema, downgrading them is not automated in this project.
+In that case, you would need to either start from a new database or use a backed up from the target version (or a previous one as upgrading is supported).
+Check the [labeled PRs](https://github.com/Crivella/ocr_translate/pulls?q=is%3Apr+label%3Adatabase_migrations) for which releases  contains database migrations (label might be missing before `v0.4.0`).
 
 ## Contributing
 

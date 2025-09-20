@@ -52,10 +52,10 @@ You can check if your code is covered by tests by running:
 
    pytest --cov=ocr_translate --cov-report=html tests
 
-And opening the `htmlcov/index.html` file generated in your working direcotry.
+And opening the `htmlcov/index.html` file generated in your working directory.
 
 If you are running tests with and IDE like VSCode, make sure that the following is set in your environment.
 
 .. code-block::
 
-   `DJANGO_SETTINGS_MODULE = "mysite.settings"`
+   `DJANGO_SETTINGS_MODULE = "ocr_translate.app.settings"`

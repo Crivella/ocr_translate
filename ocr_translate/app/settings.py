@@ -27,7 +27,8 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+# pylint: skip-file
+import json
 import os
 from pathlib import Path
 
@@ -36,7 +37,51 @@ from ocr_translate.plugin_manager import PluginManager
 PMNG = PluginManager()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(os.getenv('OCT_BASE_DIR', ''))
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() in ['true', 't', '1', 'yes', 'y']
+DJANGO_LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'INFO').upper()
+
+STREAM_HANDLER = 'logging.StreamHandler'
+STREAM_HANDLER_KWARGS = {}
+MEDIUM_FMT_STR = '{asctime} - {levelname:>7s} - {name:>15s}:{module:<15s} - {message}'
+
+try:
+    from rich.logging import RichHandler
+except:
+    pass
+else:
+    STREAM_HANDLER = 'rich.logging.RichHandler'
+    STREAM_HANDLER_KWARGS = {
+        'rich_tracebacks': True,
+        'tracebacks_suppress': ['django', 'logging', 'rich'],
+    }
+    MEDIUM_FMT_STR = '{message}'
+
+LOGFILE = os.environ.get('OCT_LOGFILE', '')
+
+handlers_list = ['console']
+file_handler = {}
+if LOGFILE:
+    if LOGFILE.lower() in ['true', 't', '1', 'yes', 'y']:
+        LOGFILE = BASE_DIR / 'ocr_translate.log'
+    file_handler = {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGFILE.as_posix(),
+            'formatter': 'verbose',
+            'maxBytes': 10*1024*1024,  # 10 MB
+            'backupCount': 5,
+            'encoding': 'utf8',
+        }
+    }
+    handlers_list.append('file')
+
+def skip_static_requests(record):
+    return not record.args[0].startswith('GET /static/')
 
 # Logging
 LOGGING = {
@@ -44,11 +89,11 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} - {asctime} - {module} - {process:d} - {thread:d} - {message}',
+            'format': '{levelname} - {asctime} - {module}:{funcName}:{lineno} - {process:d} - {thread:d} - {message}',
             'style': '{',
             },
         'medium': {
-            'format': '{asctime} - {levelname:>7s} - {name:>15s}:{module:<15s} - {message}',
+            'format': MEDIUM_FMT_STR,
             'style': '{',
             },
         'simple': {
@@ -60,14 +105,19 @@ LOGGING = {
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue',
         },
+        'skip_static_requests': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': skip_static_requests,
+        }
     },
     'handlers': {
         'console': {
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO').upper(),
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
+            'level': DJANGO_LOG_LEVEL,
+            'class': STREAM_HANDLER,
             'formatter': 'medium',
+            **STREAM_HANDLER_KWARGS,
         },
+        **file_handler
     },
     'loggers': {
         'django': {
@@ -77,24 +127,22 @@ LOGGING = {
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',
+            'filters': ['skip_static_requests'],
             'propagate': False,
         },
         'ocr.general': {
-            'handlers': ['console'],
+            'handlers': handlers_list,
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
             'propagate': False,
         },
         'ocr.worker': {
-            'handlers': ['console'],
+            'handlers': handlers_list,
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
             'propagate': False,
         },
         'plugin': {
-            'handlers': ['console'],
+            'handlers': handlers_list,
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
             'propagate': False,
         },
     },
@@ -105,16 +153,13 @@ def parse_list(s, sep=';'):
         s = s[1:-1]
     if s.startswith("'") and s.endswith("'"):
         s = s[1:-1]
-    return s.split(sep)
+    return list(filter(None, s.split(sep)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-7h+*^e963rdi*2jbdlhqvmg%xnx$9@s*ccgcfae@t219$#!)vu')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 ALLOWED_HOSTS += parse_list(os.environ.get('DJANGO_ALLOWED_HOSTS', ''))
@@ -129,7 +174,6 @@ if 'CORS_ALLOW_METHODS' in os.environ:
 if 'CORS_ALLOW_HEADERS' in os.environ:
     CORS_ALLOW_HEADERS = parse_list(os.environ.get('CORS_ALLOW_HEADERS', ''))
 
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -142,7 +186,7 @@ INSTALLED_APPS = [
 if USE_CORS_HEADERS:
     INSTALLED_APPS.append('corsheaders')
 INSTALLED_APPS.append('ocr_translate')
-INSTALLED_APPS += PMNG.plugins
+INSTALLED_APPS += PMNG.all_plugins
 
 # Middleware
 MIDDLEWARE = [
@@ -159,7 +203,7 @@ MIDDLEWARE += [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'mysite.urls'
+ROOT_URLCONF = 'ocr_translate.app.urls'
 
 TEMPLATES = [
     {
@@ -177,14 +221,14 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'mysite.wsgi.application'
+WSGI_APPLICATION = 'ocr_translate.app.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASE_ENGINE = os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3')
-DATABASE_NAME = os.environ.get('DATABASE_NAME', os.path.join(BASE_DIR, 'db.sqlite3'))
+DATABASE_NAME = os.environ.get('DATABASE_NAME', os.path.join(PROJECT_DIR, 'db.sqlite3'))
 
 DATABASE = {
     'ENGINE': DATABASE_ENGINE,
@@ -240,9 +284,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -250,15 +291,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10*1024*1024
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-# STATIC_URL = 'static/'
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(PROJECT_DIR, 'static'),
     )
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'staticfiles')
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(PROJECT_DIR, 'media')

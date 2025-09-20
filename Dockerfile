@@ -1,4 +1,4 @@
-FROM python:3.10.12-slim-bookworm as intermediate
+FROM python:3.13.7-slim-bookworm AS intermediate
 
 RUN pip install virtualenv
 RUN virtualenv /venv/
@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_
 # RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install --cache-dir /pip_cache django-ocr_translate[mysql,postgres]==0.6.1
 RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install gunicorn --cache-dir /pip_cache
 
-FROM python:3.10.12-slim-bookworm
+FROM python:3.13.7-slim-bookworm
 
 RUN apt-get update && apt-get install \
     nginx \
@@ -29,16 +29,9 @@ RUN mkdir -p /data
 
 COPY --from=intermediate /venv /venv
 
-
-RUN mkdir -p /opt/app/main
-RUN mkdir -p /opt/app/static
-RUN mkdir -p /opt/app/media
-
 COPY start-server.sh /opt/app/
-COPY run_server.py /opt/app/
-COPY mysite /opt/app/mysite/
-COPY staticfiles /opt/app/static/
-COPY media /opt/app/media/
+COPY release_files/run_server.py /opt/app/
+COPY ocr_translate/staticfiles /opt/app/static/
 
 RUN chown -R www-data:www-data /opt/app
 RUN chmod +x /opt/app/start-server.sh
@@ -61,18 +54,12 @@ ENV \
     NUM_TSL_WORKERS="1" \
     DJANGO_DEBUG="true" \
     DJANGO_LOG_LEVEL="INFO" \
-    DJANGO_SUPERUSER_USERNAME="" \
-    DJANGO_SUPERUSER_PASSWORD="" \
     DATABASE_ENGINE="django.db.backends.sqlite3" \
-    DATABASE_NAME="/db_data/db.sqlite3" \
-    DATABASE_HOST="" \
-    DATABASE_PORT="" \
-    DATABASE_USER="" \
-    DATABASE_PASSWORD=""
+    DATABASE_NAME="/db_data/db.sqlite3"
 
-VOLUME /plugin_data
-VOLUME /models
-VOLUME /db_data
+RUN mkdir -p /plugin_data
+RUN mkdir -p /models
+RUN mkdir -p /db_data
 
 WORKDIR /opt/app
 

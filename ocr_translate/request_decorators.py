@@ -25,10 +25,7 @@ from threading import Lock
 
 from django.http import HttpRequest, JsonResponse
 
-from .ocr_tsl.box import get_box_model
-from .ocr_tsl.lang import get_lang_dst, get_lang_src
-from .ocr_tsl.ocr import get_ocr_model
-from .ocr_tsl.tsl import get_tsl_model
+from . import models as m
 
 locks = {}
 
@@ -72,9 +69,9 @@ def get_backend_models(strict: bool = True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            box_model = get_box_model() or ''
-            ocr_model = get_ocr_model() or ''
-            tsl_model = get_tsl_model() or ''
+            box_model = m.OCRBoxModel.get_loaded_model() or ''
+            ocr_model = m.OCRModel.get_loaded_model() or ''
+            tsl_model = m.TSLModel.get_loaded_model() or ''
             if strict and (not box_model or not ocr_model or not tsl_model):
                 return JsonResponse({'error': 'Models not loaded'}, status=513)
             return func(*args, **kwargs, box_model=box_model, ocr_model=ocr_model, tsl_model=tsl_model)
@@ -86,8 +83,8 @@ def get_backend_langs(strict: bool = True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            lang_src = get_lang_src() or ''
-            lang_dst = get_lang_dst() or ''
+            lang_src = m.Language.get_loaded_model_src() or ''
+            lang_dst = m.Language.get_loaded_model_dst() or ''
             if strict and (not lang_src or not lang_dst):
                 return JsonResponse({'error': 'Languages not loaded'}, status=512)
             return func(*args, **kwargs, lang_src=lang_src, lang_dst=lang_dst)
@@ -127,7 +124,8 @@ def post_data_deserializer(expected_keys: list[str], strict: bool = True, requir
                     return JsonResponse({'error': f'{key} not found in POST data'}, status=400)
                 data[key] = _data.pop(key, None)
             if strict and _data:
-                return JsonResponse({'error': f'Unexpected keys: {", ".join(_data.keys())}'}, status=400)
+                keys = ', '.join(_data.keys())
+                return JsonResponse({'error': f'Unexpected keys: {keys}'}, status=400)
             return func(*args, **kwargs, **data)
         return wrapper
     return decorator
@@ -151,7 +149,8 @@ def get_data_deserializer(expected_keys: list[str], strict: bool = True, require
                     return JsonResponse({'error': f'{key} not found in GET data'}, status=400)
                 data[key] = _data.pop(key, None)
             if strict and _data:
-                return JsonResponse({'error': f'Unexpected keys: {", ".join(_data.keys())}'}, status=400)
+                keys = ', '.join(_data.keys())
+                return JsonResponse({'error': f'Unexpected keys: {keys}'}, status=400)
             return func(*args, **kwargs, **data)
         return wrapper
     return decorator

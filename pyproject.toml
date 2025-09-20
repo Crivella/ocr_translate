@@ -22,6 +22,8 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Natural Language :: English",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Database :: Database Engines/Servers",
@@ -31,12 +33,14 @@ classifiers = [
 keywords = ["django", "ocr", "translation"]
 requires-python = ">=3.10"
 dependencies = [
-    "wheel",
-    "numpy~=1.24.1",
-    "Django~=5.1",
+    "rich",
+    "wheel~=0.45.1",
+    "setuptools~=70.2.0",
+    "numpy~=2.2.6",
+    "Django~=5.2.4",
     "django-cors-headers~=4.7.0",
-    "Pillow~=10.4.0",
-    "opencv-python-headless~=4.8.0.76"
+    "Pillow~=11.0.0",
+    "opencv-python-headless~=4.12.0.88"
 ]
 
 [project.urls]
@@ -44,30 +48,30 @@ Source = "https://github.com/crivella/ocr_translate"
 
 [project.optional-dependencies]
 mysql = [
-    "pymysql==1.1.0",
+    "pymysql",
 ]
 postgres = [
-    "psycopg[binary]==3.1.9",
+    "psycopg[binary]",
 ]
 docs = [
-    "docutils==0.20.1",
-    "sphinx~=7.2.6",
-    "sphinx_design~=0.5.0",
-    "sphinx-rtd-theme~=2.0.0",
+    "docutils~=0.21.2",
+    "sphinx~=8.2.3",
+    "sphinx_design~=0.6.1",
+    "sphinx-rtd-theme~=3.0.2",
     "sphinx-rtd-dark-mode~=1.3.0",
-    "sphinxcontrib-openapi==0.8.0",
+    "sphinxcontrib-openapi~=0.8.4",
 ]
 tests = [
-    "pytest",
-    "pytest-cov",
-    "pytest-django~=4.5.2",
-    "pytest-regressions~=2.4",
+    "pytest~=8.2.0",
+    "pytest-cov~=6.2.1",
+    "pytest-django~=4.11.1",
+    "pytest-regressions~=2.8.1",
 ]
 pre-commit = [
-    "pre-commit~=3.3.3",
-    "pylint~=2.17.4",
-    "pylint-pytest~=1.1.2",
-    "pylint-django~=2.5.3",
+    "pre-commit~=4.2.0",
+    "pylint~=3.3.7",
+    "pylint-pytest~=1.1.8",
+    "pylint-django~=2.6.1",
 ]
 release = [
     "flit"
@@ -87,15 +91,14 @@ exclude = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-DJANGO_SETTINGS_MODULE = "mysite.settings"
-log_cli = true
+DJANGO_SETTINGS_MODULE = "ocr_translate.app.settings"
 
 [tool.pylint.main]
 load-plugins = [
     "pylint_django",
     "pylint_pytest"
 ]
-django-settings-module = "mysite.settings"
+django-settings-module = "ocr_translate.app.settings"
 
 [tool.pylint.messages_control]
 disable = [
@@ -120,5 +123,15 @@ good-names = [
 
 [tool.pylint.design]
 max-args = 10
-max-locals = 20
+max-locals = 30
 max-attributes = 12
+max-positional-arguments = 10
+
+[tool.tox]
+requires = ["tox>=4"]
+env_list = ["3.10", "3.11", "3.12", "3.13"]
+
+[tool.tox.env_run_base]
+description = "Run test under {base_python}"
+commands = [["pytest", "tests"]]
+deps = [".[tests]"]

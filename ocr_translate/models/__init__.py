@@ -16,32 +16,19 @@
 #                                                                                 #
 # Home: https://github.com/Crivella/ocr_translate                                 #
 ###################################################################################
-"""Tests for the database models."""
+"""Django models for the ocr_translate app."""
 
-import pytest
+from .base import BaseModel, Image, Language, LoadEvent, OptionDict, Text
+from .box import BBox, OCRBoxModel, OCRBoxRun
+from .ocr import OCRModel, OCRRun
+from .tsl import TranslationRun, TSLModel
 
-from ocr_translate.ocr_tsl import lang
-
-pytestmark = pytest.mark.django_db
-
-def test_get_lang_src(monkeypatch):
-    """Test getting the source language."""
-    monkeypatch.setattr(lang, 'LANG_SRC', 'test_lang_src')
-    assert lang.get_lang_src() == 'test_lang_src'
-
-def test_get_lang_dst(monkeypatch):
-    """Test getting the destination language."""
-    monkeypatch.setattr(lang, 'LANG_DST', 'test_lang_dst')
-    assert lang.get_lang_dst() == 'test_lang_dst'
-
-def test_load_lang_src(monkeypatch, language):
-    """Test loading the source language."""
-    monkeypatch.setattr(lang, 'LANG_SRC', None)
-    lang.load_lang_src(language.iso1)
-    assert lang.get_lang_src() == language
-
-def test_load_lang_dst(monkeypatch, language):
-    """Test loading the destination language."""
-    monkeypatch.setattr(lang, 'LANG_DST', None)
-    lang.load_lang_dst(language.iso1)
-    assert lang.get_lang_dst() == language
+__all__ = [
+    'LoadEvent',
+    'OptionDict', 'Image', 'Text',
+    'BaseModel',
+    'BBox', 'OCRBoxModel',
+    'Language',
+    'OCRModel', 'OCRRun',
+    'TSLModel', 'TranslationRun',
+]

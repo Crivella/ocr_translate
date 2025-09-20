@@ -22,7 +22,6 @@ import base64
 import hashlib
 import io
 import logging
-import traceback
 from typing import Union
 
 import numpy as np
@@ -33,50 +32,39 @@ from PIL import Image
 
 from . import __version__array__
 from . import models as m
+from . import request_decorators as reqdec
 from .entrypoint_manager import ep_manager
-from .ocr_tsl.box import get_box_model, load_box_model, unload_box_model
-from .ocr_tsl.cached_lists import (get_all_lang_dst, get_all_lang_src,
-                                   get_allowed_box_models,
-                                   get_allowed_ocr_models,
-                                   get_allowed_tsl_models)
+from .ocr_tsl import cached_lists as cl
 from .ocr_tsl.full import ocr_tsl_pipeline_lazy, ocr_tsl_pipeline_work
-from .ocr_tsl.lang import (get_lang_dst, get_lang_src, load_lang_dst,
-                           load_lang_src)
-from .ocr_tsl.ocr import get_ocr_model, load_ocr_model, unload_ocr_model
-from .ocr_tsl.tsl import get_tsl_model, load_tsl_model, unload_tsl_model
 from .plugin_manager import PluginManager
 from .queues import main_queue as q
-from .request_decorators import (get_backend_langs, get_backend_models,
-                                 get_data_deserializer, method_or_405,
-                                 post_data_deserializer, use_lock,
-                                 wait_for_lock)
-from .tries import load_trie_src
 
 logger = logging.getLogger('ocr.general')
 
 PMNG = PluginManager()
 
 
-@method_or_405(['GET'])
+@reqdec.method_or_405(['GET'])
 def handshake(request: HttpRequest) -> JsonResponse:
     """Handshake with the client."""
     csrf.get_token(request)
 
-    logger.debug(f'Handshake: {str(get_ocr_model())}, {str(get_tsl_model())}')
-    lang_src = get_lang_src()
-    lang_dst = get_lang_dst()
+    lang_src = m.Language.get_loaded_model_src()
+    lang_dst = m.Language.get_loaded_model_dst()
 
-    languages = get_all_lang_src()
-    languages_src = get_all_lang_src()
-    languages_dst = get_all_lang_dst()
+    languages = cl.get_all_lang_src()
+    languages_src = cl.get_all_lang_src()
+    languages_dst = cl.get_all_lang_dst()
 
-    box_models = get_allowed_box_models()
-    ocr_models = get_allowed_ocr_models()
-    tsl_models = get_allowed_tsl_models()
+    box_models = cl.get_allowed_box_models()
+    ocr_models = cl.get_allowed_ocr_models()
+    tsl_models = cl.get_allowed_tsl_models()
 
-    box_model = get_box_model() or ''
-    ocr_model = get_ocr_model() or ''
-    tsl_model = get_tsl_model() or ''
+    box_model = m.OCRBoxModel.get_loaded_model() or ''
+    ocr_model = m.OCRModel.get_loaded_model() or ''
+    tsl_model = m.TSLModel.get_loaded_model() or ''
+
+    logger.info(f'Handshake: {str(box_model)}, {str(ocr_model)}, {str(tsl_model)}')
 
     lang_src = getattr(lang_src, 'iso1', None) or ''
     lang_dst = getattr(lang_dst, 'iso1', None) or ''
@@ -104,10 +92,10 @@ def handshake(request: HttpRequest) -> JsonResponse:
     return res
 
 @csrf_exempt
-@method_or_405(['POST'])
-@post_data_deserializer(['box_model_id', 'ocr_model_id', 'tsl_model_id'], required=False)
-@wait_for_lock('plugin')
-@use_lock('block_plugin_changes', blocking=False)
+@reqdec.method_or_405(['POST'])
+@reqdec.post_data_deserializer(['box_model_id', 'ocr_model_id', 'tsl_model_id'], required=False)
+@reqdec.wait_for_lock('plugin')
+@reqdec.use_lock('block_plugin_changes', blocking=False)
 def set_models(request: HttpRequest, box_model_id, ocr_model_id, tsl_model_id) -> JsonResponse:
     """Handle a POST request to load models.
     Expected data:
@@ -121,11 +109,11 @@ def set_models(request: HttpRequest, box_model_id, ocr_model_id, tsl_model_id) -
 
     try:
         if not box_model_id is None and not box_model_id == '':
-            load_box_model(box_model_id)
+            m.OCRBoxModel.load_model(box_model_id)
         if not ocr_model_id is None and not ocr_model_id == '':
-            load_ocr_model(ocr_model_id)
+            m.OCRModel.load_model(ocr_model_id)
         if not tsl_model_id is None and not tsl_model_id == '':
-            load_tsl_model(tsl_model_id)
+            m.TSLModel.load_model(tsl_model_id)
     except Exception as exc:
         logger.error(f'Failed to load models: {exc}')
         return JsonResponse({'error': str(exc)}, status=400)
@@ -133,8 +121,8 @@ def set_models(request: HttpRequest, box_model_id, ocr_model_id, tsl_model_id) -
     return JsonResponse({})
 
 @csrf_exempt
-@method_or_405(['POST'])
-@post_data_deserializer(['lang_src', 'lang_dst'], required=True)
+@reqdec.method_or_405(['POST'])
+@reqdec.post_data_deserializer(['lang_src', 'lang_dst'], required=True)
 def set_lang(request: HttpRequest, lang_src, lang_dst) -> JsonResponse:
     """Handle a POST request to set languages.
     Expected data:
@@ -145,48 +133,46 @@ def set_lang(request: HttpRequest, lang_src, lang_dst) -> JsonResponse:
     """
     logger.info(f'SET LANG: {lang_src}, {lang_dst}')
 
-    old_src = get_lang_src()
-    old_dst = get_lang_dst()
+    old_src = m.Language.get_loaded_model_src()
+    old_dst = m.Language.get_loaded_model_dst()
     try:
-        load_lang_src(lang_src)
-        load_lang_dst(lang_dst)
-        load_trie_src(lang_src)
-        # load_trie_dst(lang_dst)
+        m.Language.load_model_src(lang_src)
+        m.Language.load_model_dst(lang_dst)
     except Exception as exc:
         return JsonResponse({'error': str(exc)}, status=400)
-    new_src = get_lang_src()
-    new_dst = get_lang_dst()
+    new_src = m.Language.get_loaded_model_src()
+    new_dst = m.Language.get_loaded_model_dst()
 
     check1 = old_src != new_src
     check2 = old_dst != new_dst
     if check1 or check2:
-        tsl_model = get_tsl_model()
+        tsl_model = m.TSLModel.get_loaded_model()
         if (
             not tsl_model is None and
             (
                 new_src not in tsl_model.src_languages.all() or
                 new_dst not in tsl_model.dst_languages.all()
             )):
-            unload_tsl_model()
+            m.TSLModel.unload_model()
     if check1:
-        box_model = get_box_model()
-        ocr_model = get_ocr_model()
+        box_model = m.OCRBoxModel.get_loaded_model()
+        ocr_model = m.OCRModel.get_loaded_model()
         if not box_model is None and (new_src not in box_model.languages.all()):
-            unload_box_model()
+            m.OCRBoxModel.unload_model()
         if not ocr_model is None and (new_src not in ocr_model.languages.all()):
-            unload_ocr_model()
+            m.OCRModel.unload_model()
     # if check2:
     #     pass
 
     return JsonResponse({})
 
 @csrf_exempt
-@method_or_405(['POST'])
-@post_data_deserializer(['text'], required=True)
-@get_backend_langs(strict=True)
-@get_backend_models(strict=True)
-@wait_for_lock('plugin')
-@use_lock('block_plugin_changes', blocking=False)
+@reqdec.method_or_405(['POST'])
+@reqdec.post_data_deserializer(['text'], required=True)
+@reqdec.get_backend_langs(strict=True)
+@reqdec.get_backend_models(strict=True)
+@reqdec.wait_for_lock('plugin')
+@reqdec.use_lock('block_plugin_changes', blocking=False)
 def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> JsonResponse:
     """Handle a POST request to run translation.
     Expected data:
@@ -195,19 +181,21 @@ def run_tsl(request: HttpRequest, text, tsl_model: m.TSLModel, **kwargs) -> Json
     }
     """
     src_obj, _ = m.Text.objects.get_or_create(text=text)
-    dst_obj = tsl_model.translate(src_obj, get_lang_src(), get_lang_dst())
+    lang_src = m.Language.get_loaded_model_src()
+    lang_dst = m.Language.get_loaded_model_dst()
+    dst_obj = tsl_model.translate(src_obj, lang_src, lang_dst)
     dst_obj = next(dst_obj)
 
     return JsonResponse({
         'text': dst_obj.text,
         })
 
-@method_or_405(['GET'])
-@get_backend_langs(strict=True)
-@get_backend_models(strict=True)
-@get_data_deserializer(['text'], required=True)
-@wait_for_lock('plugin')
-@use_lock('block_plugin_changes', blocking=False)
+@reqdec.method_or_405(['GET'])
+@reqdec.get_backend_langs(strict=True)
+@reqdec.get_backend_models(strict=True)
+@reqdec.get_data_deserializer(['text'], required=True)
+@reqdec.wait_for_lock('plugin')
+@reqdec.use_lock('block_plugin_changes', blocking=False)
 def run_tsl_get_xunityautotrans(
     request: HttpRequest, tsl_model: m.TSLModel, text: str,
     lang_src: m.Language, lang_dst: m.Language, **kwargs
@@ -225,12 +213,12 @@ def run_tsl_get_xunityautotrans(
     return HttpResponse(dst_obj.text)
 
 @csrf_exempt
-@method_or_405(['POST'])
-@get_backend_langs(strict=True)
-@get_backend_models(strict=True)
-@post_data_deserializer(['contents', 'md5', 'force', 'options'], required=False)
-@wait_for_lock('plugin')
-@use_lock('block_plugin_changes', blocking=False)
+@reqdec.method_or_405(['POST'])
+@reqdec.get_backend_langs(strict=True)
+@reqdec.get_backend_models(strict=True)
+@reqdec.post_data_deserializer(['contents', 'md5', 'force', 'options'], required=False)
+@reqdec.wait_for_lock('plugin')
+@reqdec.use_lock('block_plugin_changes', blocking=False)
 def run_ocrtsl(  # pylint: disable=too-many-locals
     request: HttpRequest,
     lang_src: m.Language, lang_dst: m.Language,
@@ -312,7 +300,6 @@ def run_ocrtsl(  # pylint: disable=too-many-locals
 
         if isinstance(res, Exception):
             logger.error(f'Failed to run ocr: {res}')
-            logger.debug(traceback.print_exception(type(res), res, res.__traceback__))
             return JsonResponse({'error': str(res)}, status=500)
 
 
@@ -322,9 +309,9 @@ def run_ocrtsl(  # pylint: disable=too-many-locals
 
 
 @csrf_exempt
-@method_or_405(['GET'])
-@get_backend_langs(strict=True)
-@get_data_deserializer(['text'], required=True)
+@reqdec.method_or_405(['GET'])
+@reqdec.get_backend_langs(strict=True)
+@reqdec.get_data_deserializer(['text'], required=True)
 def get_translations(
     request: HttpRequest,
     lang_src: m.Language, lang_dst: m.Language,
@@ -352,9 +339,9 @@ def get_translations(
         })
 
 @csrf_exempt
-@method_or_405(['POST'])
-@get_backend_langs(strict=True)
-@post_data_deserializer(['text', 'translation'], required=True)
+@reqdec.method_or_405(['POST'])
+@reqdec.get_backend_langs(strict=True)
+@reqdec.post_data_deserializer(['text', 'translation'], required=True)
 def set_manual_translation(
     request: HttpRequest,
     lang_src: m.Language, lang_dst: m.Language,
@@ -416,15 +403,15 @@ def get_default_options_from_cascade(
             res = obj.options.get(option, res)
         elif isinstance(obj, str):
             if obj == 'lang_src':
-                model = get_lang_src()
+                model = m.Language.get_loaded_model_src()
             elif obj == 'lang_dst':
-                model = get_lang_dst()
+                model = m.Language.get_loaded_model_dst()
             elif obj == 'box_model':
-                model = get_box_model()
+                model = m.OCRBoxModel.get_loaded_model()
             elif obj == 'ocr_model':
-                model = get_ocr_model()
+                model = m.OCRModel.get_loaded_model()
             elif obj == 'tsl_model':
-                model = get_tsl_model()
+                model = m.TSLModel.get_loaded_model()
             else:
                 raise ValueError(f'Unknown option cascade object: {obj}')
             res = model.default_options.options.get(option, res)
@@ -432,11 +419,11 @@ def get_default_options_from_cascade(
             raise TypeError(f'Cannot get default options from {type(obj)}')
     return res
 
-@method_or_405(['GET'])
-@get_backend_models(strict=False)
-@get_data_deserializer([], required=False)
-@wait_for_lock('plugin')
-@use_lock('block_plugin_changes', blocking=False)
+@reqdec.method_or_405(['GET'])
+@reqdec.get_backend_models(strict=False)
+@reqdec.get_data_deserializer([], required=False)
+@reqdec.wait_for_lock('plugin')
+@reqdec.use_lock('block_plugin_changes', blocking=False)
 def get_active_options(
     request: HttpRequest,
     box_model: m.OCRBoxModel, ocr_model: m.OCRModel, tsl_model: m.TSLModel,
@@ -467,9 +454,9 @@ def get_active_options(
 
     return JsonResponse({'options': res})
 
-@method_or_405(['GET'])
-@wait_for_lock('plugin')
-@use_lock('block_plugin_changes', blocking=False)
+@reqdec.method_or_405(['GET'])
+@reqdec.wait_for_lock('plugin')
+@reqdec.use_lock('block_plugin_changes', blocking=False)
 def get_plugin_data(request: HttpRequest) -> JsonResponse:
     """Handle a GET request to get plugins."""
     resp = {}
@@ -482,22 +469,26 @@ def get_plugin_data(request: HttpRequest) -> JsonResponse:
         ptr = {**tpl, **plugin}
         name = ptr.pop('name')
         ptr.pop('dependencies', None)
-        ptr['installed'] = name in PMNG.plugins
+        ptr['installed'] = name in PMNG.managed_plugins
         resp[name] = ptr
     return JsonResponse(resp)
 
 @csrf_exempt
-@method_or_405(['POST'])
-@post_data_deserializer(['plugins'], required=True)
-@use_lock('plugin', blocking=True)
-@use_lock('block_plugin_changes', blocking=True)
+@reqdec.method_or_405(['POST'])
+@reqdec.post_data_deserializer(['plugins'], required=True)
+@reqdec.use_lock('plugin', blocking=True)
+@reqdec.use_lock('block_plugin_changes', blocking=True)
 def manage_plugins(request: HttpRequest, plugins: dict[str, bool]) -> JsonResponse:
     """Handle a POST request to install a plugin."""
     logger.debug(f'Manage plugins: {plugins}')
-    with ep_manager():
-        for plugin, present in plugins.items():
-            if present:
-                PMNG.install_plugin(plugin)
-            else:
-                PMNG.uninstall_plugin(plugin)
-    return JsonResponse({})
+    try:
+        with ep_manager():
+            for plugin, present in plugins.items():
+                if present:
+                    PMNG.install_plugin(plugin)
+                else:
+                    PMNG.uninstall_plugin(plugin)
+    except Exception as exc:
+        logger.error('Failed to manage plugins', exc_info=exc)
+        return JsonResponse({'error': str(exc)[0:100]}, status=502)
+    return JsonResponse({'status': 'success'})

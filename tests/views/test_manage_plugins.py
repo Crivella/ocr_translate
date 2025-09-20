@@ -23,7 +23,10 @@ import pytest
 from django.urls import reverse
 
 from ocr_translate import entrypoint_manager as epm
+from ocr_translate import views
 from ocr_translate.plugin_manager import PluginManager
+
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture()
@@ -86,3 +89,15 @@ def test_manage_plugins_uninstall(monkeypatch, epm_no_ept, mock_called, client, 
     assert response.status_code == 200
     assert mock_called.called
     assert mock_called.args[0] == plugin_name
+
+def test_manage_plugins_raises(monkeypatch, client, post_kwargs):
+    """Test manage_plugins with POST request: uninstall a plugin."""
+    msg = 'Test exception'
+    def mock_raises():
+        raise ValueError(msg)
+    monkeypatch.setattr(views, 'ep_manager', mock_raises)
+
+    url = reverse('ocr_translate:manage_plugins')
+    response = client.post(url, **post_kwargs)
+    assert response.status_code == 502
+    assert msg in response.json().get('error', '')

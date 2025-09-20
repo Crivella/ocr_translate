@@ -20,80 +20,152 @@
 
 # pylint: disable=redefined-outer-name
 
-import importlib
-
 import pytest
+from django.db.utils import OperationalError
 
 from ocr_translate import models as m
-from ocr_translate import ocr_tsl, tries
-from ocr_translate.ocr_tsl import box
 from ocr_translate.ocr_tsl import initializers as ini
-from ocr_translate.ocr_tsl import lang, ocr, tsl
 
 pytestmark = pytest.mark.django_db
 
+# Tests for run_on_env
+def test_run_on_env_unkown(monkeypatch, mock_called):
+    """Test call on env variable unkown."""
+    out = ''
+    def log_warning(msg):
+        """Mock log warning."""
+        nonlocal out
+        out += msg
+
+    monkeypatch.setenv('TEST', 'false')
+    monkeypatch.setattr(ini.logger, 'warning', log_warning)
+
+    assert not hasattr(mock_called, 'called')
+    ini.run_on_env('TEST', {'true': mock_called})
+    assert not hasattr(mock_called, 'called')
+
+    assert 'Unknown value for environment variable' in out
+
+def test_run_on_env_true(monkeypatch, mock_called):
+    """Test call on env variable."""
+    monkeypatch.setenv('TEST', 'True')
+
+    assert not hasattr(mock_called, 'called')
+    ini.run_on_env('TEST', {'true': mock_called})
+    assert hasattr(mock_called, 'called')
+
+def test_run_on_env_tuple(monkeypatch, mock_called):
+    """Test call on env variable."""
+    assert not hasattr(mock_called, 'called')
+    monkeypatch.setenv('TEST', 'True')
+    ini.run_on_env('TEST', {('true', '1'): mock_called})
+    assert hasattr(mock_called, 'called')
+
+    delattr(mock_called, 'called')
+
+    assert not hasattr(mock_called, 'called')
+    monkeypatch.setenv('TEST', '1')
+    ini.run_on_env('TEST', {('true', '1'): mock_called})
+    assert hasattr(mock_called, 'called')
+
+    delattr(mock_called, 'called')
+
+    assert not hasattr(mock_called, 'called')
+    monkeypatch.setenv('TEST', 'tr')
+    ini.run_on_env('TEST', {('true', '1'): mock_called})
+    assert not hasattr(mock_called, 'called')
+
+def test_run_on_env_invalid_key(monkeypatch):
+    """Test call on env variable."""
+    monkeypatch.setenv('TEST', 'True')
+    with pytest.raises(ValueError) as excinfo:
+        ini.run_on_env('TEST', {123: lambda: None})
+    assert 'Invalid use of `run_on_env`' in str(excinfo.value)
+
+def test_run_on_env_notdef(mock_called):
+    """Test call on env variable."""
+    assert not hasattr(mock_called, 'called')
+    ini.run_on_env('TEST', {'true': mock_called})
+    assert not hasattr(mock_called, 'called')
+
+def test_run_on_env_raise(monkeypatch):
+    """Test call on env variable."""
+    out = ''
+    def log_warning(msg):
+        """Mock log warning."""
+        nonlocal out
+        out += msg
+
+    monkeypatch.setenv('TEST', 'True')
+    monkeypatch.setattr(ini.logger, 'warning', log_warning)
+    def func():
+        raise OperationalError('Test')
+    ini.run_on_env('TEST', {'true': func})
+
+    assert 'Ignoring environment variable' in out
+
 def test_init_most_used_clean(mock_loaders):
     """Test init_most_used with empty database."""
-    ocr_tsl.init_most_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    ini.init_most_used()
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC is None
+    assert m.Language.LOADED_DST is None
 
 def test_init_most_used_content_nousage(mock_loaders, language, box_model, ocr_model, tsl_model):
     """Test init_most_used with content in the database."""
-    ocr_tsl.init_most_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    ini.init_most_used()
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC is None
+    assert m.Language.LOADED_DST is None
 
 def test_init_most_used_content_partial_usage_box(
         mock_loaders, language, box_model, ocr_model, tsl_model, box_run,
         ):
     """Test init_most_used with content in the database."""
-    ocr_tsl.init_most_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    ini.init_most_used()
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC is None
+    assert m.Language.LOADED_DST is None
 
 def test_init_most_used_content_partial_usage_ocr(
         mock_loaders, language, box_model, ocr_model, tsl_model, ocr_run,
         ):
     """Test init_most_used with content in the database."""
-    ocr_tsl.init_most_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ == ocr_model
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    ini.init_most_used()
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC is None
+    assert m.Language.LOADED_DST is None
 
 def test_init_most_used_content_partial_usage_tsl(
         mock_loaders, language, box_model, ocr_model, tsl_model, tsl_run
         ):
     """Test init_most_used with content in the database."""
-    ocr_tsl.init_most_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ == tsl_model
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language
+    ini.init_most_used()
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL == tsl_model
+    assert m.Language.LOADED_SRC == language
+    assert m.Language.LOADED_DST == language
 
 def test_init_most_used_content_full_usage(
         mock_loaders, language, box_model, ocr_model, tsl_model,
         box_run, ocr_run, tsl_run
         ):
     """Test init_most_used with content in the database."""
-    ocr_tsl.init_most_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ == ocr_model
-    assert tsl.TSL_MODEL_OBJ == tsl_model
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language
+    ini.init_most_used()
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL == tsl_model
+    assert m.Language.LOADED_SRC == language
+    assert m.Language.LOADED_DST == language
 
 
 def test_init_most_used_more_content(mock_loaders, language_dict, image, option_dict, text):
@@ -147,43 +219,43 @@ def test_init_most_used_more_content(mock_loaders, language_dict, image, option_
         lang_src=lang1, lang_dst=lang1, text=text, model=tsl_model2, options=option_dict, result=text
         )
 
-    ocr_tsl.init_most_used()
+    ini.init_most_used()
 
-    assert lang.LANG_SRC == lang2
-    assert lang.LANG_DST == lang3
+    assert m.Language.LOADED_SRC == lang2
+    assert m.Language.LOADED_DST == lang3
 
-    assert box.BOX_MODEL_OBJ == ocr_box_model2
-    assert ocr.OCR_MODEL_OBJ == ocr_model2
-    assert tsl.TSL_MODEL_OBJ == tsl_model1
+    assert m.OCRBoxModel.LOADED_MODEL == ocr_box_model2
+    assert m.OCRModel.LOADED_MODEL == ocr_model2
+    assert m.TSLModel.LOADED_MODEL == tsl_model1
 
 def test_init_last_used_clean(mock_loaders):
     """Test init_last_used with empty database."""
-    ocr_tsl.init_last_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    ini.init_last_used()
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC is None
+    assert m.Language.LOADED_DST is None
 
 def test_init_last_used_partial(mock_loaders, language, language2):
     """Test init_last_used with content in the database."""
     language.load_src()
     language2.load_dst()
-    ocr_tsl.init_last_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language2
+    ini.init_last_used()
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC == language
+    assert m.Language.LOADED_DST == language2
 
     language.load_dst()
     language2.load_src()
-    ocr_tsl.init_last_used()
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC == language2
-    assert lang.LANG_DST == language
+    ini.init_last_used()
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC == language2
+    assert m.Language.LOADED_DST == language
 
 def test_init_last_used_full(mock_loaders, monkeypatch, language, language2, ocr_model, box_model, tsl_model):
     """Test init_last_used with content in the database."""
@@ -197,22 +269,22 @@ def test_init_last_used_full(mock_loaders, monkeypatch, language, language2, ocr
     box_model.load()
     tsl_model.load()
 
-    assert box.BOX_MODEL_OBJ is None
-    assert ocr.OCR_MODEL_OBJ is None
-    assert tsl.TSL_MODEL_OBJ is None
-    assert lang.LANG_SRC is None
-    assert lang.LANG_DST is None
+    assert m.OCRBoxModel.LOADED_MODEL is None
+    assert m.OCRModel.LOADED_MODEL is None
+    assert m.TSLModel.LOADED_MODEL is None
+    assert m.Language.LOADED_SRC is None
+    assert m.Language.LOADED_DST is None
 
-    ocr_tsl.init_last_used()
-    assert box.BOX_MODEL_OBJ == box_model
-    assert ocr.OCR_MODEL_OBJ == ocr_model
-    assert tsl.TSL_MODEL_OBJ == tsl_model
-    assert lang.LANG_SRC == language
-    assert lang.LANG_DST == language2
+    ini.init_last_used()
+    assert m.OCRBoxModel.LOADED_MODEL == box_model
+    assert m.OCRModel.LOADED_MODEL == ocr_model
+    assert m.TSLModel.LOADED_MODEL == tsl_model
+    assert m.Language.LOADED_SRC == language
+    assert m.Language.LOADED_DST == language2
 
 def test_auto_create_languages():
     """Test auto_create_languages."""
-    ocr_tsl.auto_create_languages()
+    ini.auto_create_languages()
 
     assert m.Language.objects.count() > 50
 
@@ -246,122 +318,180 @@ def test_load_ept_data(monkeypatch):
 def test_create_models_nolang(monkeypatch, mock_load_ept):
     """Test auto_create_models without creating languages before"""
     monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept)
-    with pytest.raises(m.Language.DoesNotExist):
+    with pytest.raises(ValueError):
         for ocr in ini.load_ept_data('ocr_translate.ocr_data'):
-            ini.add_ocr_model(ocr)
+            m.OCRModel.from_dct(ocr)
 
 def test_auto_create_models_test_data(monkeypatch, mock_load_ept):
     """Test creating dummy models"""
     # Needed after no more entrypoint are defined here
 
     monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept)
-    ocr_tsl.auto_create_languages()
+    ini.auto_create_languages()
 
     for box in ini.load_ept_data('ocr_translate.box_data'):
-        ini.add_box_model(box)
+        m.OCRBoxModel.from_dct(box)
     for ocr in ini.load_ept_data('ocr_translate.ocr_data'):
-        ini.add_ocr_model(ocr)
+        m.OCRModel.from_dct(ocr)
     for tsl in ini.load_ept_data('ocr_translate.tsl_data'):
-        ini.add_tsl_model(tsl)
+        m.TSLModel.from_dct(tsl)
 
     assert m.OCRBoxModel.objects.count() > 0
     assert m.OCRModel.objects.count() > 0
     assert m.TSLModel.objects.count() > 0
 
-def test_env_load_on_start_true(monkeypatch):
-    """Test that the previous behavior of calling `init_most_used` when LOAD_ON_START is set to true is removed."""
-    def mock_init_most_used():
-        """Mock init_most_used."""
-        mock_init_most_used.called = True
+@pytest.mark.django_db
+def test_create_new_model_box(monkeypatch, box_model_dict):
+    """Test creating a new box model with sync function."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
+    ini.sync_models_epts()
+    assert m.OCRBoxModel.objects.count() == 1
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
 
-    monkeypatch.setattr(ini, 'init_most_used', mock_init_most_used)
+@pytest.mark.django_db
+def test_create_new_model_ocr(monkeypatch, ocr_model_dict):
+    """Test creating a new ocr model with sync function."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.ocr_data'):
+            return [ocr_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
+    ini.sync_models_epts()
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 1
+    assert m.TSLModel.objects.count() == 0
+
+@pytest.mark.django_db
+def test_create_new_model_tsl(monkeypatch, tsl_model_dict):
+    """Test creating a new tsl model with sync function."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.tsl_data'):
+            return [tsl_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 0
+    ini.sync_models_epts()
+    assert m.OCRBoxModel.objects.count() == 0
+    assert m.OCRModel.objects.count() == 0
+    assert m.TSLModel.objects.count() == 1
+
+@pytest.mark.django_db
+def test_sync_update(monkeypatch, box_model_dict, box_model, mock_called):
+    """Test sync update existing model."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    monkeypatch.setattr(m.OCRBoxModel, 'from_dct', mock_called)
+    assert not hasattr(mock_called, 'called')
+    ini.sync_models_epts()
+    assert hasattr(mock_called, 'called')
+
+@pytest.mark.django_db
+def test_sync_create_missing(monkeypatch, box_model_dict, box_model, ocr_model_dict, mock_called):
+    """Test sync create missing model."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        if namespace.endswith('.ocr_data'):
+            return [ocr_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    monkeypatch.setattr(m.OCRModel, 'from_dct', mock_called)
+    assert not hasattr(mock_called, 'called')
+    ini.sync_models_epts()
+    assert hasattr(mock_called, 'called')
+
+@pytest.mark.django_db
+def test_activate_models(monkeypatch, box_model_dict, box_model):
+    """Test initializer deactivate missing models."""
+    def mock_load_ept_data(namespace):  # pylint: disable=unused-argument
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert box_model.active
+    box_model.deactivate()
+    assert not box_model.active
+    ini.sync_models_epts()
+    box_model.refresh_from_db()
+    assert box_model.active
+
+@pytest.mark.django_db
+def test_deactivate_missing_models(monkeypatch,box_model, ocr_model, tsl_model):
+    """Test initializer deactivate missing models."""
+    def mock_load_ept_data(namespace):  # pylint: disable=unused-argument
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+    assert box_model.active
+    assert ocr_model.active
+    assert tsl_model.active
+    ini.sync_models_epts()
+    box_model.refresh_from_db()
+    ocr_model.refresh_from_db()
+    tsl_model.refresh_from_db()
+    assert not box_model.active
+    assert not ocr_model.active
+    assert not tsl_model.active
+
+@pytest.mark.django_db
+def test_deactivate_missing_models_box_found(monkeypatch, box_model_dict, box_model, ocr_model, tsl_model):
+    """Test initializer deactivate missing models."""
+    def mock_load_ept_data(namespace):
+        if namespace.endswith('.box_data'):
+            return [box_model_dict]
+        return []
+    monkeypatch.setattr(ini, 'load_ept_data', mock_load_ept_data)
+
+    assert box_model.active
+    assert ocr_model.active
+    assert tsl_model.active
+    ini.sync_models_epts()
+    box_model.refresh_from_db()
+    ocr_model.refresh_from_db()
+    tsl_model.refresh_from_db()
+    assert box_model.active
+    assert not ocr_model.active
+    assert not tsl_model.active
+
+def test_load_on_start_true(monkeypatch, mock_called):
+    """Test initializer auto create models."""
     monkeypatch.setenv('LOAD_ON_START', 'true')
-
-    importlib.reload(ocr_tsl)
-    assert hasattr(mock_init_most_used, 'called')
-
-def test_env_init_most_used(monkeypatch):
-    """Test that init_most_used is called when LOAD_ON_START is 'most'."""
-    def mock_init_most_used():
-        """Mock init_most_used."""
-        mock_init_most_used.called = True
-
-    monkeypatch.setattr(ini, 'init_most_used', mock_init_most_used)
-    monkeypatch.setenv('LOAD_ON_START', 'most')
-
-    importlib.reload(ocr_tsl)
-    assert mock_init_most_used.called
-
-def test_env_init_most_used_false(monkeypatch):
-    """Test that init_most_used is not called when LOAD_ON_START is not 'false'."""
-    def mock_init_most_used():
-        """Mock init_most_used."""
-        mock_init_most_used.called = True
-    def mock_init_last_used():
-        """Mock init_last_used."""
-        mock_init_last_used.called = True
-
-    monkeypatch.setattr(ini, 'init_most_used', mock_init_most_used)
-    monkeypatch.setattr(ini, 'init_last_used', mock_init_last_used)
-    monkeypatch.setenv('LOAD_ON_START', 'false')
-
-    importlib.reload(ocr_tsl)
-    assert not hasattr(mock_init_most_used, 'called')
-    assert not hasattr(mock_init_last_used, 'called')
-
-def test_env_init_last_used(monkeypatch):
-    """Test that init_last_used is called when LOAD_ON_START is 'last'."""
-    def mock_init_last_used():
-        """Mock init_last_used."""
-        mock_init_last_used.called = True
-
-    monkeypatch.setattr(ini, 'init_last_used', mock_init_last_used)
-    monkeypatch.setenv('LOAD_ON_START', 'last')
-
-    importlib.reload(ocr_tsl)
-    assert mock_init_last_used.called
-
-def test_env_auto_create_languges(monkeypatch):
-    """Test that auto_create_languages is called when AUTOCREATE_LANGUAGES is 'true'."""
-    def mock_auto_create_languages():
-        """Mock auto_create_languages."""
-        mock_auto_create_languages.called = True
-
-    monkeypatch.setattr(ini, 'auto_create_languages', mock_auto_create_languages)
-    monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'true')
-
-    importlib.reload(ocr_tsl)
-    assert mock_auto_create_languages.called
-
-def test_env_auto_create_languges_false(monkeypatch):
-    """Test that auto_create_languages is not called when AUTOCREATE_LANGUAGES is not 'true'."""
-    def mock_auto_create_languages():
-        """Mock auto_create_languages."""
-        mock_auto_create_languages.called = True
-
-    monkeypatch.setattr(ini, 'auto_create_languages', mock_auto_create_languages)
-    monkeypatch.setenv('AUTOCREATE_LANGUAGES', 'false')
-
-    importlib.reload(ocr_tsl)
-    assert not hasattr(mock_auto_create_languages, 'called')
-
-def test_no_load_trie():
-    """Test that the trie is not loaded when LOAD_TRIE is 'false'."""
-    assert tries.TRIE_SRC is None
-    assert tries.get_trie_src() is None
+    monkeypatch.setattr(ini, 'init_most_used', mock_called)
+    assert not hasattr(mock_called, 'called')
+    ini.env_var_init()
+    assert hasattr(mock_called, 'called')
 
 def test_load_trie_unkwnown():
     """Test that the trie is not loaded when LOAD_TRIE is not 'true' or 'false'."""
-    res = tries.load_trie('unknown')
+    assert m.Language.get_loaded_trie() is None
+    res = m.Language.load_trie('unknown')
     assert res is None
 
-def test_load_trie(monkeypatch):
+def test_load_trie(monkeypatch, language):
     """Test that the trie is loaded properly."""
-    monkeypatch.setattr(tries, 'TRIE_SRC', None)
-    tries.load_trie_src('test')
-    assert tries.TRIE_SRC is not None
+    language.iso1 = 'test'
+    language.save()
+    language.refresh_from_db()
+    assert language.LOADED_TRIE is None
+    m.Language.load_model_src(language.iso1)
+    assert language.LOADED_TRIE is not None
 
-    trie = tries.get_trie_src()
+    trie = language.get_loaded_trie()
     assert trie is not None
 
     assert trie.search('ab') is True
