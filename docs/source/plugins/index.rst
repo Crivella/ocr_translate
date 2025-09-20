@@ -7,7 +7,7 @@ The base project implements functionalities to handle the web server, database, 
 
 How and which models are used is implemented entirely in plugins.
 
-Plugins can be installed by using the plugin collapsable menu on the extension, or by directly using the `manage_plugins/` endpoint (:doc:`see here <../contrib/api>`).
+Plugins can be installed by using the plugin collapsable menu on the extension, by directly using the `manage_plugins/` endpoint (:doc:`see here <../contrib/api>`) or by manually installing them in the server environment.
 
 ocr_translate-hugging_face
 --------------------------
