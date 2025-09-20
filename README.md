@@ -24,7 +24,7 @@ See the [documentation](https://crivella.github.io/ocr_translate/user/index.html
 
 **TLDR:** If you are on windows you will need to:
 
-- install [python](https://www.python.org/downloads/windows/) (`3.10 <= SUPPORTED_VERSIONS <= 3.14`) with the check on `Add python.exe to PATH`
+- install [python](https://www.python.org/downloads/windows/) (`3.10 <= SUPPORTED_VERSIONS <= 3.13`) with the check on `Add python.exe to PATH`
 - download>unzip the [release file](/../../releases/latest/download/run_server.zip)
 - run the `run-user.[bat/sh]` file (bat for windows, sh for linux)
 
@@ -61,7 +61,7 @@ It is still recommended to download the new release files as improvements/bug-fi
 - Models will be reused
 
 **NOTE**: Attempting to reuse the plugins if switching between different python versions will likely cause problems.
-If you plan to use different python versions, it is recommended to point to a different virtual environment.
+If you plan to use different python versions, it is recommended to point to a different `OCT_BASE_DIR` or move/delete your current plugin installations.
 
 ### Can I downgrade to a previous version
 
