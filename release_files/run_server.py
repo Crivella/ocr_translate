@@ -22,7 +22,7 @@ import os
 import subprocess
 import sys
 
-req_version = os.environ.get('OCT_VERSION', '0.7.0').lower()
+req_version = os.environ.get('OCT_VERSION', '0.7.1').lower()
 
 def install_upgrade(upgrade=False):
     """Install or upgrade the ocr_translate package."""

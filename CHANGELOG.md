@@ -11,6 +11,10 @@ List of changes between versions
 - [ ] Add <DETECT> language to allow either OCR or TSL models to detect the language automatically
       (Both should easy, only one could be troublesome)
 
+## 0.7.1
+
+- reflect bugfix in paddle plugin
+
 ## 0.7.0
 
 ### Breaking changes
