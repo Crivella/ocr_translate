@@ -123,9 +123,9 @@
                 "default": "optional",
                 "usage": "Probably required if using another database backend"
             },
-            "OCT_PKG_<package_name(uppercase)>_[VERSION|SCOPE|EXTRAS]": {
+            "OCT_PKG_<NAME>_<VAR>": {
                 "default": "optional",
-                "usage": "Override the version, scope or extras of a package to be installed/updated. EXAMPLE: `OCT_PKG_TORCH_VERSION=\"A.B.C\"`. If the package name contains a `-` it should be replaced with `_min_` in the package name."
+                "usage": "<NAME> = [the package name]  <VAR> = [VERSION|SCOPE|EXTRAS]. Override the version, scope or extras of a package to be installed/updated. EXAMPLE: `OCT_PKG_TORCH_VERSION=\"A.B.C\"`. If the package name contains a `-` it should be replaced with `_min_` in the package name."
             },
             "OCT_DISABLE_PLUGINS": {
                 "default": "false",
@@ -184,7 +184,7 @@
                 "usage": "Python executable to use to run the script. Mostly used to choose the initial version with which to create the virtual environment."
             },
             "VENV_DIR": {
-                "default": "CURRENT_DIR/venv",
+                "default": "<CURRENT_DIR>/venv",
                 "usage": "Path to the virtual environment directory to use/create."
             },
             "SKIP_VENV": {

@@ -32,12 +32,18 @@ def convert_to_rst(data: list[dict]) -> str:
 
             usage = rgx_code.sub(r'``\1``', usage)
 
-            if default:
+            default = str(default).strip()
+            if default.lower() == 'required':
+                default = '*REQUIRED*'
+            elif default.lower() == 'optional':
+                default = '*OPTIONAL*'
+            elif default:
                 default = f'``{default}``'
             else:
                 default = '*OPTIONAL*'
 
             rst_lines.append(f"  * - ``{var}``")
+            rst_lines.append('')
             rst_lines.append(f"      = {default}")
             rst_lines.append(f"    - {usage}")
         rst_lines.append('')
@@ -48,5 +54,5 @@ if __name__ == '__main__':
     with open('environment_variables.json') as f:
         data = json.load(f)
     rst = convert_to_rst(data)
-    with open('environment_variables.rst', 'w') as f:
+    with open('source/user/_env_vars.rst', 'w') as f:
         f.write(rst)
