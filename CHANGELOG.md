@@ -4,12 +4,17 @@ List of changes between versions
 
 ## XXX (maybe planned)
 
+
 - [ ] Add null/passthrough OCR model (how should it be designed to report  both the boxes and the OCR step?)
 - [ ] Possibly move to CUDA 12.9 and check if paddleocr can work also with the gpu version
 - [ ] Add way to control server natively without the extension (e.g. through the admin page or another view)
 - [ ] Make PMNG aware of manually installed plugins and gray them out in the extension
 - [ ] Add <DETECT> language to allow either OCR or TSL models to detect the language automatically
       (Both should easy, only one could be troublesome)
+
+## 0.7.3
+
+- Bugfix missing dependency in `plugins_data.json` for `ocr_translate-paddle` plugin and wrong `ocr_translate-google` version
 
 ## 0.7.1
 
