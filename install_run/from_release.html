@@ -1,0 +1,171 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>From Release File (Windows) &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="From Github" href="from_github.html" />
+    <link rel="prev" title="Install and Run" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Install and Run</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">From Release File (Windows)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_github.html">From Github</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_pypi.html">From PyPI installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_docker.html">From Docker image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#general-info">General info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#superuser">SuperUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#gpu">GPU</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plugins/index.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib/index.html">Contributor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Install and Run</a></li>
+      <li class="breadcrumb-item active">From Release File (Windows)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/install_run/from_release.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="from-release-file-windows">
+<h1>From Release File (Windows)<a class="headerlink" href="#from-release-file-windows" title="Link to this heading"></a></h1>
+<p>Tested for Windows11</p>
+<ul class="simple">
+<li><p>Make sure to have <a class="reference external" href="https://www.python.org/downloads/windows/">python</a> installed on your system and available in the PATH (There is a checkbox that you need to tick as soon as you run the installer to automatically do this).
+For server versions <code class="code docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">v0.7</span></code> only python 3.10 and 3.11 were supported, for <code class="code docutils literal notranslate"><span class="pre">&gt;=v0.7</span></code> any python versions 3.10, 3.11, 3.12, 3.13 and 3.14 have been tested and should work.
+If you have multiple versions of python installed, the first one found in PATH will be used.
+You can force a specific version by setting the <cite>PYTHON</cite> environment variable in <cite>run-user.bat</cite> to the full path of the python executable you want to use.</p></li>
+</ul>
+<img alt="Python installer" class="align-center" src="../_images/windows_python_install.png" />
+<ul class="simple">
+<li><p>From <a class="extlink-github reference external" href="https://github.com/Crivella/ocr_translate/releases/">github</a> download the <a class="extlink-github reference external" href="https://github.com/Crivella/ocr_translate/releases/latest/download/run_server.zip">release file</a></p></li>
+<li><p>Unzip the release file downloaded in the previous step.</p></li>
+<li><p>From inside the folder, run the <code class="code docutils literal notranslate"><span class="pre">run-user.bat</span></code> file that will</p>
+<ul>
+<li><p>Allow the user to tweak the environment variables to your liking (text editing the file), by setting/changing value to the already present ones,
+or adding new ones.</p></li>
+<li><p>Create or reuse a virtual environment in the folder <code class="code docutils literal notranslate"><span class="pre">venv</span></code> in the same directory as the script</p></li>
+<li><p>Install the required packages to run the server</p></li>
+<li><p>Start the server</p></li>
+</ul>
+</li>
+</ul>
+<p>The server will run with sensible defaults.
+Most notably the models files, plugin files (needed python packages) and database will be downloaded/created under <code class="code docutils literal notranslate"><span class="pre">%userprofile%/.ocr_translate</span></code>.
+If not DEVICE is specified, the server will attempt to find the <code class="code docutils literal notranslate"><span class="pre">nvidia-smi</span></code> executable and if available, will run on GPU.</p>
+<p>For customization, you can set the <a class="reference internal" href="../user/envs.html"><span class="doc">Environment variables</span></a> yourself.</p>
+<p>Since the introduction of the <code class="code docutils literal notranslate"><span class="pre">run-user.bat</span></code> script, this has been made easier as you just need to edit that file
+with any text editor and set the environment variables at the top of the file</p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="p">@</span><span class="k">echo</span> off
+
+<span class="k">set</span> <span class="nv">LOAD_ON_START</span><span class="p">=</span>
+
+<span class="k">set</span> <span class="nv">DEVICE</span><span class="p">=</span>cpu
+<span class="k">set</span> <span class="nv">OCT_BASE_DIR</span><span class="p">=</span>
+<span class="k">set</span> <span class="nv">DATABASE_NAME</span><span class="p">=</span>
+
+<span class="k">set</span> <span class="nv">DJANGO_DEBUG</span><span class="p">=</span>false
+<span class="k">set</span> <span class="nv">DJANGO_LOG_LEVEL</span><span class="p">=</span>INFO
+
+<span class="k">call</span> run.bat
+</pre></div>
+</div>
+<p>You can see some of them already set to their default values or nothing, meaning they are left undefined.</p>
+<p>The <cite>call run.bat</cite> calls the secondary script with the boilerplate code to start the server.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Install and Run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="from_github.html" class="btn btn-neutral float-right" title="From Github" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

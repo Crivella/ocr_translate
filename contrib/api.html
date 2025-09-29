@@ -1,0 +1,318 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Endpoints &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Writing plugins" href="plugins.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install_run/index.html">Install and Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plugins/index.html">Plugins</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Contributor’s guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plugins.html">Writing plugins</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">API Endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#development-dependencies">Development dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#pre-commit-hooks">pre-commit hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#testing">Testing</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Contributor’s guide</a></li>
+      <li class="breadcrumb-item active">API Endpoints</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contrib/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-endpoints">
+<h1>API Endpoints<a class="headerlink" href="#api-endpoints" title="Link to this heading"></a></h1>
+<dl class="http get">
+<dt class="sig sig-object http" id="get--">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/</span></span><a class="headerlink" href="#get--" title="Link to this definition"></a></dt>
+<dd><p><strong>Server handshake.</strong></p>
+<p>Return a JSON response containing information about the available languages/models and the currently in use src/dst language and box/ocr/tsl models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – A JSON dictionary with handshake info.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--get_trans-">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/get_trans/</span></span><a class="headerlink" href="#get--get_trans-" title="Link to this definition"></a></dt>
+<dd><p><strong>Get translation.</strong></p>
+<p>Return a JSON response containing all the available translation of the specified text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>string</em>) – The text for which to search for translations.
+(Required)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1">400 Bad Request</a></span> – Bad request.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Text not found.</p></li>
+<li><p><span><span class="problematic">512</span></span> – Attempting translation with no languages selected.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – A JSON dictionary with the translation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--set_lang-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/set_lang/</span></span><a class="headerlink" href="#post--set_lang-" title="Link to this definition"></a></dt>
+<dd><p><strong>Set source and destination languages.</strong></p>
+<p>Set the source and destination languages for the translation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1">400 Bad Request</a></span> – Bad request.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--set_models-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/set_models/</span></span><a class="headerlink" href="#post--set_models-" title="Link to this definition"></a></dt>
+<dd><p><strong>Set box, ocr and tsl models.</strong></p>
+<p>Set the box, ocr and tsl models for the translation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1">400 Bad Request</a></span> – Bad request.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--run_tsl-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/run_tsl/</span></span><a class="headerlink" href="#post--run_tsl-" title="Link to this definition"></a></dt>
+<dd><p><strong>Run translation on text.</strong></p>
+<p>Run translation on text using active model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1">400 Bad Request</a></span> – Bad request.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><span class="problematic">512</span></span> – Attempting translation with no languages selected.</p></li>
+<li><p><span><span class="problematic">513</span></span> – Attempting translation with no models selected.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – A JSON dictionary with the translated text.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--run_ocrtsl-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/run_ocrtsl/</span></span><a class="headerlink" href="#post--run_ocrtsl-" title="Link to this definition"></a></dt>
+<dd><p><strong>Run OCR and translation on image.</strong></p>
+<p>Run OCR and translation on image () using active models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1">400 Bad Request</a></span> – Bad request.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7">406 Not Acceptable</a></span> – Can’t lazyload with only md5.</p></li>
+<li><p><span><span class="problematic">512</span></span> – Attempting translation with no languages selected.</p></li>
+<li><p><span><span class="problematic">513</span></span> – Attempting translation with no models selected.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – A JSON dictionary with the translated text.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--run_tsl_get_xunityautotrans">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/run_tsl_get_xunityautotrans</span></span><a class="headerlink" href="#get--run_tsl_get_xunityautotrans" title="Link to this definition"></a></dt>
+<dd><p><strong>Run translation from a GET endpoint.</strong></p>
+<p>Runt translation of text with API compatible with <a class="reference external" href="https://github.com/bbepis/XUnity.AutoTranslator">https://github.com/bbepis/XUnity.AutoTranslator</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>string</em>) – The text to translate.
+(Required)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Text not found.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--set_manual_translation-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/set_manual_translation/</span></span><a class="headerlink" href="#post--set_manual_translation-" title="Link to this definition"></a></dt>
+<dd><p><strong>Set manual translation.</strong></p>
+<p>Set manual translation for a text object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1">400 Bad Request</a></span> – Bad request.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Text not found.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><span class="problematic">512</span></span> – Attempting translation with no languages selected.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--get_active_options">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/get_active_options</span></span><a class="headerlink" href="#get--get_active_options" title="Link to this definition"></a></dt>
+<dd><p><strong>Get active options.</strong></p>
+<p>Get the active options for the OCR and translation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – A JSON dictionary with the active options.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--get_plugin_data">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/get_plugin_data</span></span><a class="headerlink" href="#get--get_plugin_data" title="Link to this definition"></a></dt>
+<dd><p><strong>Get the data of the available plugins</strong></p>
+<p>Get a dict of available plugins and their data, including if they are installed or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – A JSON dictionary with the plugin data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--manage_plugins-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/manage_plugins/</span></span><a class="headerlink" href="#post--manage_plugins-" title="Link to this definition"></a></dt>
+<dd><p><strong>Manage plugins.</strong></p>
+<p>Manage the plugins, by installing/uninstalling them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1">400 Bad Request</a></span> – Bad request.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.6">405 Method Not Allowed</a></span> – Method not allowed.</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plugins.html" class="btn btn-neutral float-left" title="Writing plugins" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

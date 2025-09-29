@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Install and Run &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="From Release File (Windows)" href="from_release.html" />
+    <link rel="prev" title="Welcome to ocr_translate’s documentation!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Install and Run</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="from_release.html">From Release File (Windows)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_github.html">From Github</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_pypi.html">From PyPI installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_docker.html">From Docker image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#general-info">General info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#superuser">SuperUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpu">GPU</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plugins/index.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib/index.html">Contributor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Install and Run</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/install_run/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="install-and-run">
+<h1>Install and Run<a class="headerlink" href="#install-and-run" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="from_release.html">From Release File (Windows)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="from_github.html">From Github</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="from_github.html#run-the-server">Run the server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_github.html#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="from_pypi.html">From PyPI installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="from_docker.html">From Docker image</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="from_docker.html#compose-example">Compose example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="general-info">
+<h2>General info<a class="headerlink" href="#general-info" title="Link to this heading"></a></h2>
+<p>NOTE!!: Since version <cite>v0.6</cite>, <cite>python</cite> (or at least) <cite>pip</cite> needs to be installed on the system. (See <a class="reference external" href="https://www.python.org/downloads/">https://www.python.org/downloads/</a>)</p>
+<p>Most of the server behavior (eg: model/plugin/db install locations and allowed hosts) can be customized using <a class="reference internal" href="../user/envs.html"><span class="doc">Environment variables</span></a></p>
+</section>
+<section id="superuser">
+<h2>SuperUser<a class="headerlink" href="#superuser" title="Link to this heading"></a></h2>
+<p>Following the described procedures, the server will be created with a admin user <em>admin</em>:<em>password</em>.</p>
+<p>The username and password can be changed by setting the environment variables <cite>DJANGO_SUPERUSER_USERNAME</cite> and <cite>DJANGO_SUPERUSER_PASSWORD</cite> respectively. (See <a class="reference internal" href="../user/envs.html"><span class="doc">Environment variables</span></a>)</p>
+<p>You can login to the admin interface at <cite>http://SERVER_ADDRESS:SERVER_PORT/admin/</cite> (eg: <cite>http://127.0.0.1:4000/admin/</cite>) in order to manage the database.
+The main idea is to use this to manually add new models (with the appropriate entrypoint) if you want to test out,
+model that are not yet available. (If you find good models, please do share).</p>
+</section>
+<section id="gpu">
+<h2>GPU<a class="headerlink" href="#gpu" title="Link to this heading"></a></h2>
+<p>By default the <cite>run_server.py</cite> will attempt to use a specific device following:</p>
+<ul class="simple">
+<li><p>If the environment variable <cite>DEVICE</cite> is set, it will use the device specified by the value.</p></li>
+<li><p>If <cite>nvidia-smi</cite> is available the server will try running in GPU mode.</p></li>
+<li><p>If none of the above is available, the server will run in CPU mode.</p></li>
+</ul>
+<p>Independent of the configured specified/found <cite>DEVICE</cite>, if <cite>torch</cite> is already installed it will be used to determine if it can run with CUDA.</p>
+<p>As of <cite>v0.6</cite> no device specific dependencies are included by default, but some plugins will install/use different dependencies based on the device used.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to ocr_translate’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="from_release.html" class="btn btn-neutral float-right" title="From Release File (Windows)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

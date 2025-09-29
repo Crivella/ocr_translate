@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Writing plugins &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Endpoints" href="api.html" />
+    <link rel="prev" title="Contributor’s guide" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install_run/index.html">Install and Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plugins/index.html">Plugins</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Contributor’s guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Writing plugins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#model-definitions">Model definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#model-usage">Model usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#allowed-options">ALLOWED_OPTIONS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html">API Endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#development-dependencies">Development dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#pre-commit-hooks">pre-commit hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#testing">Testing</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Contributor’s guide</a></li>
+      <li class="breadcrumb-item active">Writing plugins</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/contrib/plugins.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="writing-plugins">
+<h1>Writing plugins<a class="headerlink" href="#writing-plugins" title="Link to this heading"></a></h1>
+<p>New models and proxy model classes can be added without modifying the core codebase by creating a python package and using the following entrypoints.</p>
+<p>When Creating a plugin, the following example show the minimal methods that need to be redefined.
+Beside this, the plugin can also redefine any of the methods to change eg how inputs are preprocessed, but be careful with this as it might break provenance (eg. <cite>options</cite> are used differently).</p>
+<p>A <a class="reference external" href="https://github.com/cookiecutter/cookiecutter">cookiecutter</a> recipe to create a new plugin is available <a class="reference external" href="https://github.com/Crivella/ocr_translate-plugin_template">HERE</a></p>
+<p>IMPORTANT: The model class are supposed to be proxy classes  and should ence contain</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Meta</span><span class="p">:</span>
+    <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<section id="model-definitions">
+<h2>Model definitions<a class="headerlink" href="#model-definitions" title="Link to this heading"></a></h2>
+<p>The entrypoint for model definitions tell the server which models should be available to the user after the plugin is installed.</p>
+<p>They consist of an entrypoint of type <cite>ocr_translate.XXX_data</cite> where <cite>XXX</cite> is one of <cite>box</cite>, <cite>ocr</cite> and <cite>tsl</cite>.</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">ocr_translate.box_data</span></code>: Point this entrypoint to a dictionary with the info required to create a new <code class="code docutils literal notranslate"><span class="pre">OCRBoxModel</span></code></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">easyocr_box_model_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># Name of the model</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;easyocr&#39;</span><span class="p">,</span>
+    <span class="c1"># List of ISO-639-1 codes supported by the model</span>
+    <span class="s1">&#39;lang&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;en&#39;</span><span class="p">,</span> <span class="s1">&#39;ja&#39;</span><span class="p">,</span> <span class="s1">&#39;zh&#39;</span><span class="p">,</span> <span class="s1">&#39;ko&#39;</span><span class="p">],</span>
+    <span class="c1"># How the model requires the codes to be passed (one of &#39;iso1&#39;, &#39;iso2b&#39;, &#39;iso2t&#39;, &#39;iso3&#39;)</span>
+    <span class="c1"># If the models codes only partially match or are totally different from one of the ISO standards, see iso1_map</span>
+    <span class="s1">&#39;lang_code&#39;</span><span class="p">:</span> <span class="s1">&#39;iso1&#39;</span><span class="p">,</span>
+    <span class="c1"># Name of the entrypoint for the model (should match what is used in pyproject.toml)</span>
+    <span class="s1">&#39;entrypoint&#39;</span><span class="p">:</span> <span class="s1">&#39;easyocr.box&#39;</span><span class="p">,</span>
+    <span class="c1"># Maps ISO-639-1 codes to the codes used by the model. Does not need to map every language, only those that are</span>
+    <span class="c1"># different from getattr(lang: m.Language, lang_code)</span>
+    <span class="s1">&#39;iso1_map&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;ce&#39;</span><span class="p">:</span> <span class="s1">&#39;che&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;zh&#39;</span><span class="p">:</span> <span class="s1">&#39;ch_sim&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;zht&#39;</span><span class="p">:</span> <span class="s1">&#39;ch_tra&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;tg&#39;</span><span class="p">:</span> <span class="s1">&#39;tjk&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">ocr_translate.ocr_data</span></code>: Point this entrypoint to a dictionary with the info required to create a new <code class="code docutils literal notranslate"><span class="pre">OCRModel</span></code></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">khawhite_ocr_model_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;kha-white/manga-ocr-base&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;lang&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;ja&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;lang_code&#39;</span><span class="p">:</span> <span class="s1">&#39;iso1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;entrypoint&#39;</span><span class="p">:</span> <span class="s1">&#39;hugginface.ved&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">ocr_translate.tsl_data</span></code>: Point this entrypoint to a dictionary with the info required to create a new <code class="code docutils literal notranslate"><span class="pre">TSLModel</span></code></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">staka_fugumt_ja_en_tsl_model_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;staka/fugumt-ja-en&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;lang_src&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;ja&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;lang_dst&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;en&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;lang_code&#39;</span><span class="p">:</span> <span class="s1">&#39;iso1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;default_options&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;break_newlines&#39;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;entrypoint&#39;</span><span class="p">:</span> <span class="s1">&#39;hugginface.seq2seq&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="model-usage">
+<h2>Model usage<a class="headerlink" href="#model-usage" title="Link to this heading"></a></h2>
+<p>The entrypoint for model usage point the server to a proxy class of either <cite>OCRBoxModel</cite>, <cite>OCRModel</cite> or <cite>TSLModel</cite> that will be used to interact with the model.</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">ocr_translate.box_models</span></code>: Point this entrypoint to a class that subclasses <code class="code docutils literal notranslate"><span class="pre">OCRBoxModel</span></code>. Should redefine at least the following methods</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">BoxDetectionResult</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Type for the result of the box detection&quot;&quot;&quot;</span>
+    <span class="n">single</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
+    <span class="n">merged</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SomeNewClassName</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">OCRBoxModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OCRBoxtranslate plugin to allow usage of ... for box detection.&quot;&quot;&quot;</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the model into memory.&quot;&quot;&quot;</span>
+        <span class="c1"># Do something here to load the model or nothing if not needed (should still be defined)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unload the model from memory.&quot;&quot;&quot;</span>
+        <span class="c1"># Do something here to unload the model or nothing if not needed (should still be defined)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_box_detection</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">image</span><span class="p">:</span> <span class="n">PILImage</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BoxDetectionResult</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;PLACEHOLDER (to be implemented via entrypoint): Perform box OCR on an image.</span>
+<span class="sd">        Returns list of bounding boxes as dicts:</span>
+<span class="sd">            - merged: The merged BBox as a tuple[int, int, int, int]</span>
+<span class="sd">            - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image (Image.Image): A Pillow image on which to perform OCR.</span>
+<span class="sd">            options (dict, optional): A dictionary of options.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NotImplementedError: The type of model specified is not implemented.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[BoxDetectionResult]: List of dictionary with key/value pairs:</span>
+<span class="sd">            - merged: The merged BBox as a tuple[int, int, int, int]</span>
+<span class="sd">            - single: List of BBoxed merged into the merged BBox as a tuple[int, int, int, int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Redefine this method with the same signature as above</span>
+        <span class="c1"># Should return a list of `lrbt` boxes after processing the input PILImage</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">ocr_translate.ocr_models</span></code>: Point this entrypoint to a class that subclasses <code class="code docutils literal notranslate"><span class="pre">OCRModel</span></code>. Should redefine atleast the following methods</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SomeNewClassName</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">OCRModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OCRBoxtranslate plugin to allow usage of ... for box detection.&quot;&quot;&quot;</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the model into memory.&quot;&quot;&quot;</span>
+        <span class="c1"># Do something here to load the model or nothing if not needed (should still be defined)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unload the model from memory.&quot;&quot;&quot;</span>
+        <span class="c1"># Do something here to unload the model or nothing if not needed (should still be defined)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ocr</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">img</span><span class="p">:</span> <span class="n">PILImage</span><span class="p">,</span> <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform OCR on an image.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            img (Image.Image):  A Pillow image on which to perform OCR.</span>
+<span class="sd">            lang (str, optional): The language to use for OCR. (Not every model will use this)</span>
+<span class="sd">            bbox (tuple[int, int, int, int], optional): The bounding box of the text on the image in lbrt format.</span>
+<span class="sd">            options (dict, optional): A dictionary of options to pass to the OCR model.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If img is not a Pillow image.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The text extracted from the image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Redefine this method with the same signature as above</span>
+        <span class="c1"># Should return a sring with the result of the OCR performed on the input PILImage.</span>
+        <span class="c1"># Unless the methods `prepare_image` or `ocr` are also being overwritten, the input image will be the result of the CROP on the original image using the bounding boxes given by the box detection model.</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">ocr_translate.tsl_models</span></code>: Point this entrypoint to a class that subclasses <code class="code docutils literal notranslate"><span class="pre">TSLModel</span></code>. Should redefine atleast the following methods</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SomeNewClassName</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">TSLModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OCRBoxtranslate plugin to allow usage of ... for box detection.&quot;&quot;&quot;</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the model into memory.&quot;&quot;&quot;</span>
+        <span class="c1"># Do something here to load the model or nothing if not needed (should still be defined)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unload the model from memory.&quot;&quot;&quot;</span>
+        <span class="c1"># Do something here to unload the model or nothing if not needed (should still be defined)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_translate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">src_lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst_lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Translate a text using a the loaded model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tokens (list): list or list[list] of string tokens to be translated.</span>
+<span class="sd">            lang_src (str): Source language.</span>
+<span class="sd">            lang_dst (str): Destination language.</span>
+<span class="sd">            options (dict, optional): Options for the translation. Defaults to {}.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If text is not a string or a list of strings.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Union[str,list[str]]: Translated text. If text is a list, returns a list of translated strings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Redefine this method with the same signature as above</span>
+        <span class="c1"># Should return a sring with the translated text.</span>
+        <span class="c1"># IMPORTANT: the main codebase treats this function as batchable:</span>
+        <span class="c1"># The input `tokens` can be a list of strings or a list of list of strings. The output should match the input being a string or list of strings.</span>
+        <span class="c1"># (This is used to leverage the capability of pytorch to batch inputs and outputs for faster performances, or it can also used to write a plugin for an online service by using a single request for multiple inputs using some separator that the service will leave unaltered.)</span>
+</pre></div>
+</div>
+</section>
+<section id="allowed-options">
+<h2>ALLOWED_OPTIONS<a class="headerlink" href="#allowed-options" title="Link to this heading"></a></h2>
+<p>Since version <cite>v0.5.1</cite> the server can communicate a list of allowed options to the extension.
+The latter will use them to generate a form for the user to overwrite the default options.</p>
+<p>In order to use this feature, the plugin needs to define a class variable <cite>ALLOWED_OPTIONS</cite> that is a dictionary with the following structure:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">YourFancyModel</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">TSLModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OCRtranslate plugin to allow usage of google_translate as translator.&quot;&quot;&quot;</span>
+
+    <span class="n">ALLOWED_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">m</span><span class="o">.</span><span class="n">TSLModel</span><span class="o">.</span><span class="n">ALLOWED_OPTIONS</span><span class="p">,</span>
+        <span class="s1">&#39;OPTION_NAME1&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+            <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;This is a float option that will generate an input field of type number.&#39;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;OPTION_NAME2&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+            <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;This is a boolean option that will generate an input field of type checkbox.&#39;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>Note the line of code</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">**</span><span class="n">m</span><span class="o">.</span><span class="n">TSLModel</span><span class="o">.</span><span class="n">ALLOWED_OPTIONS</span><span class="p">,</span>
+</pre></div>
+</div>
+<p>This is used to inherit the default options from the parent class.</p>
+<p>The allowed types are:</p>
+<ul class="simple">
+<li><p><cite>int</cite></p></li>
+<li><p><cite>float</cite></p></li>
+<li><p><cite>str</cite></p></li>
+<li><p><cite>bool</cite></p></li>
+</ul>
+<p>that will be converted respectively by the extension in the form into an input field of type:</p>
+<ul class="simple">
+<li><p><cite>number</cite></p></li>
+<li><p><cite>number</cite></p></li>
+<li><p><cite>text</cite></p></li>
+<li><p><cite>checkbox</cite></p></li>
+</ul>
+<p>The <cite>descrciption</cite> field is used to generate a tooltip that will be shown to the user when hovering
+a question mark icon next to the input field.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Contributor’s guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API Endpoints" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

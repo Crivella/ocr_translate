@@ -1,0 +1,477 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Environment Variables &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Plugins" href="../plugins/index.html" />
+    <link rel="prev" title="User’s guide" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install_run/index.html">Install and Run</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User’s guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Environment Variables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-environment-variables">Setting Environment variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#project-variable-list">Project variable list</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plugin-variable-list">Plugin variable list</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utility-run-scripts">Utility run scripts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#docker-environment-variables">Docker environment variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#docker-exceptions">Docker exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#supported-tested-databases">Supported/tested databases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../plugins/index.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib/index.html">Contributor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">User’s guide</a></li>
+      <li class="breadcrumb-item active">Environment Variables</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/user/envs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="environment-variables">
+<h1>Environment Variables<a class="headerlink" href="#environment-variables" title="Link to this heading"></a></h1>
+<p>The server will check a number of environment variables to configure itself.</p>
+<section id="setting-environment-variables">
+<h2>Setting Environment variables<a class="headerlink" href="#setting-environment-variables" title="Link to this heading"></a></h2>
+<p>Environment variables can be set in many ways depending on the the OS and/or the tool used to launch the server.
+This is a list of common possible ways:</p>
+<ul class="simple">
+<li><p>Windows Powershell: <code class="code docutils literal notranslate"><span class="pre">$env:VARIABLE_NAME</span> <span class="pre">=</span> <span class="pre">&quot;value&quot;</span></code> (code must be run in the same shell)</p></li>
+<li><p>Windows Command Prompt: <code class="code docutils literal notranslate"><span class="pre">set</span> <span class="pre">VARIABLE_NAME=value</span></code> (code must be run in the same shell)
+!! Do not use quotes as they will be included in the value</p></li>
+<li><p>Windows Settings: <code class="code docutils literal notranslate"><span class="pre">Control</span> <span class="pre">Panel</span> <span class="pre">&gt;</span> <span class="pre">System</span> <span class="pre">&gt;</span> <span class="pre">Advanced</span> <span class="pre">System</span> <span class="pre">Settings</span> <span class="pre">&gt;</span> <span class="pre">Environment</span> <span class="pre">Variables</span></code></p></li>
+<li><p>Linux BASH: <code class="code docutils literal notranslate"><span class="pre">export</span> <span class="pre">VARIABLE_NAME=value</span></code> (code must be run in the same shell)</p></li>
+<li><p>VSCode: <code class="code docutils literal notranslate"><span class="pre">launch.json</span> <span class="pre">&gt;</span> <span class="pre">env</span> <span class="pre">&gt;</span> <span class="pre">VARIABLE_NAME</span></code></p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;configurations&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="o">...</span>
+            <span class="s2">&quot;env&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;VARIABLE_NAME_1&quot;</span><span class="p">:</span> <span class="s2">&quot;VALUE_1&quot;</span><span class="p">,</span>
+                <span class="o">...</span>
+            <span class="p">},</span>
+            <span class="o">...</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Docker: <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">-e</span> <span class="pre">VARIABLE_NAME=value</span> <span class="pre">...</span></code></p></li>
+<li><p>Docker: <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">--env-file</span> <span class="pre">.env</span> <span class="pre">...</span></code> where <cite>.env</cite> is a file with the format</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VARIABLE_NAME_1</span><span class="o">=</span><span class="n">VALUE_1</span>
+<span class="o">...</span>
+<span class="n">VARIABLE_NAME_N</span><span class="o">=</span><span class="n">VALUE_N</span>
+</pre></div>
+</div>
+</section>
+<section id="project-variable-list">
+<h2>Project variable list<a class="headerlink" href="#project-variable-list" title="Link to this heading"></a></h2>
+<p>List of environment variables used in this project to configure the application behavior.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable (=[default])</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLUMNS</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Number of columns the rich logging should use if enabled. Particularly useful in docker environments if the terminal width is not detected properly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CORS_ALLOWED_ORIGINS</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>List of semi-colon <code class="docutils literal notranslate"><span class="pre">;</span></code> separated URLs that are allowed to access the server. CSRF_TRUSTED_ORIGINS is set to the same value (can use this with USE_CORS_HEADERS=false) to set CSRF_TRUSTED_ORIGINS only. EXAMPLE: <code class="docutils literal notranslate"><span class="pre">CORS_ALLOWED_ORIGINS=&quot;http://localhost:4000;http://127.0.0.1:4000&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CORS_ALLOW_HEADERS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">LIB</span> <span class="pre">default</span></code></p>
+</td>
+<td><p>List of semi-colon <code class="docutils literal notranslate"><span class="pre">;</span></code> separated HTTP headers that are allowed to be used. EXAMPLE: <code class="docutils literal notranslate"><span class="pre">CORS_ALLOW_HEADERS=&quot;Content-Type;Authorization;X-CSRFToken&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CORS_ALLOW_METHODS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">LIB</span> <span class="pre">default</span></code></p>
+</td>
+<td><p>List of semi-colon <code class="docutils literal notranslate"><span class="pre">;</span></code> separated HTTP methods that are allowed to be used. EXAMPLE: <code class="docutils literal notranslate"><span class="pre">CORS_ALLOW_METHODS=&quot;GET;POST;PUT;DELETE;OPTIONS;PATCH&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DATABASE_ENGINE</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">django.db.backends.sqlite3</span></code></p>
+</td>
+<td><p>Change this to either a Django or 3rd party provided backend to use another Database type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATABASE_HOST</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Required if using another database backend</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DATABASE_NAME</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">db.sqlite3</span></code></p>
+</td>
+<td><p>For <code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> this is the path to the database file. For other backends, it should be the name of the database</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATABASE_PASSWORD</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Probably required if using another database backend</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DATABASE_PORT</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Required if using another database backend</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATABASE_USER</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Probably required if using another database backend</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DEVICE</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">cpu</span></code></p>
+</td>
+<td><p>Which device to use for plugins that support it. Currently allowed: cpu, cuda</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DJANGO_ALLOWED_HOSTS</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Add list of semi-colon <code class="docutils literal notranslate"><span class="pre">;</span></code> separated IPs to the <code class="docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code> of the server. Needed if you want to host the server on a different machine than the one querying it. EXAMPLE: <code class="docutils literal notranslate"><span class="pre">DJANGO_ALLOWED_HOSTS=&quot;192.168.1.1;172.108.104.3&quot;</span></code>. See Django Documentation for more info: <a class="reference external" href="https://docs.djangoproject.com/en/2.2/ref/settings/#allowed-hosts">https://docs.djangoproject.com/en/2.2/ref/settings/#allowed-hosts</a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DJANGO_DEBUG</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p>Whether to run the server in debug (true) or production (false) mode</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DJANGO_LOG_LEVEL</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">INFO</span></code></p>
+</td>
+<td><p>Python <code class="docutils literal notranslate"><span class="pre">logging</span></code> level. See <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging-levels">https://docs.python.org/3/library/logging.html#logging-levels</a> for allowed values</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DJANGO_SUPERUSER_PASSWORD</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">password</span></code></p>
+</td>
+<td><p>Password for the superuser to be created</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DJANGO_SUPERUSER_USERNAME</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">admin</span></code></p>
+</td>
+<td><p>Username for the superuser to be created</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LOAD_ON_START</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p><code class="docutils literal notranslate"><span class="pre">most</span></code>: Load the most used models and the respective languages <code class="docutils literal notranslate"><span class="pre">last</span></code>: Load the last used models and languages source/destination languages and most used models for that language combination at server start</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_BOX_WORKERS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</td>
+<td><p>Number of <code class="docutils literal notranslate"><span class="pre">WorkerMessageQueue</span></code> workers handling box_ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_MAIN_WORKERS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">4</span></code></p>
+</td>
+<td><p>Number of <code class="docutils literal notranslate"><span class="pre">WorkerMessageQueue</span></code> workers handling incoming OCR_TSL post requests</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_OCR_WORKERS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</td>
+<td><p>Number of <code class="docutils literal notranslate"><span class="pre">WorkerMessageQueue</span></code> workers handling ocr pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_TSL_WORKERS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</td>
+<td><p>Number of <code class="docutils literal notranslate"><span class="pre">WorkerMessageQueue</span></code> workers handling translation pipelines (Should be set as 1 until the pipeline is build to handle multiple concurrent request efficiently without slowdowns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_AUTOUPDATE</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p>If true, the server will attempt to update the main package to the version specified by <code class="docutils literal notranslate"><span class="pre">OCT_VERSION</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_BASE_DIR</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p>Path to the base directory of the project. If no other paths are configured using environment variables, the server database, plugin files and downloaded models will be stored here.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_DISABLE_PLUGINS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p>If true, all plugins will be disabled and not loaded at server start. Mostly used for testing purposes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_DJANGO_BIND_ADDRESS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code></p>
+</td>
+<td><p>Address to bind the server to</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_DJANGO_PORT</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">4000</span></code></p>
+</td>
+<td><p>Port the server will listen to</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_GUNICORN_NUM_WORKERS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</td>
+<td><p>Number of gunicorn workers</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_GUNICORN_TIMEOUT</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">1200</span></code></p>
+</td>
+<td><p>Timeout for gunicorn workers</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_GUNICORN_USER</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">current</span> <span class="pre">user</span></code></p>
+</td>
+<td><p>User to run the server as if using gunicorn.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_LOGFILE</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p>true/false/path. If true, a logfile named <code class="docutils literal notranslate"><span class="pre">ocr_translate.log</span></code> will be created in the base directory. If a path is provided, that will be used instead.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_PKG_&lt;NAME&gt;_&lt;VAR&gt;</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>&lt;NAME&gt; = [the package name]  &lt;VAR&gt; = [VERSION|SCOPE|EXTRAS]. Override the version, scope or extras of a package to be installed/updated. EXAMPLE: <code class="docutils literal notranslate"><span class="pre">OCT_PKG_TORCH_VERSION=&quot;A.B.C&quot;</span></code>. If the package name contains a <code class="docutils literal notranslate"><span class="pre">-</span></code> it should be replaced with <code class="docutils literal notranslate"><span class="pre">_min_</span></code> in the package name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_VERSION</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Default set to the downloaded release version Version the <code class="docutils literal notranslate"><span class="pre">run_server.py</span></code> script will attempt to install/update to. Can be either a version number (<code class="docutils literal notranslate"><span class="pre">A.B.C</span></code> eg <code class="docutils literal notranslate"><span class="pre">0.6.1`</span></code>) or last/latest.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">USE_CORS_HEADERS</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p>Allow setting of CORS headers in the server responses</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="plugin-variable-list">
+<h2>Plugin variable list<a class="headerlink" href="#plugin-variable-list" title="Link to this heading"></a></h2>
+<p>List of environment variables used by various plugins to configure their behavior. For more details visit the respective plugin documentation.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable (=[default])</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EASYOCR_MODULE_PATH</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">&lt;OCT_BASE_DIR&gt;/models/easyocr</span></code></p>
+</td>
+<td><p>Path to a directory where easyocr models will be downloaded and loaded from.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_OLLAMA_ENDPOINT</span></code></p>
+<p>= <em>REQUIRED</em></p>
+</td>
+<td><p>Endpoint URL for the Ollama API.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OCT_OLLAMA_PREFIX</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">oct_ollama</span></code></p>
+</td>
+<td><p>Prefix added to the model name, made customizable via environment variable since people might not want to setup a dedicated server for this.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PADDLEOCR_PREFIX</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">&lt;OCT_BASE_DIR&gt;/models/paddleocr</span></code></p>
+</td>
+<td><p>Path to a directory where paddleocr models will be downloaded and loaded from.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TESSERACT_ALLOW_DOWNLOAD</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">true</span></code></p>
+</td>
+<td><p>If true, tesseract will attempt to download missing language models when needed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TESSERACT_PREFIX</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Path to a directory where tesseract  models will be downloaded and loaded from.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TRANSFORMERS_CACHE</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">&lt;OCT_BASE_DIR&gt;/models/transformers</span></code></p>
+</td>
+<td><p>Path to a directory where transformers models will be downloaded and loaded from.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TRANSFORMERS_OFFLINE</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</td>
+<td><p>If set to 1, transformers will not attempt to download models and will only use models already present in the storage cache.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="utility-run-scripts">
+<h2>Utility run scripts<a class="headerlink" href="#utility-run-scripts" title="Link to this heading"></a></h2>
+<p>List of environment variables used in the <code class="docutils literal notranslate"><span class="pre">run/run-user.[sh|bat]</span></code> scripts to configure their behavior.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable (=[default])</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PIP_INSTALLER_LOCATION</span></code></p>
+<p>= <em>OPTIONAL</em></p>
+</td>
+<td><p>Path to a pip installer script like <code class="docutils literal notranslate"><span class="pre">get-pip.py</span></code> to allow python to bootstrap pip if it is not available in the current python environment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PYTHON</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">python</span></code></p>
+</td>
+<td><p>Python executable to use to run the script. Mostly used to choose the initial version with which to create the virtual environment.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SKIP_VENV</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</td>
+<td><p>If true, the script will not attempt to create/use a virtual environment and will run using the current python environment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VENV_DIR</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">&lt;CURRENT_DIR&gt;/venv</span></code></p>
+</td>
+<td><p>Path to the virtual environment directory to use/create.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="docker-environment-variables">
+<h2>Docker environment variables<a class="headerlink" href="#docker-environment-variables" title="Link to this heading"></a></h2>
+<p>List of environment variables used by the <code class="docutils literal notranslate"><span class="pre">start-server.sh</span></code> in docker.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable (=[default])</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GID</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">1000</span></code></p>
+</td>
+<td><p>Group ID to run the server as inside the container. Mostly useful when mounting volumes to avoid permission issues.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UID</span></code></p>
+<p>= <code class="docutils literal notranslate"><span class="pre">1000</span></code></p>
+</td>
+<td><p>User ID to run the server as inside the container. Mostly useful when mounting volumes to avoid permission issues.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="docker-exceptions">
+<h2>Docker exceptions<a class="headerlink" href="#docker-exceptions" title="Link to this heading"></a></h2>
+<p>In Docker environments, the values of <code class="code docutils literal notranslate"><span class="pre">OCT_DJANGO_PORT</span></code> and <code class="code docutils literal notranslate"><span class="pre">OCT_BASE_DIR</span></code> are overridden and cannot be customized.</p>
+<p>To persist data, bind mount the container path <code class="code docutils literal notranslate"><span class="pre">/plugin_data</span></code>. The server listens on port <code class="code docutils literal notranslate"><span class="pre">4000</span></code>, which should be mapped to the desired host port.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="User’s guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../plugins/index.html" class="btn btn-neutral float-right" title="Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

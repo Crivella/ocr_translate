@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>From Docker image &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="User’s guide" href="../user/index.html" />
+    <link rel="prev" title="From PyPI installation" href="from_pypi.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Install and Run</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="from_release.html">From Release File (Windows)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_github.html">From Github</a></li>
+<li class="toctree-l2"><a class="reference internal" href="from_pypi.html">From PyPI installation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">From Docker image</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#compose-example">Compose example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#general-info">General info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#superuser">SuperUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#gpu">GPU</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plugins/index.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib/index.html">Contributor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Install and Run</a></li>
+      <li class="breadcrumb-item active">From Docker image</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/install_run/from_docker.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="from-docker-image">
+<h1>From Docker image<a class="headerlink" href="#from-docker-image" title="Link to this heading"></a></h1>
+<p>Images can be downloaded from <a class="extlink-dockerhub reference external" href="https://hub.docker.com/r/crivella1/ocr_translate/">Dockerhub</a>:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">crivella1/ocr_translate:latest</span></code></p></li>
+</ul>
+<p>Or manually created:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/Crivella/ocr_translate.git</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">cd</span> <span class="pre">ocr_translate</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">build</span> <span class="pre">-t</span> <span class="pre">IMAGE_TAG</span> <span class="pre">-f</span> <span class="pre">Dockerfile</span> <span class="pre">.</span></code></p></li>
+</ul>
+<p>Run the command:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">--name</span> <span class="pre">CONTAINER_NAME</span> <span class="pre">-v</span> <span class="pre">OCT_MODELS:/models</span> <span class="pre">-v</span> <span class="pre">OCT_DB_DATA:/db_data</span> <span class="pre">-v</span> <span class="pre">OCT_PLUGINS_DATA:/plugin_data</span> <span class="pre">-p</span> <span class="pre">SERVER_PORT:4000</span> <span class="pre">-d</span> <span class="pre">IMAGE_NAME</span></code></p></li>
+</ul>
+<p>Replace the all caps parts with the appropriate values.
+For the volumes you can either specify a native docker volume using a name or a bind mount using a path (see <cite>docker documentation &lt;https://docs.docker.com/storage/volumes/&gt;`</cite>).
+While it is possible to omit the <cite>-v</cite> this will result in a new volume with random name being created each time the container is run, making it hard to reuse previous data.</p>
+<p>See the <a class="reference internal" href="../user/envs.html"><span class="doc">Environment variables</span></a> section for configuring your environment variables via CLI or a file.</p>
+<p>Additionally the docker image defines several other variables to automatically create an admin user for managing the database via the django-admin interface:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">UID</span></code>: UID of the user owning the files in /models and /data</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">GID</span></code>: GID of the user owning the files in /models and /data</p></li>
+</ul>
+<section id="compose-example">
+<h2>Compose example<a class="headerlink" href="#compose-example" title="Link to this heading"></a></h2>
+<p>This is an example of using <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> to run the server with a postgres database and bind mounts:</p>
+<ul class="simple">
+<li><p>Create a <code class="code docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file with the following content:</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ocr_translate</span>
+
+<span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">server</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oct_server</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">crivella1/ocr_translate:${OCT_VERSION:-latest}</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${PLUGINS_LOCATION}:/plugin_data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${MODELS_LOCATION}:/models</span>
+<span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATABASE_NAME=${DB_DATABASE_NAME}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATABASE_ENGINE=django.db.backends.postgresql</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATABASE_USER=${DB_USERNAME}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATABASE_PASSWORD=${DB_PASSWORD}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATABASE_HOST=database</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATABASE_PORT=5432</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4000:4000</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">database</span>
+<span class="w">    </span><span class="nt">tty</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># Useful to see the color on the logs</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+
+<span class="w">  </span><span class="nt">database</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oct_postgres</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres:16.4</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">POSTGRES_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span>
+<span class="w">      </span><span class="nt">POSTGRES_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_USERNAME}</span>
+<span class="w">      </span><span class="nt">POSTGRES_DB</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_DATABASE_NAME}</span>
+<span class="w">      </span><span class="nt">POSTGRES_INITDB_ARGS</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;--data-checksums&#39;</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_DATA_LOCATION}:/var/lib/postgresql/data</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pg_isready --dbname=&#39;${DB_DATABASE_NAME}&#39; --username=&#39;${DB_USERNAME}&#39; || exit 1; Chksum=&quot;$$(psql --dbname=&#39;${DB_DATABASE_NAME}&#39; --username=&#39;${DB_USERNAME}&#39; --tuples-only --no-align --command=&#39;SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database&#39;)&quot;; echo &quot;checksum failure count is $$Chksum&quot;; [ &quot;$$Chksum&quot; = &#39;0&#39; ] || exit 1</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+<span class="w">      </span><span class="nt">start_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Create a <code class="code docutils literal notranslate"><span class="pre">.env</span></code> file with the following content (replace the values with your own):</p></li>
+</ul>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">PLUGINS_LOCATION</span><span class="o">=</span>./plugins
+<span class="nv">MODELS_LOCATION</span><span class="o">=</span>./models
+<span class="nv">DB_DATA_LOCATION</span><span class="o">=</span>./data
+
+<span class="nv">DB_USERNAME</span><span class="o">=</span>postgres
+<span class="nv">DB_DATABASE_NAME</span><span class="o">=</span>ocr_translate
+
+<span class="c1"># Connection password for postgres. You should change it to a random password</span>
+<span class="nv">DB_PASSWORD</span><span class="o">=</span>YOUR_DATABASE_PASSWORD
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Run the command:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="from_pypi.html" class="btn btn-neutral float-left" title="From PyPI installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../user/index.html" class="btn btn-neutral float-right" title="User’s guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

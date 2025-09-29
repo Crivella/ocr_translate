@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plugins &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributor’s guide" href="../contrib/index.html" />
+    <link rel="prev" title="Environment Variables" href="../user/envs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install_run/index.html">Install and Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User’s guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Plugins</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ocr-translate-hugging-face">ocr_translate-hugging_face</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ocr-translate-easyocr">ocr_translate-easyocr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ocr-translate-tesseract">ocr_translate-tesseract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ocr-translate-paddle">ocr_translate-paddle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ocr-translate-ollama">ocr_translate-ollama</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ocr-translate-google">ocr_translate-google</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib/index.html">Contributor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Plugins</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/plugins/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="plugins">
+<h1>Plugins<a class="headerlink" href="#plugins" title="Link to this heading"></a></h1>
+<p>Plugins are the bread and butter of <cite>ocr_translate</cite>.</p>
+<p>The base project implements functionalities to handle the web server, database, translation pipelines and queues.</p>
+<p>How and which models are used is implemented entirely in plugins.</p>
+<p>Plugins can be installed by using the plugin collapsable menu on the extension, by directly using the <cite>manage_plugins/</cite> endpoint (<a class="reference internal" href="../contrib/api.html"><span class="doc">see here</span></a>) or by manually installing them in the server environment.</p>
+<section id="ocr-translate-hugging-face">
+<h2>ocr_translate-hugging_face<a class="headerlink" href="#ocr-translate-hugging-face" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/Crivella/ocr_translate-hugging_face">HOMEPAGE</a></p>
+<p>Plugin for using Hugging Face models for OCR and translation.</p>
+<p>Implements <a class="reference external" href="https://huggingface.co/docs/transformers/en/model_doc/vision-encoder-decoder">VED models</a> for OCR and <a class="reference external" href="https://huggingface.co/learn/nlp-course/en/chapter1/7">Seq2Seq</a> models for translation.</p>
+<p>Plugin or associated packages environment variables</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id1" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 16.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">TRANSFORMERS_CACHE</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">$OCT_BASE_DIR/models/huggingface</span></code></p></td>
+<td><p>Directory where <a class="reference external" href="https://huggingface.co/">Hugging Face</a> models are being</p>
+<p>stored (either downloaded manually or downloaded</p>
+<p>by <cite>transformers</cite>)</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">TRANSFORMERS_OFFLINE</span></code></p></td>
+<td><p>0</p></td>
+<td><p>By default <cite>transformers</cite> will try to download</p>
+<p>missing models. Set this to 1 to only work in</p>
+<p>offline mode</p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ocr-translate-easyocr">
+<h2>ocr_translate-easyocr<a class="headerlink" href="#ocr-translate-easyocr" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/Crivella/ocr_translate-easyocr">HOMEPAGE</a></p>
+<p>Plugin for using EasyOCR models for BBox detection.</p>
+<p>Plugin or associated packages environment variables</p>
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id2" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 16.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">EASYOCR_PREFIX</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">$OCT_BASE_DIR/models/easyocr</span></code></p></td>
+<td><p>Directory where EasyOCR downloads its models</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ocr-translate-tesseract">
+<h2>ocr_translate-tesseract<a class="headerlink" href="#ocr-translate-tesseract" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/Crivella/ocr_translate-tesseract">HOMEPAGE</a></p>
+<p>Plugin for using Tesseract models for OCR.
+This requires tesseract to be installed on your machine.</p>
+<p>Plugin or associated packages environment variables</p>
+<table class="docutils align-default" id="id3">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id3" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 16.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">TESSERACT_PREFIX</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">$OCT_BASE_DIR/models/tesseract</span></code></p></td>
+<td><p>Directory where tesseract downloads its models</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">TESSERACT_ALLOW_DOWNLOAD</span></code></p></td>
+<td><p>true</p></td>
+<td><p>Control whether the app should download missing</p>
+<p>models (true) or work in offline mode only (false)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ocr-translate-paddle">
+<h2>ocr_translate-paddle<a class="headerlink" href="#ocr-translate-paddle" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/Crivella/ocr_translate-paddle">HOMEPAGE</a></p>
+<p>Plugin for using PaddleOCR models for BBox detection and OCR.</p>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id4" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 16.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">PADDLEOCR_PREFIX</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">$OCT_BASE_DIR/models/paddleocr</span></code></p></td>
+<td><p>Directory where PaddleOCR downloads its models</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ocr-translate-ollama">
+<h2>ocr_translate-ollama<a class="headerlink" href="#ocr-translate-ollama" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/Crivella/ocr_translate-ollama">HOMEPAGE</a></p>
+<p>Plugin for using LLMs through ollama for translation.</p>
+<p>The <a class="reference external" href="https://ollama.com/">Ollama</a> server needs to be setup independently.</p>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id5" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 16.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">OCT_OLLAMA_ENDPOINT</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">http://127.0.0.1:11434/api</span></code></p></td>
+<td><p>Endpoint where the ollama server is running</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ocr-translate-google">
+<h2>ocr_translate-google<a class="headerlink" href="#ocr-translate-google" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/Crivella/ocr_translate-google">HOMEPAGE</a></p>
+<p>Plugin for using Google Translate for translation.</p>
+<p>This plugins requires an internet connection and will send the text to be translated to google.</p>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id6" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 16.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>EMPTY</p></td>
+<td><p>EMPTY</p></td>
+<td><p>EMPTY</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../user/envs.html" class="btn btn-neutral float-left" title="Environment Variables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../contrib/index.html" class="btn btn-neutral float-right" title="Contributor’s guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
