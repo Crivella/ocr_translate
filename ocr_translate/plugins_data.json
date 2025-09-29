@@ -689,6 +689,118 @@
       {
         "name": "safetensors",
         "version": "0.6.2"
+      },
+      {
+        "name": "einops",
+        "version": "0.8.1"
+      },
+      {
+        "name": "ftfy",
+        "version": "6.3.1"
+      },
+      {
+        "name": "openpyxl",
+        "version": "3.1.5"
+      },
+      {
+        "name": "et_xmlfile",
+        "version": "2.0.0"
+      },
+      {
+        "name": "Jinja2",
+        "version": "3.1.4"
+      },
+      {
+        "name": "MarkupSafe",
+        "version": "2.1.5"
+      },
+      {
+        "name": "imagesize",
+        "version": "1.4.1"
+      },
+      {
+        "name": "pyclipper",
+        "version": "1.3.0.post6"
+      },
+      {
+        "name": "pypdfium2",
+        "version": "4.30.0"
+      },
+      {
+        "name": "scikit-learn",
+        "version": "1.7.2"
+      },
+      {
+        "name": "scipy",
+        "version": "1.15.3"
+      },
+      {
+        "name": "joblib",
+        "version": "1.3.2"
+      },
+      {
+        "name": "threadpoolctl",
+        "version": "3.6.0"
+      },
+      {
+        "name": "shapely",
+        "version": "2.1.1"
+      },
+      {
+        "name": "tiktoken",
+        "version": "0.11.0"
+      },
+      {
+        "name": "regex",
+        "version": "2025.9.1"
+      },
+      {
+        "name": "tokenizers",
+        "version": "0.22.0"
+      },
+      {
+        "name": "huggingface-hub",
+        "version": "0.34.4"
+      },
+      {
+        "name": "filelock",
+        "version": "3.19.1"
+      },
+      {
+        "name": "fsspec",
+        "version": "2025.9.0"
+      },
+      {
+        "name": "colorama",
+        "version": "0.4.6"
+      },
+      {
+        "name": "premailer",
+        "version": "3.10.0"
+      },
+      {
+        "name": "lxml",
+        "version": "6.0.2"
+      },
+      {
+        "name": "cssselect",
+        "version": "1.3.0"
+      },
+      {
+        "name": "cssutils",
+        "version": "2.11.1"
+      },
+      {
+        "name": "more-itertools",
+        "version": "10.8.0"
+      },
+      {
+        "name": "cachetools",
+        "version": "6.2.0"
+      },
+      {
+        "name": "opencv-contrib-python",
+        "version": "4.10.0.84"
       }
     ]
   },
@@ -711,7 +823,7 @@
     "package": "ocr_translate-google",
     "description": "Plugins to enable usage of GoogleTranslate in ocr_translate using `googletrans`",
     "warning": "This plugin requires an active internet connection to work, and text to be translated will be sent to Google's servers for translation.",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "homepage": "https://github.com/Crivella/ocr_translate-google",
     "dependencies": [
       {
