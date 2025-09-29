@@ -18,6 +18,7 @@ RUN --mount=type=cache,target=/pip_cache /venv/bin/pip install gunicorn --cache-
 FROM python:3.13.7-slim-bookworm
 
 RUN apt-get update && apt-get install \
+    libgl1 \
     nginx \
     tesseract-ocr \
     -y --no-install-recommends \
