@@ -12,6 +12,10 @@ List of changes between versions
 - [ ] Add <DETECT> language to allow either OCR or TSL models to detect the language automatically
       (Both should easy, only one could be troublesome)
 
+## 0.7.4
+
+- Added `ocr_translate_libretranslate` plugin to allow using LibreTranslate (https://libretranslate.com/) as a translation backend.
+
 ## 0.7.3
 
 - Bugfix missing dependency in `plugins_data.json` for `ocr_translate-paddle` plugin and wrong `ocr_translate-google` version
