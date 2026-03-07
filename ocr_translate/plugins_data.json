@@ -820,7 +820,7 @@
   },
   {
     "name": "ocr_translate_libretranslate",
-    "package": "https://github.com/Crivella/ocr_translate-libretranslate.git",
+    "package": "ocr_translate_libretranslate",
     "description": "This is a plugin for ocr_translate that implements translations through LibreTranslate.",
     "warning": "This plugin requires a running LibreTranslate server that is not included with the project. See the homepage for more details",
     "version": "0.1.1",
