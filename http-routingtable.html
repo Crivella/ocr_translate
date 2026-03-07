@@ -1,0 +1,222 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTTP Routing Table &mdash; ocr_translate  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=6e34c9ab" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+      <script src="_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+ 
+
+    <script>
+      DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true;
+    </script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ocr_translate
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="install_run/index.html">Install and Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/index.html">User’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins/index.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib/index.html">Contributor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ocr_translate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">HTTP Routing Table</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+
+   <h1>HTTP Routing Table</h1>
+
+   <div class="modindex-jumpbox">
+   <a href="#cap-/"><strong>/</strong></a> | 
+   <a href="#cap-/get_active_options"><strong>/get_active_options</strong></a> | 
+   <a href="#cap-/get_plugin_data"><strong>/get_plugin_data</strong></a> | 
+   <a href="#cap-/get_trans"><strong>/get_trans</strong></a> | 
+   <a href="#cap-/manage_plugins"><strong>/manage_plugins</strong></a> | 
+   <a href="#cap-/run_ocrtsl"><strong>/run_ocrtsl</strong></a> | 
+   <a href="#cap-/run_tsl"><strong>/run_tsl</strong></a> | 
+   <a href="#cap-/run_tsl_get_xunityautotrans"><strong>/run_tsl_get_xunityautotrans</strong></a> | 
+   <a href="#cap-/set_lang"><strong>/set_lang</strong></a> | 
+   <a href="#cap-/set_manual_translation"><strong>/set_manual_translation</strong></a> | 
+   <a href="#cap-/set_models"><strong>/set_models</strong></a>
+   </div>
+
+   <table class="indextable modindextable">
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/"><td></td><td>
+       <strong>/</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#get--"><code class="xref">GET /</code></a></td><td>
+       <em>Server handshake.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/get_active_options"><td></td><td>
+       <strong>/get_active_options</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#get--get_active_options"><code class="xref">GET /get_active_options</code></a></td><td>
+       <em>Get active options.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/get_plugin_data"><td></td><td>
+       <strong>/get_plugin_data</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#get--get_plugin_data"><code class="xref">GET /get_plugin_data</code></a></td><td>
+       <em>Get the data of the available plugins</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/get_trans"><td></td><td>
+       <strong>/get_trans</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#get--get_trans-"><code class="xref">GET /get_trans/</code></a></td><td>
+       <em>Get translation.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/manage_plugins"><td></td><td>
+       <strong>/manage_plugins</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#post--manage_plugins-"><code class="xref">POST /manage_plugins/</code></a></td><td>
+       <em>Manage plugins.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/run_ocrtsl"><td></td><td>
+       <strong>/run_ocrtsl</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#post--run_ocrtsl-"><code class="xref">POST /run_ocrtsl/</code></a></td><td>
+       <em>Run OCR and translation on image.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/run_tsl"><td></td><td>
+       <strong>/run_tsl</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#post--run_tsl-"><code class="xref">POST /run_tsl/</code></a></td><td>
+       <em>Run translation on text.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/run_tsl_get_xunityautotrans"><td></td><td>
+       <strong>/run_tsl_get_xunityautotrans</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#get--run_tsl_get_xunityautotrans"><code class="xref">GET /run_tsl_get_xunityautotrans</code></a></td><td>
+       <em>Run translation from a GET endpoint.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/set_lang"><td></td><td>
+       <strong>/set_lang</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#post--set_lang-"><code class="xref">POST /set_lang/</code></a></td><td>
+       <em>Set source and destination languages.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/set_manual_translation"><td></td><td>
+       <strong>/set_manual_translation</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#post--set_manual_translation-"><code class="xref">POST /set_manual_translation/</code></a></td><td>
+       <em>Set manual translation.</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/set_models"><td></td><td>
+       <strong>/set_models</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="contrib/api.html#post--set_models-"><code class="xref">POST /set_models/</code></a></td><td>
+       <em>Set box, ocr and tsl models.</em></td></tr>
+   </table>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Grassano.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
