@@ -819,6 +819,20 @@
     ]
   },
   {
+    "name": "ocr_translate_libretranslate",
+    "package": "https://github.com/Crivella/ocr_translate-libretranslate.git",
+    "description": "This is a plugin for ocr_translate that implements translations through LibreTranslate.",
+    "warning": "This plugin requires a running LibreTranslate server that is not included with the project. See the homepage for more details",
+    "version": "0.1.0",
+    "homepage": "https://github.com/Crivella/ocr_translate-libretranslate",
+    "dependencies": [
+      {
+        "name": "requests",
+        "version": "2.32.5"
+      }
+    ]
+  },
+  {
     "name": "ocr_translate_google",
     "package": "ocr_translate-google",
     "description": "Plugins to enable usage of GoogleTranslate in ocr_translate using `googletrans`",
