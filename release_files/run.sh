@@ -35,7 +35,7 @@ start_venv() {
     if [ -x "$VENV_DIR/bin/python" ]; then
         activate_venv
     else
-        PYTHON_FULLNAME=$(python -c "import sys; print(sys.executable)")
+        PYTHON_FULLNAME=$($PYTHON -c "import sys; print(sys.executable)")
         echo "Creating venv in directory $VENV_DIR using python $PYTHON_FULLNAME"
         $PYTHON_FULLNAME -m venv "$VENV_DIR" >tmp/stdout.txt 2>tmp/stderr.txt
         if [ $? -eq 0 ]; then
